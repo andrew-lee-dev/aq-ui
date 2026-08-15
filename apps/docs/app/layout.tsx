@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Open-code React components, hooks, and content editors.",
 }
 
+const docsBasePath = process.env.GITHUB_ACTIONS ? "/aq-ui" : ""
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,8 +42,17 @@ export default function RootLayout({
               <Link
                 href="/"
                 prefetch={false}
-                className="shrink-0 font-semibold tracking-tight outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex shrink-0 items-center gap-1.5 font-semibold tracking-tight outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring"
               >
+                {/* The metadata icon route is already optimized to 64px. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${docsBasePath}/icon.png`}
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="dark:invert"
+                />
                 aq-ui
               </Link>
               <div className="ms-auto flex min-w-0 items-center gap-1.5 sm:gap-2">

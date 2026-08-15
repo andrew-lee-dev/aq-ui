@@ -27,6 +27,12 @@ test("docs shell exposes keyboard and landmark navigation", () => {
   assert.match(layout, /tabIndex=\{-1\}/u)
   assert.match(layout, /className="scroll-pt-16/u)
   assert.match(layout, /sticky top-0/u)
+  assert.match(layout, /docsBasePath = process\.env\.GITHUB_ACTIONS/u)
+  assert.match(
+    layout,
+    /<img[\s\S]*\$\{docsBasePath\}\/icon\.png[\s\S]*dark:invert/u
+  )
+  assert.match(layout, />\s*aq-ui\s*<\/Link>/u)
   assert.match(layout, /className="flex h-full items-center/u)
   assert.match(layout, /className="flex min-h-\[calc\(100svh-3\.5rem\)\]"/u)
   assert.doesNotMatch(layout, /max-w-\[100rem\]/u)

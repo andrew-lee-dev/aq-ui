@@ -1,6 +1,7 @@
-import { ApiEntryCards, exportAnchor } from "@/components/api-entry-cards"
+import { ApiEntryCards } from "@/components/api-entry-cards"
 import { CopyButton } from "@/components/copy-button"
 import { LazyApiDetails } from "@/components/lazy-api-details"
+import { exportAnchor } from "@/lib/api-anchor"
 import { quickStart } from "@/lib/api-reference-quick-start"
 import type { RegistryItem } from "@/lib/registry"
 
@@ -67,7 +68,7 @@ function CompactReference({
           >
             {api.map((entry) => (
               <li
-                id={exportAnchor(item.name, entry.name)}
+                id={exportAnchor(item.name, entry.name, "api", api)}
                 key={entry.name}
                 data-api-export={entry.name}
                 className="min-w-0 scroll-mt-20"
@@ -148,7 +149,7 @@ function ApiReference({ item, compactMembers = false }: ApiReferenceProps) {
           {api.map((entry) => (
             <li key={entry.name} className="min-w-0">
               <a
-                href={`#${exportAnchor(item.name, entry.name)}`}
+                href={`#${exportAnchor(item.name, entry.name, "api", api)}`}
                 className="font-mono break-all underline-offset-4 hover:underline"
               >
                 {entry.name}

@@ -1,0 +1,910 @@
+{
+  "items": [
+    {
+      "name": "accordion",
+      "title": "Accordion",
+      "description": "Open-code aq-ui accessible component family for Accordion.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "alert",
+      "title": "Alert",
+      "description": "Open-code aq-ui accessible component family for Alert.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "alert-dialog",
+      "title": "Alert Dialog",
+      "description": "Open-code aq-ui accessible component family for Alert Dialog.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "aq-neutral",
+      "title": "Globals",
+      "description": "Open-code aq-ui theme and style foundation for Globals.",
+      "type": "registry:style"
+    },
+    {
+      "name": "aspect-ratio",
+      "title": "Aspect Ratio",
+      "description": "Open-code aq-ui accessible component family for Aspect Ratio.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "attachment",
+      "title": "Attachment",
+      "description": "Open-code aq-ui accessible component family for Attachment.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "avatar",
+      "title": "Avatar",
+      "description": "Open-code aq-ui accessible component family for Avatar.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "badge",
+      "title": "Badge",
+      "description": "Open-code aq-ui accessible component family for Badge.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "breadcrumb",
+      "title": "Breadcrumb",
+      "description": "Open-code aq-ui accessible component family for Breadcrumb.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "bubble",
+      "title": "Bubble",
+      "description": "Open-code aq-ui accessible component family for Bubble.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "button",
+      "title": "Button",
+      "description": "Accessible action control with six variants, eight sizes, loading feedback, icon support, and Base UI composition.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "button-group",
+      "title": "Button Group",
+      "description": "Open-code aq-ui accessible component family for Button Group.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "calendar",
+      "title": "Calendar",
+      "description": "Open-code aq-ui accessible component family for Calendar.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "card",
+      "title": "Card",
+      "description": "Open-code aq-ui accessible component family for Card.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "carousel",
+      "title": "Carousel",
+      "description": "Open-code aq-ui accessible component family for Carousel.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "chart",
+      "title": "Chart",
+      "description": "Open-code aq-ui accessible component family for Chart.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "checkbox",
+      "title": "Checkbox",
+      "description": "Open-code aq-ui accessible component family for Checkbox.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "code-block",
+      "title": "Code Block",
+      "description": "SSR-safe syntax-highlighted code with line numbers, diffs, emphasis, filenames, and copy support.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "code-editor",
+      "title": "Code Editor",
+      "description": "CodeMirror 6 editor with controlled state, lazy languages, diagnostics, search, folding, and token-aware themes.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "collapsible",
+      "title": "Collapsible",
+      "description": "Open-code aq-ui accessible component family for Collapsible.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "color-picker",
+      "title": "Color Picker",
+      "description": "Accessible color area, hue and alpha controls, swatch, field, and controlled color formats.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "combobox",
+      "title": "Combobox",
+      "description": "Open-code aq-ui accessible component family for Combobox.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "command",
+      "title": "Command",
+      "description": "Open-code aq-ui accessible component family for Command.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "context-menu",
+      "title": "Context Menu",
+      "description": "Open-code aq-ui accessible component family for Context Menu.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "data-grid",
+      "title": "Data Grid",
+      "description": "Virtualized TanStack data grid with sorting, filtering, resizing, pinning, visibility, and row selection.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "data-table",
+      "title": "Data Table",
+      "description": "Open-code aq-ui accessible component family for Data Table.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "date-picker",
+      "title": "Date Picker",
+      "description": "Open-code aq-ui accessible component family for Date Picker.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "dialog",
+      "title": "Dialog",
+      "description": "Open-code aq-ui accessible component family for Dialog.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "direction",
+      "title": "Direction",
+      "description": "Open-code aq-ui accessible component family for Direction.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "drawer",
+      "title": "Drawer",
+      "description": "Open-code aq-ui accessible component family for Drawer.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "dropdown-menu",
+      "title": "Dropdown Menu",
+      "description": "Open-code aq-ui accessible component family for Dropdown Menu.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "empty",
+      "title": "Empty",
+      "description": "Open-code aq-ui accessible component family for Empty.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "field",
+      "title": "Field",
+      "description": "Open-code aq-ui accessible component family for Field.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "file-upload",
+      "title": "File Upload",
+      "description": "Keyboard-accessible drop zone with validation, progress, retry, cancellation, and transport-neutral uploads.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "hover-card",
+      "title": "Hover Card",
+      "description": "Open-code aq-ui accessible component family for Hover Card.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "input",
+      "title": "Input",
+      "description": "Open-code aq-ui accessible component family for Input.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "input-group",
+      "title": "Input Group",
+      "description": "Open-code aq-ui accessible component family for Input Group.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "input-otp",
+      "title": "Input Otp",
+      "description": "Open-code aq-ui accessible component family for Input Otp.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "item",
+      "title": "Item",
+      "description": "Open-code aq-ui accessible component family for Item.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "kbd",
+      "title": "Kbd",
+      "description": "Open-code aq-ui accessible component family for Kbd.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "label",
+      "title": "Label",
+      "description": "Open-code aq-ui accessible component family for Label.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "markdown-editor",
+      "title": "Markdown Editor",
+      "description": "CommonMark and GFM source editor with write, preview, split, formatting, uploads, and deferred rendering.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "markdown-renderer",
+      "title": "Markdown Renderer",
+      "description": "Sanitized CommonMark and GFM renderer with safe protocols, prefixed headings, and highlighted code fences.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "marker",
+      "title": "Marker",
+      "description": "Open-code aq-ui accessible component family for Marker.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "menubar",
+      "title": "Menubar",
+      "description": "Open-code aq-ui accessible component family for Menubar.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "message",
+      "title": "Message",
+      "description": "Open-code aq-ui accessible component family for Message.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "message-scroller",
+      "title": "Message Scroller",
+      "description": "Open-code aq-ui accessible component family for Message Scroller.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "native-select",
+      "title": "Native Select",
+      "description": "Open-code aq-ui accessible component family for Native Select.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "navigation-menu",
+      "title": "Navigation Menu",
+      "description": "Open-code aq-ui accessible component family for Navigation Menu.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "pagination",
+      "title": "Pagination",
+      "description": "Open-code aq-ui accessible component family for Pagination.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "popover",
+      "title": "Popover",
+      "description": "Open-code aq-ui accessible component family for Popover.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "progress",
+      "title": "Progress",
+      "description": "Open-code aq-ui accessible component family for Progress.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "questionnaire",
+      "title": "Questionnaire",
+      "description": "Open-code aq-ui accessible component family for Questionnaire.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "radio-group",
+      "title": "Radio Group",
+      "description": "Open-code aq-ui accessible component family for Radio Group.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "resizable",
+      "title": "Resizable",
+      "description": "Open-code aq-ui accessible component family for Resizable.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "rich-text-editor",
+      "title": "Rich Text Editor",
+      "description": "Tiptap JSON editor and static renderer with production formatting, tables, media, mentions, and slash commands.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "rich-text-html",
+      "title": "Rich Text Html",
+      "description": "Open-code aq-ui shared library for Rich Text Html.",
+      "type": "registry:lib"
+    },
+    {
+      "name": "scroll-area",
+      "title": "Scroll Area",
+      "description": "Open-code aq-ui accessible component family for Scroll Area.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "select",
+      "title": "Select",
+      "description": "Open-code aq-ui accessible component family for Select.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "separator",
+      "title": "Separator",
+      "description": "Open-code aq-ui accessible component family for Separator.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "sheet",
+      "title": "Sheet",
+      "description": "Open-code aq-ui accessible component family for Sheet.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "sidebar",
+      "title": "Sidebar",
+      "description": "Open-code aq-ui accessible component family for Sidebar.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "skeleton",
+      "title": "Skeleton",
+      "description": "Open-code aq-ui accessible component family for Skeleton.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "slider",
+      "title": "Slider",
+      "description": "Open-code aq-ui accessible component family for Slider.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "spinner",
+      "title": "Spinner",
+      "description": "Open-code aq-ui accessible component family for Spinner.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "stepper",
+      "title": "Stepper",
+      "description": "Controlled or uncontrolled, linear-aware multi-step workflow with horizontal and vertical composition.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "switch",
+      "title": "Switch",
+      "description": "Open-code aq-ui accessible component family for Switch.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "table",
+      "title": "Table",
+      "description": "Open-code aq-ui accessible component family for Table.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "tabs",
+      "title": "Tabs",
+      "description": "Open-code aq-ui accessible component family for Tabs.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "textarea",
+      "title": "Textarea",
+      "description": "Open-code aq-ui accessible component family for Textarea.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "timeline",
+      "title": "Timeline",
+      "description": "Semantic, RTL-safe timeline primitives for events, status history, and activity feeds.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "toast",
+      "title": "Toast",
+      "description": "Open-code aq-ui accessible component family for Toast.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "toggle",
+      "title": "Toggle",
+      "description": "Open-code aq-ui accessible component family for Toggle.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "toggle-group",
+      "title": "Toggle Group",
+      "description": "Open-code aq-ui accessible component family for Toggle Group.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "tooltip",
+      "title": "Tooltip",
+      "description": "Open-code aq-ui accessible component family for Tooltip.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "tree-view",
+      "title": "Tree View",
+      "description": "Keyboard-navigable hierarchical view with selection, expansion, typeahead, and controlled state.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "typography",
+      "title": "Typography",
+      "description": "Open-code aq-ui accessible component family for Typography.",
+      "type": "registry:ui"
+    },
+    {
+      "name": "upload",
+      "title": "Upload",
+      "description": "Open-code aq-ui shared library for Upload.",
+      "type": "registry:lib"
+    },
+    {
+      "name": "use-async",
+      "title": "Use Async",
+      "description": "Open-code aq-ui React hook for Use Async.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-autosize-textarea",
+      "title": "Use Autosize Textarea",
+      "description": "Open-code aq-ui React hook for Use Autosize Textarea.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-before-unload",
+      "title": "Use Before Unload",
+      "description": "Open-code aq-ui React hook for Use Before Unload.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-breakpoint",
+      "title": "Use Breakpoint",
+      "description": "Open-code aq-ui React hook for Use Breakpoint.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-click-outside",
+      "title": "Use Click Outside",
+      "description": "Open-code aq-ui React hook for Use Click Outside.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-clipboard",
+      "title": "Use Clipboard",
+      "description": "Open-code aq-ui React hook for Use Clipboard.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-code-editor",
+      "title": "Use Code Editor",
+      "description": "Open-code aq-ui React hook for Use Code Editor.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-controllable-state",
+      "title": "Use Controllable State",
+      "description": "Open-code aq-ui React hook for Use Controllable State.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-data-grid",
+      "title": "Use Data Grid",
+      "description": "Open-code aq-ui React hook for Use Data Grid.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-debounced-callback",
+      "title": "Use Debounced Callback",
+      "description": "Open-code aq-ui React hook for Use Debounced Callback.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-debounced-value",
+      "title": "Use Debounced Value",
+      "description": "Open-code aq-ui React hook for Use Debounced Value.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-direction",
+      "title": "Use Direction",
+      "description": "Open-code aq-ui React hook for Use Direction.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-disclosure",
+      "title": "Use Disclosure",
+      "description": "Open-code aq-ui React hook for Use Disclosure.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-document-title",
+      "title": "Use Document Title",
+      "description": "Open-code aq-ui React hook for Use Document Title.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-element-rect",
+      "title": "Use Element Rect",
+      "description": "Open-code aq-ui React hook for Use Element Rect.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-element-size",
+      "title": "Use Element Size",
+      "description": "Open-code aq-ui React hook for Use Element Size.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-escape-key",
+      "title": "Use Escape Key",
+      "description": "Open-code aq-ui React hook for Use Escape Key.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-event-listener",
+      "title": "Use Event Listener",
+      "description": "Open-code aq-ui React hook for Use Event Listener.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-file-drop",
+      "title": "Use File Drop",
+      "description": "Open-code aq-ui React hook for Use File Drop.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-file-upload",
+      "title": "Use File Upload",
+      "description": "Open-code aq-ui React hook for Use File Upload.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-focus-return",
+      "title": "Use Focus Return",
+      "description": "Open-code aq-ui React hook for Use Focus Return.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-focus-visible",
+      "title": "Use Focus Visible",
+      "description": "Open-code aq-ui React hook for Use Focus Visible.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-focus-within",
+      "title": "Use Focus Within",
+      "description": "Open-code aq-ui React hook for Use Focus Within.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-form-field",
+      "title": "Use Form Field",
+      "description": "Open-code aq-ui React hook for Use Form Field.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-fullscreen",
+      "title": "Use Fullscreen",
+      "description": "Open-code aq-ui React hook for Use Fullscreen.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-history-state",
+      "title": "Use History State",
+      "description": "Open-code aq-ui React hook for Use History State.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-hotkeys",
+      "title": "Use Hotkeys",
+      "description": "Open-code aq-ui React hook for Use Hotkeys.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-hover",
+      "title": "Use Hover",
+      "description": "Open-code aq-ui React hook for Use Hover.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-hydrated",
+      "title": "Use Hydrated",
+      "description": "Open-code aq-ui React hook for Use Hydrated.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-idle",
+      "title": "Use Idle",
+      "description": "Open-code aq-ui React hook for Use Idle.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-intersection-observer",
+      "title": "Use Intersection Observer",
+      "description": "Open-code aq-ui React hook for Use Intersection Observer.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-interval",
+      "title": "Use Interval",
+      "description": "Open-code aq-ui React hook for Use Interval.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-isomorphic-layout-effect",
+      "title": "Use Isomorphic Layout Effect",
+      "description": "Open-code aq-ui React hook for Use Isomorphic Layout Effect.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-key-press",
+      "title": "Use Key Press",
+      "description": "Open-code aq-ui React hook for Use Key Press.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-keyboard-modality",
+      "title": "Use Keyboard Modality",
+      "description": "Open-code aq-ui React hook for Use Keyboard Modality.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-latest",
+      "title": "Use Latest",
+      "description": "Open-code aq-ui React hook for Use Latest.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-lazy-ref",
+      "title": "Use Lazy Ref",
+      "description": "Open-code aq-ui React hook for Use Lazy Ref.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-live-region",
+      "title": "Use Live Region",
+      "description": "Open-code aq-ui React hook for Use Live Region.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-local-storage",
+      "title": "Use Local Storage",
+      "description": "Open-code aq-ui React hook for Use Local Storage.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-long-press",
+      "title": "Use Long Press",
+      "description": "Open-code aq-ui React hook for Use Long Press.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-markdown-editor",
+      "title": "Use Markdown Editor",
+      "description": "Open-code aq-ui React hook for Use Markdown Editor.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-media-query",
+      "title": "Use Media Query",
+      "description": "Open-code aq-ui React hook for Use Media Query.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-merged-refs",
+      "title": "Use Merged Refs",
+      "description": "Open-code aq-ui React hook for Use Merged Refs.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-message-scroller",
+      "title": "Use Message Scroller",
+      "description": "Open-code aq-ui React hook for Use Message Scroller.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-mutation-observer",
+      "title": "Use Mutation Observer",
+      "description": "Open-code aq-ui React hook for Use Mutation Observer.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-online",
+      "title": "Use Online",
+      "description": "Open-code aq-ui React hook for Use Online.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-page-visibility",
+      "title": "Use Page Visibility",
+      "description": "Open-code aq-ui React hook for Use Page Visibility.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-pagination",
+      "title": "Use Pagination",
+      "description": "Open-code aq-ui React hook for Use Pagination.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-permission",
+      "title": "Use Permission",
+      "description": "Open-code aq-ui React hook for Use Permission.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-pointer-type",
+      "title": "Use Pointer Type",
+      "description": "Open-code aq-ui React hook for Use Pointer Type.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-portal-container",
+      "title": "Use Portal Container",
+      "description": "Open-code aq-ui React hook for Use Portal Container.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-preferred-color-scheme",
+      "title": "Use Preferred Color Scheme",
+      "description": "Open-code aq-ui React hook for Use Preferred Color Scheme.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-previous",
+      "title": "Use Previous",
+      "description": "Open-code aq-ui React hook for Use Previous.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-reduced-motion",
+      "title": "Use Reduced Motion",
+      "description": "Open-code aq-ui React hook for Use Reduced Motion.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-resize-observer",
+      "title": "Use Resize Observer",
+      "description": "Open-code aq-ui React hook for Use Resize Observer.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-rich-text-editor",
+      "title": "Use Rich Text Editor",
+      "description": "Open-code aq-ui React hook for Use Rich Text Editor.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-roving-focus",
+      "title": "Use Roving Focus",
+      "description": "Open-code aq-ui React hook for Use Roving Focus.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-scroll-direction",
+      "title": "Use Scroll Direction",
+      "description": "Open-code aq-ui React hook for Use Scroll Direction.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-scroll-lock",
+      "title": "Use Scroll Lock",
+      "description": "Open-code aq-ui React hook for Use Scroll Lock.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-scroll-position",
+      "title": "Use Scroll Position",
+      "description": "Open-code aq-ui React hook for Use Scroll Position.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-session-storage",
+      "title": "Use Session Storage",
+      "description": "Open-code aq-ui React hook for Use Session Storage.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-sidebar",
+      "title": "Use Sidebar",
+      "description": "Open-code aq-ui React hook for Use Sidebar.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-stable-callback",
+      "title": "Use Stable Callback",
+      "description": "Open-code aq-ui React hook for Use Stable Callback.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-stepper",
+      "title": "Use Stepper",
+      "description": "Open-code aq-ui React hook for Use Stepper.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-throttled-callback",
+      "title": "Use Throttled Callback",
+      "description": "Open-code aq-ui React hook for Use Throttled Callback.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-throttled-value",
+      "title": "Use Throttled Value",
+      "description": "Open-code aq-ui React hook for Use Throttled Value.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-timeout",
+      "title": "Use Timeout",
+      "description": "Open-code aq-ui React hook for Use Timeout.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-toast",
+      "title": "Use Toast",
+      "description": "Open-code aq-ui React hook for Use Toast.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-toggle",
+      "title": "Use Toggle",
+      "description": "Open-code aq-ui React hook for Use Toggle.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-tree-view",
+      "title": "Use Tree View",
+      "description": "Open-code aq-ui React hook for Use Tree View.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-typeahead",
+      "title": "Use Typeahead",
+      "description": "Open-code aq-ui React hook for Use Typeahead.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "use-window-size",
+      "title": "Use Window Size",
+      "description": "Open-code aq-ui React hook for Use Window Size.",
+      "type": "registry:hook"
+    },
+    {
+      "name": "utils",
+      "title": "Utils",
+      "description": "Open-code aq-ui shared library for Utils.",
+      "type": "registry:lib"
+    }
+  ]
+}

@@ -18,6 +18,14 @@ interface RegistryItemDetailProps {
   collection: "components" | "hooks" | "utilities"
 }
 
+const editorNames = new Set([
+  "code-block",
+  "code-editor",
+  "markdown-editor",
+  "markdown-renderer",
+  "rich-text-editor",
+])
+
 export function registryItemDescription(item: RegistryItem) {
   return item.name === "button" ? buttonDescription : item.description
 }
@@ -29,14 +37,18 @@ export function RegistryItemDetail({
   const record = getRegistryRecord(item.name) ?? item
   const description = registryItemDescription(item)
   const isComponent = collection === "components"
-  const collectionLabel =
-    collection === "components"
+  const isEditor = isComponent && editorNames.has(item.name)
+  const backCollection = isEditor ? "editors" : collection
+  const collectionLabel = isEditor
+    ? "Editors"
+    : collection === "components"
       ? "Components"
       : collection === "hooks"
         ? "Hooks"
         : "Utilities"
-  const typeLabel =
-    collection === "components"
+  const typeLabel = isEditor
+    ? "Editor"
+    : collection === "components"
       ? "Component"
       : collection === "hooks"
         ? "Hook"
@@ -47,11 +59,14 @@ export function RegistryItemDetail({
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <Link
-        href={`/${collection}/`}
+        href={`/${backCollection}/`}
         prefetch={false}
-        className="mb-4 block text-sm"
+        className="mb-5 flex w-fit gap-2 text-sm hover:underline focus-visible:outline focus-visible:outline-offset-2"
       >
-        {collectionLabel}
+        <span aria-hidden className="inline-block rtl:rotate-180">
+          ←
+        </span>
+        Back to {collectionLabel}
       </Link>
       <Badge variant="outline">{typeLabel}</Badge>
       <h1 className="mt-4 text-4xl font-bold tracking-tight">{item.title}</h1>

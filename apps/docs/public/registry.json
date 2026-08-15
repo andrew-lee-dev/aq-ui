@@ -1395,12 +1395,12 @@
         "utils"
       ],
       "meta": {
-        "integrity": "sha256-b3d49d688098459a4ca1defef6f56854d176c38ad99143bbb849d3dd06370f7d",
+        "integrity": "sha256-82c907993a737502a35f7414d085ad5cd9be9d67b5197638d2e7f0422712e340",
         "api": [
           {
             "name": "DataGrid",
             "kind": "const",
-            "line": 423
+            "line": 430
           },
           {
             "name": "DataGridProps",
@@ -2333,7 +2333,7 @@
         "utils"
       ],
       "meta": {
-        "integrity": "sha256-41d11bb6eca4cd3d1f3292ac9282311fb0674dc70dd96bb0000dd07d53bb1900",
+        "integrity": "sha256-0ce25d9c051ce46c00d7b351204b8b9d50c9510267b062b76efabacf18243394",
         "api": [
           {
             "name": "EditorAssetUploadAdapter",
@@ -2343,7 +2343,7 @@
           {
             "name": "MarkdownEditor",
             "kind": "const",
-            "line": 319
+            "line": 338
           },
           {
             "name": "MarkdownEditorMode",
@@ -2353,37 +2353,37 @@
           {
             "name": "MarkdownEditorPreview",
             "kind": "const",
-            "line": 213
+            "line": 232
           },
           {
             "name": "MarkdownEditorPreviewProps",
             "kind": "interface",
-            "line": 209
+            "line": 228
           },
           {
             "name": "MarkdownEditorProps",
             "kind": "interface",
-            "line": 293
+            "line": 312
           },
           {
             "name": "MarkdownEditorStatusBar",
             "kind": "function",
-            "line": 245
+            "line": 264
           },
           {
             "name": "MarkdownEditorStatusBarProps",
             "kind": "interface",
-            "line": 237
+            "line": 256
           },
           {
             "name": "MarkdownEditorToolbar",
             "kind": "function",
-            "line": 106
+            "line": 125
           },
           {
             "name": "MarkdownEditorToolbarProps",
             "kind": "interface",
-            "line": 101
+            "line": 120
           },
           {
             "name": "MarkdownRenderer",
@@ -3357,7 +3357,7 @@
         "utils"
       ],
       "meta": {
-        "integrity": "sha256-ff5217dd192f3b9d80e2ed0a543c83c33593c8b7fd8416aac0aadd9c687e43d4",
+        "integrity": "sha256-4ed3b5a148ed7ab33f8cd588e6cad6108e0cdce5c794cb5442733f6368000707",
         "api": [
           {
             "name": "createRichTextExtensions",
@@ -3377,7 +3377,7 @@
           {
             "name": "RichTextEditor",
             "kind": "const",
-            "line": 907
+            "line": 1005
           },
           {
             "name": "RichTextEditorBubbleMenu",
@@ -3412,7 +3412,7 @@
           {
             "name": "RichTextEditorProps",
             "kind": "interface",
-            "line": 882
+            "line": 980
           },
           {
             "name": "RichTextEditorStatusBar",
@@ -6239,7 +6239,7 @@
         "use-code-editor"
       ],
       "meta": {
-        "integrity": "sha256-67e89817a6a5f96c0b07180abab672bfd32180957050846ae9031310b4089584",
+        "integrity": "sha256-be13831ddfde4488143236f9b7e0835d2a6706c93a3f7e069b66ff360854b97b",
         "api": [
           {
             "name": "countWords",

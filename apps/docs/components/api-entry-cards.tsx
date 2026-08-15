@@ -2,6 +2,7 @@ import {
   primaryEntry,
   safeCallableUsage,
 } from "@/lib/api-reference-quick-start"
+import { exportAnchor } from "@/lib/api-anchor"
 import type {
   RegistryApiEntry,
   RegistryApiMember,
@@ -23,15 +24,6 @@ const compoundParts = [
   "Close",
   "Item",
 ] as const
-
-function exportAnchor(itemName: string, exportName: string, prefix = "api") {
-  const slug = exportName
-    .replace(/([a-z0-9])([A-Z])/gu, "$1-$2")
-    .replace(/[^a-z0-9]+/giu, "-")
-    .replace(/^-|-$/gu, "")
-    .toLowerCase()
-  return `${prefix}-${itemName}-${slug || "export"}`
-}
 
 function exportDescription(
   item: RegistryItem,
@@ -132,7 +124,7 @@ function ApiEntryCards({
         const usage = entry.usage ? safeCallableUsage(entry, entry.usage) : ""
         return (
           <article
-            id={exportAnchor(item.name, entry.name, anchorPrefix)}
+            id={exportAnchor(item.name, entry.name, anchorPrefix, api)}
             key={entry.name}
             data-api-export={entry.name}
             className="min-w-0 scroll-mt-20 overflow-hidden rounded-xl border p-4"
@@ -187,7 +179,7 @@ function ApiEntryCards({
                     <dd className="mt-1 min-w-0 text-muted-foreground">
                       {propsTarget ? (
                         <a
-                          href={`#${exportAnchor(item.name, propsTarget.name, anchorPrefix)}`}
+                          href={`#${exportAnchor(item.name, propsTarget.name, anchorPrefix, api)}`}
                           className="font-mono break-words hover:underline"
                         >
                           {entry.propsType}
@@ -239,4 +231,4 @@ function ApiEntryCards({
   )
 }
 
-export { ApiEntryCards, exportAnchor, exportDescription }
+export { ApiEntryCards, exportDescription }

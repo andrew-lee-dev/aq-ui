@@ -2,7 +2,7 @@
 
 import { MarkdownEditor } from "@aq-ui/registry/components/markdown-editor"
 
-const markdownExample = `# Release checklist
+const markdownExample = `## Release checklist
 
 aq-ui renders **CommonMark** with GitHub Flavored Markdown.
 

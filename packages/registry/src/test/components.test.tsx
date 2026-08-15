@@ -275,6 +275,14 @@ describe("component contracts", () => {
     const resizeHandle = screen.getByRole("separator", {
       name: "Resize Name column",
     })
+    expect(headers[0]).toHaveClass("pe-6")
+    expect(resizeHandle).toHaveAttribute("aria-orientation", "vertical")
+    expect(resizeHandle).toHaveClass("min-h-6", "min-w-6", "w-6")
+    const resizeIndicator = resizeHandle.querySelector(
+      "[data-grid-resize-indicator]"
+    )
+    expect(resizeIndicator).toHaveAttribute("aria-hidden", "true")
+    expect(resizeIndicator).toHaveClass("w-px")
     resizeHandle.focus()
     expect(resizeHandle).toHaveAttribute("aria-valuenow", "120")
     await user.keyboard("{ArrowRight}")

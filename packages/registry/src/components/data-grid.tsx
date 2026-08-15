@@ -273,7 +273,8 @@ function DataGridInner<TData, TValue>(
                       }
                     }}
                     className={cn(
-                      "relative flex shrink-0 items-center border-e px-2 text-sm font-medium last:border-e-0",
+                      "relative flex shrink-0 items-center border-e ps-2 text-sm font-medium last:border-e-0",
+                      header.column.getCanResize() ? "pe-6" : "pe-2",
                       pinned && "sticky z-30 bg-background"
                     )}
                     style={{
@@ -316,7 +317,7 @@ function DataGridInner<TData, TValue>(
                         aria-valuemin={min}
                         aria-valuemax={max}
                         aria-valuenow={Math.round(header.getSize())}
-                        className="absolute inset-y-0 end-0 w-1 cursor-col-resize touch-none select-none hover:bg-primary focus-visible:w-2 focus-visible:bg-primary focus-visible:outline-none data-[resizing=true]:bg-primary"
+                        className="group absolute inset-y-0 end-0 z-10 min-h-6 w-6 min-w-6 cursor-col-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                         data-resizing={
                           header.column.getIsResizing() || undefined
                         }
@@ -327,7 +328,13 @@ function DataGridInner<TData, TValue>(
                         }
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
-                      />
+                      >
+                        <span
+                          aria-hidden="true"
+                          data-grid-resize-indicator=""
+                          className="pointer-events-none absolute inset-y-0 end-0 w-px bg-border transition-[width,background-color] group-hover:w-0.5 group-hover:bg-primary group-focus-visible:w-0.5 group-focus-visible:bg-primary group-data-[resizing=true]:w-0.5 group-data-[resizing=true]:bg-primary"
+                        />
+                      </button>
                     ) : null}
                   </div>
                 )

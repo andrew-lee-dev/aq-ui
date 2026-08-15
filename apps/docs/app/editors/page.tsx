@@ -86,8 +86,8 @@ export default function EditorsPage() {
           ))}
         </div>
       </section>
-      <section className="mt-12 grid gap-6 lg:grid-cols-2">
-        <div>
+      <section className="mt-12 grid min-w-0 gap-6 lg:grid-cols-2">
+        <div className="min-w-0">
           <h2 className="text-2xl font-semibold">Static code</h2>
           <CodeBlock
             code={
@@ -99,7 +99,7 @@ export default function EditorsPage() {
             highlightedLines={[1]}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-2xl font-semibold">Sanitized GFM</h2>
           <div className="mt-4 rounded-lg border p-4">
             <MarkdownRenderer

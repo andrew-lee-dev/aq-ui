@@ -17,6 +17,8 @@ interface RegistryFile {
 
 interface RegistryItem {
   name: string
+  title: string
+  description: string
   type: string
   version: string
   dependencies: string[]
@@ -32,6 +34,17 @@ interface RegistryItem {
 
 interface RegistryCatalog {
   items: RegistryItem[]
+}
+
+interface RegistrySearchItem {
+  name: string
+  title: string
+  description: string
+  type: string
+}
+
+interface RegistrySearchIndex {
+  items: RegistrySearchItem[]
 }
 
 const workspaceRoot = resolve(process.cwd(), "../..")
@@ -50,9 +63,16 @@ const supportedExternalDependencies = {
   ...registryPackage.devDependencies,
   ...registryPackage.dependencies,
 }
-const catalog = JSON.parse(
-  readFileSync(resolve(workspaceRoot, "registry.json"), "utf8")
-) as RegistryCatalog
+const catalogSource = readFileSync(
+  resolve(workspaceRoot, "registry.json"),
+  "utf8"
+)
+const catalog = JSON.parse(catalogSource) as RegistryCatalog
+const searchIndexSource = readFileSync(
+  resolve(workspaceRoot, "apps/docs/public/search-index.json"),
+  "utf8"
+)
+const searchIndex = JSON.parse(searchIndexSource) as RegistrySearchIndex
 
 function itemRecord(name: string) {
   return JSON.parse(
@@ -119,6 +139,56 @@ describe("registry contract", () => {
     expect(
       catalog.items.filter((item) => item.type === "registry:hook")
     ).toHaveLength(72)
+  })
+
+  it("generates a deterministic, lean search index for every public item", () => {
+    expect(searchIndex.items).toHaveLength(151)
+    expect(
+      searchIndex.items.filter((item) => item.type === "registry:ui")
+    ).toHaveLength(75)
+    expect(
+      searchIndex.items.filter((item) => item.type === "registry:hook")
+    ).toHaveLength(72)
+    expect(
+      searchIndex.items.filter((item) => item.type === "registry:style")
+    ).toHaveLength(1)
+    expect(
+      searchIndex.items.filter((item) => item.type === "registry:lib")
+    ).toHaveLength(3)
+
+    expect(searchIndex.items.map((item) => item.name)).toEqual(
+      catalog.items.map((item) => item.name)
+    )
+    expect(searchIndex.items.map((item) => item.name)).toEqual(
+      searchIndex.items.map((item) => item.name).sort()
+    )
+
+    for (const item of searchIndex.items) {
+      expect(Object.keys(item)).toEqual([
+        "name",
+        "title",
+        "description",
+        "type",
+      ])
+      expect(item.name).toMatch(/^[a-z0-9][a-z0-9-]*$/u)
+      expect(item.title).toBeTruthy()
+      expect(item.description).toBeTruthy()
+      expect(item.type).toMatch(/^registry:(?:ui|hook|style|lib)$/u)
+
+      const catalogItem = catalog.items.find(
+        (candidate) => candidate.name === item.name
+      )
+      expect(item).toEqual({
+        name: catalogItem?.name,
+        title: catalogItem?.title,
+        description: catalogItem?.description,
+        type: catalogItem?.type,
+      })
+    }
+
+    expect(Buffer.byteLength(searchIndexSource)).toBeLessThan(
+      Buffer.byteLength(catalogSource) * 0.2
+    )
   })
 
   it("uses the publishable CLI package version for every record", () => {

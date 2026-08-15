@@ -47,6 +47,32 @@ test("shared registry detail uses detailed per-item API records", () => {
   )
 })
 
+test("registry details expose compact, accessible collection navigation", () => {
+  const detail = read("components/registry-item-detail.tsx")
+
+  assert.match(detail, /href=\{`\/\$\{backCollection\}\/`\}/)
+  assert.match(detail, /Back to \{collectionLabel\}/)
+  assert.match(detail, /prefetch=\{false\}/)
+  assert.match(detail, /mb-5 flex w-fit/)
+  assert.match(detail, /hover:underline/)
+  assert.match(detail, /rtl:rotate-180/)
+  assert.match(detail, /focus-visible:outline/)
+  for (const editor of [
+    "code-block",
+    "code-editor",
+    "markdown-editor",
+    "markdown-renderer",
+    "rich-text-editor",
+  ]) {
+    assert.match(detail, new RegExp(`"${editor}"`, "u"))
+  }
+  assert.match(
+    detail,
+    /const backCollection = isEditor \? "editors" : collection/u
+  )
+  assert.match(detail, /isEditor\s*\n\s*\? "Editors"/u)
+})
+
 test("API shell stays server rendered with focused client islands", () => {
   const apiReference = read("components/api-reference.tsx")
   const entryCards = read("components/api-entry-cards.tsx")
@@ -92,6 +118,29 @@ test("API reference exposes quick start, anchors, contracts, and source", () => 
   assert.match(entryCards, /const hasDefaults =/)
   assert.match(entryCards, /const hasDescriptions =/)
   assert.match(entryCards, /safeCallableUsage\(entry, entry\.usage\)/)
+})
+
+test("API export anchors remain unique when names differ only by case", async () => {
+  const helper = read("lib/api-anchor.ts")
+  const javascript = ts.transpileModule(helper, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText
+  const anchorModule = await import(
+    `data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}`
+  )
+  const entries = [{ name: "toast" }, { name: "Toast" }]
+
+  assert.equal(
+    anchorModule.exportAnchor("toast", "toast", "api", entries),
+    "api-toast-toast"
+  )
+  assert.equal(
+    anchorModule.exportAnchor("toast", "Toast", "api", entries),
+    "api-toast-toast-2"
+  )
 })
 
 test("large APIs load rich details from the static record on demand", () => {

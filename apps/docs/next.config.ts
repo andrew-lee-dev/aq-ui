@@ -3,6 +3,8 @@ import createMDX from "@next/mdx"
 
 const nextConfig: NextConfig = {
   output: "export",
+  allowedDevOrigins: ["127.0.0.1"],
+  devIndicators: false,
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   trailingSlash: true,
   basePath: process.env.GITHUB_ACTIONS ? "/aq-ui" : "",

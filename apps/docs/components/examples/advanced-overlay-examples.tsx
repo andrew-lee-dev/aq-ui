@@ -134,7 +134,7 @@ function HoverCardExample() {
   return (
     <HoverCard>
       <HoverCardTrigger
-        href="#"
+        href="https://github.com/andrew-lee-dev/aq-ui"
         className="font-medium text-primary underline underline-offset-4"
       >
         @aq-ui

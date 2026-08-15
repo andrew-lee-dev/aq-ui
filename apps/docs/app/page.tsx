@@ -59,7 +59,7 @@ export default function HomePage() {
             Browse components <ArrowRightIcon data-icon="inline-end" />
           </Link>
           <a
-            href="https://github.com/aq-ui/aq-ui"
+            href="https://github.com/andrew-lee-dev/aq-ui"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
             View source

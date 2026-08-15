@@ -19,7 +19,10 @@ const routes = [
   {
     route: "/components/button/",
     html: "components/button/index.html",
-    budget: { initialGzipBytes: 310 * 1024, htmlRawBytes: 40 * 1024 },
+    // The persistent SSR documentation sidebar is core navigation, so the raw
+    // ceiling includes its progressive-enhancement markup. Transfer size keeps
+    // the stricter existing gzip budget.
+    budget: { initialGzipBytes: 310 * 1024, htmlRawBytes: 45 * 1024 },
   },
   {
     route: "/components/data-grid/",
@@ -34,7 +37,7 @@ const routes = [
   {
     route: "/components/markdown-renderer/",
     html: "components/markdown-renderer/index.html",
-    budget: { initialGzipBytes: 410 * 1024, htmlRawBytes: 50 * 1024 },
+    budget: { initialGzipBytes: 410 * 1024, htmlRawBytes: 55 * 1024 },
   },
   {
     route: "/components/questionnaire/",

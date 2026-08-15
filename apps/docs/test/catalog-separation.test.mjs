@@ -23,6 +23,7 @@ const hookDetail = source("app/hooks/[name]/page.tsx")
 const utilityDetail = source("app/utilities/[name]/page.tsx")
 const catalogSearch = source("components/catalog-search.tsx")
 const layout = source("app/layout.tsx")
+const siteNavigation = source("components/site-navigation.tsx")
 
 test("public catalogs partition all 151 registry items by type", () => {
   const components = registry.items.filter(
@@ -123,6 +124,40 @@ test("all five content families stay discoverable through canonical component li
   assert.match(editorsPage, /prefetch=\{false\}/u)
 })
 
+test("editor demos shrink on narrow viewports without adding a second page heading", () => {
+  const markdownEditorExample = source(
+    "components/examples/editor-markdown-editor-example.tsx"
+  )
+  const markdownRendererExample = source(
+    "components/examples/editor-markdown-renderer-example.tsx"
+  )
+
+  assert.match(editorsPage, /grid min-w-0 gap-6/u)
+  assert.equal(editorsPage.match(/<div className="min-w-0">/gu)?.length, 2)
+  assert.match(markdownEditorExample, /`## Release checklist/u)
+  assert.match(markdownRendererExample, /`## Release checklist/u)
+  assert.doesNotMatch(markdownEditorExample, /`# Release checklist/u)
+  assert.doesNotMatch(markdownRendererExample, /`# Release checklist/u)
+})
+
+test("interactive navigation examples use real fallback destinations", () => {
+  const navigationExamples = source(
+    "components/examples/advanced-navigation-examples.tsx"
+  )
+  const overlayExamples = source(
+    "components/examples/advanced-overlay-examples.tsx"
+  )
+
+  assert.doesNotMatch(navigationExamples, /href="#"/u)
+  assert.doesNotMatch(overlayExamples, /href="#"/u)
+  assert.match(navigationExamples, /href="\.\.\/"/u)
+  assert.match(
+    navigationExamples,
+    /href="\.\.\/\.\.\/utilities\/aq-neutral\/"/u
+  )
+  assert.match(overlayExamples, /github\.com\/andrew-lee-dev\/aq-ui/u)
+})
+
 test("catalog search exposes accessible filtering, reset focus, and mobile-safe status", () => {
   assert.match(catalogSearch, /type="search"/u)
   assert.match(catalogSearch, /role="status"/u)
@@ -142,10 +177,11 @@ test("catalog search exposes accessible filtering, reset focus, and mobile-safe 
   assert.match(utilityPage, /searchLabel="Search utilities"/u)
 })
 
-test("primary navigation labels the separated destinations clearly", () => {
-  assert.match(layout, />\s*Components\s*</u)
-  assert.match(layout, />\s*Hooks\s*</u)
-  assert.match(layout, />\s*Editors\s*</u)
-  assert.match(layout, />\s*Utilities\s*</u)
-  assert.doesNotMatch(layout, />\s*Catalog\s*</u)
+test("site navigation labels the separated destinations clearly", () => {
+  assert.match(layout, /<SiteNavigation \/>/u)
+  assert.match(siteNavigation, /label: "Components"/u)
+  assert.match(siteNavigation, /label: "Hooks"/u)
+  assert.match(siteNavigation, /label: "Editors"/u)
+  assert.match(siteNavigation, /label: "Utilities"/u)
+  assert.doesNotMatch(siteNavigation, /label: "Catalog"/u)
 })

@@ -637,6 +637,7 @@ function suggestionPosition(
 function RichTextSuggestionMenus() {
   const context = useRichTextEditorContext()
   const editor = context?.editor ?? null
+  const listboxId = React.useId()
   const [mention, setMention] = React.useState<TriggerMatch | null>(null)
   const [slash, setSlash] = React.useState<TriggerMatch | null>(null)
   const [mentionItems, setMentionItems] = React.useState<
@@ -645,21 +646,41 @@ function RichTextSuggestionMenus() {
   const [mentionLoading, setMentionLoading] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState(0)
   const mentionProvider = context?.mentionProvider
+  const suggestionQueryRef = React.useRef("")
+  const closeSuggestions = React.useCallback(() => {
+    suggestionQueryRef.current = ""
+    setMention(null)
+    setSlash(null)
+    setActiveIndex(0)
+  }, [])
 
   React.useEffect(() => {
     if (!editor) return
     const update = () => {
-      setMention(mentionProvider ? findTrigger(editor, "@") : null)
-      setSlash(findTrigger(editor, "/"))
+      const nextMention = mentionProvider ? findTrigger(editor, "@") : null
+      const nextSlash = findTrigger(editor, "/")
+      const nextQuery = nextMention
+        ? `mention:${nextMention.query}`
+        : nextSlash
+          ? `slash:${nextSlash.query}`
+          : ""
+      if (suggestionQueryRef.current !== nextQuery) {
+        suggestionQueryRef.current = nextQuery
+        setActiveIndex(0)
+      }
+      setMention(nextMention)
+      setSlash(nextSlash)
     }
     editor.on("transaction", update)
     editor.on("selectionUpdate", update)
+    editor.on("blur", closeSuggestions)
     update()
     return () => {
       editor.off("transaction", update)
       editor.off("selectionUpdate", update)
+      editor.off("blur", closeSuggestions)
     }
-  }, [editor, mentionProvider])
+  }, [closeSuggestions, editor, mentionProvider])
 
   React.useEffect(() => {
     if (!mention || !mentionProvider) {
@@ -746,26 +767,90 @@ function RichTextSuggestionMenus() {
   )
 
   const visibleItems = mention ? mentionItems : slash ? slashCommands : []
+  const menuOpen = Boolean(mention || slash)
+  const resolvedActiveIndex =
+    visibleItems.length > 0 ? Math.min(activeIndex, visibleItems.length - 1) : 0
+  const activeOptionId =
+    visibleItems.length > 0
+      ? `${listboxId}-option-${resolvedActiveIndex}`
+      : undefined
 
   React.useEffect(() => {
-    if (!editor || visibleItems.length === 0) return
+    if (!editor) return
+    const textbox = editor.view.dom
+    textbox.setAttribute("aria-haspopup", "listbox")
+    textbox.setAttribute("aria-expanded", menuOpen ? "true" : "false")
+    if (menuOpen) textbox.setAttribute("aria-controls", listboxId)
+    else textbox.removeAttribute("aria-controls")
+    if (activeOptionId) {
+      textbox.setAttribute("aria-activedescendant", activeOptionId)
+    } else {
+      textbox.removeAttribute("aria-activedescendant")
+    }
+
+    return () => {
+      textbox.removeAttribute("aria-haspopup")
+      textbox.removeAttribute("aria-expanded")
+      textbox.removeAttribute("aria-controls")
+      textbox.removeAttribute("aria-activedescendant")
+    }
+  }, [activeOptionId, editor, listboxId, menuOpen])
+
+  React.useEffect(() => {
+    if (!editor || !menuOpen) return
+    const onFocusIn = (event: FocusEvent) => {
+      if (!(event.target instanceof Node)) return
+      const textbox = editor.view.dom
+      const listbox = document.getElementById(listboxId)
+      if (textbox.contains(event.target) || listbox?.contains(event.target))
+        return
+      closeSuggestions()
+    }
+    document.addEventListener("focusin", onFocusIn, true)
+    return () => document.removeEventListener("focusin", onFocusIn, true)
+  }, [closeSuggestions, editor, listboxId, menuOpen])
+
+  React.useEffect(() => {
+    if (!editor || !menuOpen) return
     const onKeyDown = (event: KeyboardEvent) => {
+      const textbox = editor.view.dom
+      const activeElement = document.activeElement
+      if (
+        !(activeElement instanceof Node) ||
+        !textbox.contains(activeElement)
+      ) {
+        return
+      }
+
       if (event.key === "ArrowDown") {
+        if (visibleItems.length === 0) return
         event.preventDefault()
-        setActiveIndex((index) => (index + 1) % visibleItems.length)
-      } else if (event.key === "ArrowUp") {
-        event.preventDefault()
+        event.stopPropagation()
         setActiveIndex(
-          (index) => (index - 1 + visibleItems.length) % visibleItems.length
+          (index) =>
+            (Math.min(index, visibleItems.length - 1) + 1) % visibleItems.length
+        )
+      } else if (event.key === "ArrowUp") {
+        if (visibleItems.length === 0) return
+        event.preventDefault()
+        event.stopPropagation()
+        setActiveIndex(
+          (index) =>
+            (Math.min(index, visibleItems.length - 1) -
+              1 +
+              visibleItems.length) %
+            visibleItems.length
         )
       } else if (event.key === "Escape") {
         event.preventDefault()
-        setMention(null)
-        setSlash(null)
+        event.stopPropagation()
+        closeSuggestions()
       } else if (event.key === "Enter") {
+        if (visibleItems.length === 0) return
         event.preventDefault()
+        event.stopPropagation()
         if (mention) {
-          const item = mentionItems[activeIndex]
+          const item = mentionItems[resolvedActiveIndex]
           if (item) {
             editor
               .chain()
@@ -778,7 +863,7 @@ function RichTextSuggestionMenus() {
               .run()
           }
         } else if (slash) {
-          const command = slashCommands[activeIndex]
+          const command = slashCommands[resolvedActiveIndex]
           if (command) {
             editor
               .chain()
@@ -793,10 +878,12 @@ function RichTextSuggestionMenus() {
     window.addEventListener("keydown", onKeyDown, true)
     return () => window.removeEventListener("keydown", onKeyDown, true)
   }, [
-    activeIndex,
+    closeSuggestions,
     editor,
+    menuOpen,
     mention,
     mentionItems,
+    resolvedActiveIndex,
     slash,
     slashCommands,
     visibleItems.length,
@@ -808,25 +895,34 @@ function RichTextSuggestionMenus() {
   return (
     <div
       data-slot={mention ? "rich-text-mention-menu" : "rich-text-slash-menu"}
+      id={listboxId}
       role="listbox"
       aria-label={mention ? "Mention suggestions" : "Insert block"}
+      aria-busy={mentionLoading || undefined}
       className="fixed z-50 min-w-52 overflow-hidden rounded-lg border bg-popover p-1 text-sm text-popover-foreground shadow-md"
       style={{ left: position.left, top: position.top }}
     >
       {mentionLoading ? (
-        <div className="flex items-center gap-2 px-2 py-1.5 text-muted-foreground">
+        <div
+          role="status"
+          className="flex items-center gap-2 px-2 py-1.5 text-muted-foreground"
+        >
           <Loader2Icon className="size-3.5 animate-spin" aria-hidden="true" />
           Loading…
         </div>
       ) : visibleItems.length === 0 ? (
-        <div className="px-2 py-1.5 text-muted-foreground">No results</div>
+        <div role="status" className="px-2 py-1.5 text-muted-foreground">
+          No results
+        </div>
       ) : mention ? (
         mentionItems.map((item, index) => (
           <button
             key={item.id}
+            id={`${listboxId}-option-${index}`}
             type="button"
             role="option"
-            aria-selected={index === activeIndex}
+            aria-selected={index === resolvedActiveIndex}
+            tabIndex={-1}
             className="flex w-full flex-col rounded-md px-2 py-1.5 text-start hover:bg-muted aria-selected:bg-muted"
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => {
@@ -856,9 +952,11 @@ function RichTextSuggestionMenus() {
         slashCommands.map((command, index) => (
           <button
             key={command.label}
+            id={`${listboxId}-option-${index}`}
             type="button"
             role="option"
-            aria-selected={index === activeIndex}
+            aria-selected={index === resolvedActiveIndex}
+            tabIndex={-1}
             className="block w-full rounded-md px-2 py-1.5 text-start hover:bg-muted aria-selected:bg-muted"
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => {

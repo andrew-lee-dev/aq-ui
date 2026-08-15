@@ -1,11 +1,18 @@
 import * as React from "react"
 import type { Editor } from "@tiptap/core"
-import { act, render, renderHook, waitFor } from "@testing-library/react"
+import {
+  act,
+  fireEvent,
+  render,
+  renderHook,
+  waitFor,
+} from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
 import { CodeBlock } from "@aq-ui/registry/components/code-block"
 import { CodeEditor } from "@aq-ui/registry/components/code-editor"
+import { MarkdownEditor } from "@aq-ui/registry/components/markdown-editor"
 import { MarkdownRenderer } from "@aq-ui/registry/components/markdown-renderer"
 import { RichTextEditor } from "@aq-ui/registry/components/rich-text-editor"
 import { RichTextRenderer } from "@aq-ui/registry/components/rich-text-renderer"
@@ -129,6 +136,151 @@ mystery-token
 })
 
 describe("interactive editor lifecycle", () => {
+  it("contains focus and restores inline constraints around Markdown fullscreen", async () => {
+    const { container } = render(
+      <div>
+        <button type="button" data-testid="outside-control">
+          Outside control
+        </button>
+        <MarkdownEditor
+          defaultValue="# Fullscreen"
+          minHeight={440}
+          maxHeight={600}
+          style={{ maxWidth: 720 }}
+        />
+      </div>
+    )
+    const root = container.querySelector<HTMLElement>(
+      '[data-slot="markdown-editor"]'
+    )
+    expect(root).not.toBeNull()
+    await waitFor(() =>
+      expect(root?.querySelector(".cm-editor")).not.toBeNull()
+    )
+    const codeMirror = root?.querySelector(".cm-editor")
+    const enterFullscreen = root?.querySelector<HTMLButtonElement>(
+      '[aria-label="Enter fullscreen"]'
+    )
+    expect(enterFullscreen).not.toBeNull()
+    enterFullscreen?.focus()
+    fireEvent.click(enterFullscreen!)
+
+    await waitFor(() => expect(root).toHaveAttribute("role", "dialog"))
+    expect(root).toHaveAttribute("aria-modal", "true")
+    expect(root).toHaveAccessibleName("Fullscreen Markdown editor")
+    expect(root?.style.position).toBe("fixed")
+    expect(root?.style.width).toBe("100vw")
+    expect(root?.style.height).toBe("100dvh")
+    expect(root?.style.minHeight).toBe("0px")
+    expect(root?.style.maxHeight).toBe("none")
+    expect(root?.style.maxWidth).toBe("none")
+    expect(document.body.style.overflow).toBe("hidden")
+
+    const outside = container.querySelector<HTMLButtonElement>(
+      '[data-testid="outside-control"]'
+    )
+    outside?.focus()
+    expect(root?.contains(document.activeElement)).toBe(true)
+
+    const nestedModal = document.createElement("div")
+    nestedModal.setAttribute("role", "dialog")
+    nestedModal.setAttribute("aria-modal", "true")
+    const nestedControl = document.createElement("button")
+    nestedControl.type = "button"
+    nestedModal.append(nestedControl)
+    root?.append(nestedModal)
+    nestedControl.focus()
+    fireEvent.keyDown(nestedControl, { key: "Escape" })
+    expect(root).toHaveAttribute("role", "dialog")
+    nestedModal.remove()
+
+    const markdownSource = root?.querySelector<HTMLElement>(
+      '[role="textbox"][aria-label="Markdown source"]'
+    )
+    expect(markdownSource).not.toBeNull()
+    markdownSource?.focus()
+    markdownSource?.addEventListener(
+      "keydown",
+      (event) => event.preventDefault(),
+      { once: true }
+    )
+    fireEvent.keyDown(markdownSource!, { key: "Escape" })
+    await waitFor(() => expect(root).not.toHaveAttribute("role", "dialog"))
+    await waitFor(() => expect(enterFullscreen).toHaveFocus())
+    expect(root).not.toHaveAttribute("aria-modal")
+    expect(root?.style.minHeight).toBe("440px")
+    expect(root?.style.maxHeight).toBe("600px")
+    expect(root?.style.maxWidth).toBe("720px")
+    expect(document.body.style.overflow).toBe("")
+    expect(root?.querySelector(".cm-editor")).toBe(codeMirror)
+  })
+
+  it("keeps rich-text suggestions attached to the focused editor", async () => {
+    const editor = { current: null as Editor | null }
+    const { container } = render(
+      <div>
+        <RichTextEditor
+          onReady={(nextEditor) => {
+            editor.current = nextEditor
+          }}
+        />
+        <input aria-label="External search" />
+      </div>
+    )
+
+    await waitFor(() => expect(editor.current).not.toBeNull())
+    act(() => {
+      editor.current?.chain().focus("end").insertContent("/").run()
+    })
+    const textbox = container.querySelector<HTMLElement>(
+      '[data-slot="rich-text-editor"] [role="textbox"]'
+    )
+    await waitFor(() =>
+      expect(container.querySelector('[role="listbox"]')).not.toBeNull()
+    )
+    const listbox = container.querySelector<HTMLElement>('[role="listbox"]')
+    const firstOption = listbox?.querySelector<HTMLElement>('[role="option"]')
+    expect(textbox).toHaveAttribute("aria-haspopup", "listbox")
+    expect(textbox).toHaveAttribute("aria-expanded", "true")
+    expect(textbox).toHaveAttribute("aria-controls", listbox?.id)
+    expect(textbox).toHaveAttribute("aria-activedescendant", firstOption?.id)
+    expect(firstOption).toHaveAttribute("tabindex", "-1")
+
+    textbox?.focus()
+    fireEvent.keyDown(textbox!, { key: "ArrowDown" })
+    await waitFor(() =>
+      expect(
+        listbox?.querySelectorAll<HTMLElement>('[role="option"]')[1]
+      ).toHaveAttribute("aria-selected", "true")
+    )
+
+    const externalSearch = container.querySelector<HTMLInputElement>(
+      '[aria-label="External search"]'
+    )
+    externalSearch?.focus()
+    fireEvent.keyDown(externalSearch!, { key: "ArrowDown" })
+    fireEvent.keyDown(externalSearch!, { key: "Enter" })
+    await waitFor(() =>
+      expect(container.querySelector('[role="listbox"]')).toBeNull()
+    )
+    expect(textbox).toHaveAttribute("aria-expanded", "false")
+    expect(textbox).not.toHaveAttribute("aria-controls")
+    expect(editor.current?.getText()).toBe("/")
+
+    act(() => {
+      editor.current?.chain().focus("end").insertContent("no-match").run()
+    })
+    await waitFor(() => expect(container).toHaveTextContent("No results"))
+    expect(textbox).toHaveAttribute("aria-expanded", "true")
+    expect(textbox).not.toHaveAttribute("aria-activedescendant")
+    textbox?.focus()
+    fireEvent.keyDown(textbox!, { key: "Escape" })
+    await waitFor(() =>
+      expect(container.querySelector('[role="listbox"]')).toBeNull()
+    )
+    expect(textbox).toHaveAttribute("aria-expanded", "false")
+  })
+
   it("does not reparse unchanged Markdown during parent renders", () => {
     const paragraph = vi.fn(({ children }: React.ComponentProps<"p">) => (
       <p>{children}</p>

@@ -73,6 +73,10 @@ function useMarkdownEditor({
     [currentMode, modeControlled, onModeChange]
   )
 
+  const toggleFullscreen = React.useCallback(() => {
+    setFullscreen((current) => !current)
+  }, [])
+
   const runCommand = React.useCallback(
     (command: MarkdownCommand, editor: CodeEditorHandle | null) => {
       if (!editor) return
@@ -168,7 +172,7 @@ function useMarkdownEditor({
     setMode,
     fullscreen,
     setFullscreen,
-    toggleFullscreen: () => setFullscreen((current) => !current),
+    toggleFullscreen,
     runCommand,
     characters: currentValue.length,
     words: countWords(currentValue),

@@ -57,7 +57,7 @@ function BreadcrumbExample() {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="#">Docs</BreadcrumbLink>
+          <BreadcrumbLink href="../">Docs</BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
@@ -84,7 +84,7 @@ function PaginationExample() {
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            href="#"
+            href={`?page=${Math.max(1, page - 1)}`}
             disabled={page === 1}
             onClick={selectPage(page - 1)}
           />
@@ -92,7 +92,7 @@ function PaginationExample() {
         {[1, 2, 3].map((value) => (
           <PaginationItem key={value}>
             <PaginationLink
-              href="#"
+              href={`?page=${value}`}
               isActive={page === value}
               onClick={selectPage(value)}
             >
@@ -105,7 +105,7 @@ function PaginationExample() {
         </PaginationItem>
         <PaginationItem>
           <PaginationNext
-            href="#"
+            href={`?page=${Math.min(5, page + 1)}`}
             disabled={page === 5}
             onClick={selectPage(page + 1)}
           />
@@ -123,7 +123,7 @@ function NavigationMenuExample() {
           <NavigationMenuTrigger>Components</NavigationMenuTrigger>
           <NavigationMenuContent>
             <div className="grid w-80 gap-1 p-1">
-              <NavigationMenuLink href="#">
+              <NavigationMenuLink href="../">
                 <Code2Icon />
                 <span>
                   <span className="block font-medium">Components</span>
@@ -132,7 +132,7 @@ function NavigationMenuExample() {
                   </span>
                 </span>
               </NavigationMenuLink>
-              <NavigationMenuLink href="#">
+              <NavigationMenuLink href="../../utilities/aq-neutral/">
                 <PaletteIcon />
                 <span>
                   <span className="block font-medium">Themes</span>
@@ -145,7 +145,9 @@ function NavigationMenuExample() {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink href="#">Documentation</NavigationMenuLink>
+          <NavigationMenuLink href="../../getting-started/">
+            Documentation
+          </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>

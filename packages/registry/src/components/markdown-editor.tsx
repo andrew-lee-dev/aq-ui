@@ -57,6 +57,25 @@ const MarkdownEditorContext =
   React.createContext<MarkdownEditorContextValue | null>(null)
 
 const emptyMarkdownPlugins: PluggableList = []
+const fullscreenFocusableSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  'input:not([disabled]):not([type="hidden"])',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[contenteditable="true"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(",")
+
+function fullscreenFocusableElements(root: HTMLElement) {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(fullscreenFocusableSelector)
+  ).filter(
+    (element) =>
+      element.tabIndex >= 0 &&
+      !element.closest('[hidden], [aria-hidden="true"]')
+  )
+}
 
 function safeUploadedMarkdownUrl(value: string) {
   const url = value.trim()
@@ -341,6 +360,11 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
       statusBar = true,
       className,
       style,
+      role,
+      tabIndex,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-modal": ariaModal,
       onKeyDownCapture,
       onPasteCapture,
       onDropCapture,
@@ -376,7 +400,16 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
     const [uploading, setUploading] = React.useState(0)
     const [uploadError, setUploadError] = React.useState<Error | null>(null)
     const uploadsRef = React.useRef(new Set<AbortController>())
+    const rootRef = React.useRef<HTMLDivElement | null>(null)
     const deferredValue = React.useDeferredValue(markdownValue)
+    const setRootRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        rootRef.current = node
+        if (typeof forwardedRef === "function") forwardedRef(node)
+        else if (forwardedRef) forwardedRef.current = node
+      },
+      [forwardedRef]
+    )
 
     const handleValueChange = React.useCallback(
       (nextValue: string) => {
@@ -454,15 +487,67 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
 
     React.useEffect(() => {
       if (!fullscreen) return
+      const root = rootRef.current
+      if (!root) return
+
       const previousOverflow = document.body.style.overflow
+      const previouslyFocused =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null
       document.body.style.overflow = "hidden"
-      const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") setFullscreen(false)
+
+      const focusInside = (last = false) => {
+        const focusable = fullscreenFocusableElements(root)
+        const target = last ? focusable.at(-1) : focusable[0]
+        ;(target ?? root).focus({ preventScroll: true })
       }
+
+      if (!root.contains(document.activeElement)) {
+        queueMicrotask(() => {
+          if (rootRef.current === root && fullscreen) focusInside()
+        })
+      }
+
+      const onFocusIn = (event: FocusEvent) => {
+        if (event.target instanceof Node && root.contains(event.target)) return
+        focusInside()
+      }
+
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.defaultPrevented || event.key !== "Tab") return
+        const focusable = fullscreenFocusableElements(root)
+        if (focusable.length === 0) {
+          event.preventDefault()
+          root.focus({ preventScroll: true })
+          return
+        }
+
+        const active = document.activeElement
+        const first = focusable[0]
+        const last = focusable.at(-1)
+        if (
+          event.shiftKey
+            ? active === first || active === root || !root.contains(active)
+            : active === last || active === root || !root.contains(active)
+        ) {
+          event.preventDefault()
+          if (event.shiftKey) focusInside(true)
+          else focusInside()
+        }
+      }
+
+      document.addEventListener("focusin", onFocusIn)
       document.addEventListener("keydown", onKeyDown)
       return () => {
         document.body.style.overflow = previousOverflow
+        document.removeEventListener("focusin", onFocusIn)
         document.removeEventListener("keydown", onKeyDown)
+        queueMicrotask(() => {
+          if (previouslyFocused?.isConnected) {
+            previouslyFocused.focus({ preventScroll: true })
+          }
+        })
       }
     }, [fullscreen, setFullscreen])
 
@@ -527,12 +612,26 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
       event: React.KeyboardEvent<HTMLDivElement>
     ) => {
       onKeyDownCapture?.(event)
-      if (
-        event.defaultPrevented ||
-        readOnly ||
-        disabled ||
-        !(event.metaKey || event.ctrlKey)
-      ) {
+      if (event.defaultPrevented) return
+
+      if (fullscreen && event.key === "Escape") {
+        const fullscreenRoot = rootRef.current
+        const targetModal =
+          event.target instanceof Element
+            ? event.target.closest<HTMLElement>(
+                '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]'
+              )
+            : null
+
+        if (!targetModal || targetModal === fullscreenRoot) {
+          event.preventDefault()
+          event.stopPropagation()
+          setFullscreen(false)
+        }
+        return
+      }
+
+      if (readOnly || disabled || !(event.metaKey || event.ctrlKey)) {
         return
       }
 
@@ -576,19 +675,43 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
       }
     }
 
+    const editorStyle: React.CSSProperties = fullscreen
+      ? {
+          ...style,
+          position: "fixed",
+          inset: 0,
+          width: "100vw",
+          height: "100dvh",
+          minWidth: 0,
+          maxWidth: "none",
+          minHeight: 0,
+          maxHeight: "none",
+          margin: 0,
+        }
+      : { minHeight, maxHeight, ...style }
+
     return (
       <MarkdownEditorContext.Provider value={context}>
         <div
-          ref={forwardedRef}
+          ref={setRootRef}
           data-slot="markdown-editor"
           data-mode={editorMode}
           data-fullscreen={fullscreen ? "" : undefined}
           data-disabled={disabled ? "" : undefined}
+          role={fullscreen ? "dialog" : role}
+          aria-modal={fullscreen ? true : ariaModal}
+          aria-labelledby={ariaLabelledBy}
+          aria-label={
+            fullscreen && !ariaLabelledBy
+              ? (ariaLabel ?? "Fullscreen Markdown editor")
+              : ariaLabel
+          }
+          tabIndex={fullscreen ? -1 : tabIndex}
           className={cn(
             "flex min-w-0 flex-col overflow-hidden rounded-lg border bg-background text-foreground shadow-xs focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 data-fullscreen:fixed data-fullscreen:inset-0 data-fullscreen:z-50 data-fullscreen:rounded-none data-disabled:opacity-50",
             className
           )}
-          style={{ minHeight, maxHeight, ...style }}
+          style={editorStyle}
           onKeyDownCapture={handleKeyboardShortcut}
           onPasteCapture={handlePaste}
           onDropCapture={handleDrop}

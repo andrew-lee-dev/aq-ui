@@ -1187,7 +1187,20 @@ const catalog = {
   }),
 }
 
+// Keep the command palette payload independent from the install catalog. The
+// catalog intentionally carries dependency and API metadata that is useful to
+// the CLI, but unnecessary for documentation search.
+const searchIndex = {
+  items: publicItems.map(({ name, title, description, type }) => ({
+    name,
+    title,
+    description,
+    type,
+  })),
+}
+
 await ensureWrite(join(publicRoot, "registry.json"), catalog)
+await ensureWrite(join(publicRoot, "search-index.json"), searchIndex)
 await ensureWrite(join(workspaceRoot, "registry.json"), catalog)
 for (const item of items) {
   await ensureWrite(join(outputRoot, `${item.name}.json`), item)

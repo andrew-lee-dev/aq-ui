@@ -2,6 +2,11 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 import "@aq-ui/registry/globals.css"
+import {
+  MobileSiteNavigation,
+  SiteNavigation,
+} from "@/components/site-navigation"
+import { SiteSearch } from "@/components/site-search"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -16,44 +21,34 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="font-sans antialiased">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className="scroll-pt-16 font-sans antialiased"
+    >
       <body className="min-h-svh">
         <ThemeProvider>
-          <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-            <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 sm:px-6 md:h-14 md:flex-nowrap md:py-0">
-              <Link href="/" className="font-semibold tracking-tight">
+          <a
+            href="#main-content"
+            className="fixed start-4 top-3 z-[100] -translate-y-20 rounded-md bg-background px-3 py-2 text-sm font-medium shadow-lg ring-1 ring-border transition-transform focus:translate-y-0 focus:ring-2 focus:ring-ring focus:outline-none"
+          >
+            Skip to content
+          </a>
+          <header className="sticky top-0 z-40 h-14 border-b bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/75">
+            <div className="flex h-full items-center gap-2 px-3 sm:gap-4 sm:px-6">
+              <MobileSiteNavigation />
+              <Link
+                href="/"
+                prefetch={false}
+                className="shrink-0 font-semibold tracking-tight outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 aq-ui
               </Link>
-              <nav
-                aria-label="Primary navigation"
-                className="order-last flex w-full items-center gap-4 overflow-x-auto text-sm whitespace-nowrap text-muted-foreground md:order-none md:w-auto md:overflow-visible"
-              >
-                <Link
-                  href="/getting-started/"
-                  className="hover:text-foreground"
-                >
-                  Docs
-                </Link>
-                <Link href="/components/" className="hover:text-foreground">
-                  Components
-                </Link>
-                <Link href="/hooks/" className="hover:text-foreground">
-                  Hooks
-                </Link>
-                <Link href="/editors/" className="hover:text-foreground">
-                  Editors
-                </Link>
-                <Link href="/utilities/" className="hover:text-foreground">
-                  Utilities
-                </Link>
-                <Link href="/cli/" className="hover:text-foreground">
-                  CLI
-                </Link>
-              </nav>
-              <div className="ms-auto flex items-center gap-2">
+              <div className="ms-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+                <SiteSearch />
                 <a
-                  href="https://github.com/aq-ui/aq-ui"
-                  className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
+                  href="https://github.com/andrew-lee-dev/aq-ui"
+                  className="hidden text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring md:inline"
                 >
                   GitHub
                 </a>
@@ -61,21 +56,33 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          {children}
-          <footer className="border-t">
-            <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:px-6">
-              <p>aq-ui · Open source under the MIT License.</p>
-              <div className="flex flex-wrap items-center gap-4">
-                <Link
-                  href="/contributing/registry-authoring/"
-                  className="hover:text-foreground"
-                >
-                  Registry authoring
-                </Link>
-                <p>React 18.3/19 · Tailwind CSS 4 · Base UI</p>
+          <div className="flex min-h-[calc(100svh-3.5rem)]">
+            <SiteNavigation />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div
+                id="main-content"
+                tabIndex={-1}
+                className="min-w-0 flex-1 scroll-mt-16 outline-none"
+              >
+                {children}
               </div>
+              <footer className="border-t">
+                <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:px-6">
+                  <p>aq-ui · Open source under the MIT License.</p>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Link
+                      href="/contributing/registry-authoring/"
+                      prefetch={false}
+                      className="outline-none hover:text-foreground focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      Registry authoring
+                    </Link>
+                    <p>React 18.3/19 · Tailwind CSS 4 · Base UI</p>
+                  </div>
+                </div>
+              </footer>
             </div>
-          </footer>
+          </div>
         </ThemeProvider>
       </body>
     </html>

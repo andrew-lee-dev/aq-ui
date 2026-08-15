@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { useFileUpload } from "@aq-ui/registry/hooks/use-file-upload"
 import { useFormField } from "@aq-ui/registry/hooks/use-form-field"
+import { useMarkdownEditor } from "@aq-ui/registry/hooks/use-markdown-editor"
 import {
   createPaginationRange,
   usePagination,
@@ -14,6 +15,19 @@ import {
 } from "@aq-ui/registry/hooks/use-tree-view"
 
 describe("controller hooks", () => {
+  it("exposes stable Markdown fullscreen controls", () => {
+    const { result, rerender } = renderHook(() => useMarkdownEditor())
+    const toggleFullscreen = result.current.toggleFullscreen
+
+    act(() => result.current.toggleFullscreen())
+    expect(result.current.fullscreen).toBe(true)
+    rerender()
+    expect(result.current.toggleFullscreen).toBe(toggleFullscreen)
+
+    act(() => result.current.setFullscreen(false))
+    expect(result.current.fullscreen).toBe(false)
+  })
+
   it("builds stable pagination ranges and clamps navigation", () => {
     expect(createPaginationRange(5, 10)).toEqual([
       1,

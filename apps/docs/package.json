@@ -23,8 +23,8 @@
     "lucide-react": "^1.31.0",
     "next": "16.3.1",
     "next-themes": "^0.4.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@aq-ui/eslint-config": "workspace:^",
@@ -38,11 +38,11 @@
     "@storybook/nextjs-vite": "10.5.8",
     "@tailwindcss/postcss": "^4",
     "@types/mdx": "^2.0.14",
-    "@types/node": "^20",
+    "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^10",
     "storybook": "10.5.8",
-    "typescript": "^5"
+    "typescript": "^7"
   }
 }

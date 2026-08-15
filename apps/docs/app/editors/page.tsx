@@ -12,7 +12,7 @@ import { MarkdownRenderer } from "@aq-ui/registry/components/markdown-renderer"
 
 export const metadata: Metadata = { title: "Content editors" }
 
-const editors = [
+const contentFamilies = [
   {
     name: "code-editor",
     title: "Code Editor",
@@ -30,6 +30,18 @@ const editors = [
     title: "Rich Text Editor",
     description:
       "Canonical Tiptap JSON with production formatting, lists, tables, images, attachments, mentions, slash commands, uploads, an SSR-safe static renderer, and server JSON/HTML conversion.",
+  },
+  {
+    name: "code-block",
+    title: "Code Block",
+    description:
+      "SSR-compatible static syntax highlighting with copy, filenames, line numbers, highlighted lines, wrapping, and diff markers.",
+  },
+  {
+    name: "markdown-renderer",
+    title: "Markdown Renderer",
+    description:
+      "SSR-compatible CommonMark and GFM rendering with sanitized HTML, safe links, heading IDs, and fenced code through Code Block.",
   },
 ]
 
@@ -53,22 +65,27 @@ export default function EditorsPage() {
         and installs only the selected production modules. Use{" "}
         <code>--languages all</code> for the complete built-in set.
       </p>
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
-        {editors.map((editor) => (
-          <Link
-            key={editor.name}
-            href={`/components/${editor.name}/`}
-            prefetch={false}
-          >
-            <Card className="h-full transition-colors hover:bg-muted/50">
-              <CardHeader>
-                <CardTitle>{editor.title}</CardTitle>
-                <CardDescription>{editor.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <section className="mt-10" aria-labelledby="content-families-heading">
+        <h2 id="content-families-heading" className="text-2xl font-semibold">
+          Explore all content families
+        </h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {contentFamilies.map((editor) => (
+            <Link
+              key={editor.name}
+              href={`/components/${editor.name}/`}
+              prefetch={false}
+            >
+              <Card className="h-full transition-colors hover:bg-muted/50">
+                <CardHeader>
+                  <CardTitle>{editor.title}</CardTitle>
+                  <CardDescription>{editor.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
       <section className="mt-12 grid gap-6 lg:grid-cols-2">
         <div>
           <h2 className="text-2xl font-semibold">Static code</h2>

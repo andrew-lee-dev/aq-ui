@@ -12,19 +12,38 @@ function read(relativePath) {
   return readFileSync(resolve(docsRoot, relativePath), "utf8")
 }
 
-test("component routes use detailed per-item API records", () => {
-  const page = read("app/components/[name]/page.tsx")
+test("shared registry detail uses detailed per-item API records", () => {
+  const detail = read("components/registry-item-detail.tsx")
+  const componentPage = read("app/components/[name]/page.tsx")
+  const hookPage = read("app/hooks/[name]/page.tsx")
+  const utilityPage = read("app/utilities/[name]/page.tsx")
 
-  assert.match(page, /getRegistryRecord/)
-  assert.match(page, /const record = getRegistryRecord\(item\.name\) \?\? item/)
+  assert.match(detail, /getRegistryRecord/)
   assert.match(
-    page,
+    detail,
+    /const record = getRegistryRecord\(item\.name\) \?\? item/
+  )
+  assert.match(
+    detail,
     /<ApiReference item=\{record\} compactMembers=\{item\.name === "button"\} \/>/
   )
-  assert.doesNotMatch(page, /item\.meta\.api\.map/)
-  assert.ok(page.indexOf("<ApiReference") > page.indexOf("<ButtonGuide"))
+  assert.doesNotMatch(detail, /item\.meta\.api\.map/)
+  assert.ok(detail.indexOf("<ApiReference") > detail.indexOf("<ButtonGuide"))
   assert.ok(
-    page.indexOf("<ApiReference") < page.indexOf("item.registryDependencies")
+    detail.indexOf("<ApiReference") <
+      detail.indexOf("item.registryDependencies")
+  )
+  assert.match(
+    componentPage,
+    /<RegistryItemDetail item=\{item\} collection="components" \/>/
+  )
+  assert.match(
+    hookPage,
+    /<RegistryItemDetail item=\{item\} collection="hooks" \/>/
+  )
+  assert.match(
+    utilityPage,
+    /<RegistryItemDetail item=\{item\} collection="utilities" \/>/
   )
 })
 

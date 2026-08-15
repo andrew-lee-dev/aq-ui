@@ -1,61 +1,86 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { Badge } from "@aq-ui/registry/components/badge"
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@aq-ui/registry/components/card"
+  CatalogSearch,
+  type CatalogSearchSection,
+} from "@/components/catalog-search"
+import { getRegistry } from "@/lib/registry"
 
-import { getRegistry, type RegistryItem } from "@/lib/registry"
+export const metadata: Metadata = { title: "Components" }
 
-export const metadata: Metadata = { title: "Components and hooks" }
+const contentComponentNames = new Set([
+  "code-block",
+  "code-editor",
+  "markdown-editor",
+  "markdown-renderer",
+  "rich-text-editor",
+])
 
-export default function CatalogPage() {
-  const groups = getRegistry().items.reduce<Record<string, RegistryItem[]>>(
-    (result, item) => {
-      const group = (result[item.type] ??= [])
-      group.push(item)
-      return result
-    },
-    {}
+export default function ComponentsPage() {
+  const components = getRegistry().items.filter(
+    (item) => item.type === "registry:ui"
   )
+  const sections: CatalogSearchSection[] = [
+    {
+      id: "ui-components",
+      title: "UI components",
+      description:
+        "Accessible controls, forms, overlays, navigation, data display, feedback, and advanced application patterns.",
+      items: components
+        .filter((item) => !contentComponentNames.has(item.name))
+        .map((item) => ({
+          name: item.name,
+          title: item.title,
+          description: item.description,
+          href: `/components/${item.name}/`,
+        })),
+    },
+    {
+      id: "content-components",
+      title: "Content and editors",
+      description:
+        "Static code and Markdown rendering plus CodeMirror, Markdown, and rich-text editing families.",
+      items: components
+        .filter((item) => contentComponentNames.has(item.name))
+        .map((item) => ({
+          name: item.name,
+          title: item.title,
+          description: item.description,
+          href: `/components/${item.name}/`,
+        })),
+    },
+  ]
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <h1 className="text-4xl font-bold tracking-tight">
-        Components and hooks
+        {components.length} component families
       </h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">
-        Every item is installed as editable source through the aq-ui registry.
+      <p className="mt-3 max-w-3xl text-muted-foreground">
+        Browse every public <code>registry:ui</code> family. Each component is
+        installed as editable source with only the dependencies it needs.
       </p>
-      {Object.entries(groups).map(([type, group]) => (
-        <section key={type} className="mt-12">
-          <div className="mb-4 flex items-center gap-3">
-            <h2 className="text-2xl font-semibold capitalize">
-              {type.replace("registry:", "")}
-            </h2>
-            <Badge variant="secondary">{group?.length ?? 0}</Badge>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {group?.map((item) => (
-              <Link
-                key={item.name}
-                href={`/components/${item.name}/`}
-                prefetch={false}
-              >
-                <Card className="h-full transition-colors hover:bg-muted/50">
-                  <CardHeader>
-                    <CardTitle className="text-base">{item.title}</CardTitle>
-                    <CardDescription>{item.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ))}
+      <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+        Looking for production editor guidance? Visit the dedicated{" "}
+        <Link
+          href="/editors/"
+          prefetch={false}
+          className="font-medium text-foreground underline underline-offset-4"
+        >
+          Editors overview
+        </Link>
+        .
+      </p>
+      <CatalogSearch
+        sections={sections}
+        itemLabel="component"
+        itemLabelPlural="components"
+        searchLabel="Search components"
+        placeholder="Search by component name or capability…"
+        emptyTitle="No components found"
+        emptyDescription="Try a broader term such as form, navigation, data, Markdown, or editor."
+      />
     </main>
   )
 }

@@ -7,7 +7,7 @@ import {
 } from "@/components/registry-item-detail"
 import { getRegistry, getRegistryItem } from "@/lib/registry"
 
-interface ComponentPageProps {
+interface HookPageProps {
   params: Promise<{ name: string }>
 }
 
@@ -15,21 +15,21 @@ export const dynamicParams = false
 
 export function generateStaticParams() {
   return getRegistry()
-    .items.filter((item) => item.type === "registry:ui")
+    .items.filter((item) => item.type === "registry:hook")
     .map((item) => ({ name: item.name }))
 }
 
 export async function generateMetadata({
   params,
-}: ComponentPageProps): Promise<Metadata> {
+}: HookPageProps): Promise<Metadata> {
   const item = getRegistryItem((await params).name)
-  return item?.type === "registry:ui"
+  return item?.type === "registry:hook"
     ? { title: item.title, description: registryItemDescription(item) }
     : {}
 }
 
-export default async function ComponentPage({ params }: ComponentPageProps) {
+export default async function HookPage({ params }: HookPageProps) {
   const item = getRegistryItem((await params).name)
-  if (item?.type !== "registry:ui") notFound()
-  return <RegistryItemDetail item={item} collection="components" />
+  if (item?.type !== "registry:hook") notFound()
+  return <RegistryItemDetail item={item} collection="hooks" />
 }

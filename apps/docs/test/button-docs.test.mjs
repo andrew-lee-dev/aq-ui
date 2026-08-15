@@ -88,11 +88,11 @@ test("Button docs expose every supported variant and size", () => {
 })
 
 test("Button route documents usage, props, defaults, and accessibility", () => {
-  const page = read("app/components/[name]/page.tsx")
+  const detail = read("components/registry-item-detail.tsx")
   const guide = read("components/guides/button-guide.tsx")
   const preview = read("components/examples/component-example.tsx")
 
-  assert.match(page, /item\.name === "button" \? <ButtonGuide \/> : null/)
+  assert.match(detail, /item\.name === "button" \? <ButtonGuide \/> : null/)
   assert.doesNotMatch(preview, /Use the controls/)
   assert.doesNotMatch(guide, /^"use client"/m)
 

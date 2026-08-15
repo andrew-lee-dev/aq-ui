@@ -7,29 +7,33 @@ import {
 } from "@/components/registry-item-detail"
 import { getRegistry, getRegistryItem } from "@/lib/registry"
 
-interface ComponentPageProps {
+interface UtilityPageProps {
   params: Promise<{ name: string }>
 }
 
 export const dynamicParams = false
 
+function isUtilityType(type: string | undefined) {
+  return type === "registry:style" || type === "registry:lib"
+}
+
 export function generateStaticParams() {
   return getRegistry()
-    .items.filter((item) => item.type === "registry:ui")
+    .items.filter((item) => isUtilityType(item.type))
     .map((item) => ({ name: item.name }))
 }
 
 export async function generateMetadata({
   params,
-}: ComponentPageProps): Promise<Metadata> {
+}: UtilityPageProps): Promise<Metadata> {
   const item = getRegistryItem((await params).name)
-  return item?.type === "registry:ui"
+  return item && isUtilityType(item.type)
     ? { title: item.title, description: registryItemDescription(item) }
     : {}
 }
 
-export default async function ComponentPage({ params }: ComponentPageProps) {
+export default async function UtilityPage({ params }: UtilityPageProps) {
   const item = getRegistryItem((await params).name)
-  if (item?.type !== "registry:ui") notFound()
-  return <RegistryItemDetail item={item} collection="components" />
+  if (!item || !isUtilityType(item.type)) notFound()
+  return <RegistryItemDetail item={item} collection="utilities" />
 }

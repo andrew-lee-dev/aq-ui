@@ -35,13 +35,16 @@ export default function RootLayout({
                   Docs
                 </Link>
                 <Link href="/components/" className="hover:text-foreground">
-                  Catalog
+                  Components
                 </Link>
                 <Link href="/hooks/" className="hover:text-foreground">
                   Hooks
                 </Link>
                 <Link href="/editors/" className="hover:text-foreground">
                   Editors
+                </Link>
+                <Link href="/utilities/" className="hover:text-foreground">
+                  Utilities
                 </Link>
                 <Link href="/cli/" className="hover:text-foreground">
                   CLI

@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 
-import { Badge } from "@aq-ui/registry/components/badge"
-
+import {
+  CatalogSearch,
+  type CatalogSearchSection,
+} from "@/components/catalog-search"
 import { getRegistry } from "@/lib/registry"
 
 export const metadata: Metadata = { title: "Hooks" }
@@ -28,49 +29,53 @@ export default function HooksPage() {
   )
   const controllers = hooks.filter((item) => controllerNames.has(item.name))
   const general = hooks.filter((item) => !controllerNames.has(item.name))
+  const sections: CatalogSearchSection[] = [
+    {
+      id: "controller-hooks",
+      title: "Component controllers",
+      description:
+        "State and behavior contracts shared by complex components and content editors.",
+      items: controllers.map((item) => ({
+        name: item.name,
+        title: item.title,
+        description: item.description,
+        href: `/hooks/${item.name}/`,
+      })),
+    },
+    {
+      id: "general-hooks",
+      title: "State, browser, DOM, and accessibility",
+      description:
+        "General-purpose hooks built on React and Web APIs with SSR-safe browser integration.",
+      items: general.map((item) => ({
+        name: item.name,
+        title: item.title,
+        description: item.description,
+        href: `/hooks/${item.name}/`,
+      })),
+    },
+  ]
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <h1 className="text-4xl font-bold tracking-tight">72 public hooks</h1>
+    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <h1 className="text-4xl font-bold tracking-tight">
+        {hooks.length} public hooks
+      </h1>
       <p className="mt-3 max-w-3xl text-muted-foreground">
-        The 60 general hooks depend only on React and Web APIs where possible.
-        Browser state is SSR-safe, shared stores use{" "}
+        {general.length} general hooks and {controllers.length} component
+        controllers. Browser state is SSR-safe, shared stores use{" "}
         <code>useSyncExternalStore</code>, observers are pooled, and
         asynchronous work supports cancellation.
       </p>
-      <HookGroup title="Component controllers" items={controllers} />
-      <HookGroup
-        title="State, browser, DOM, and accessibility"
-        items={general}
+      <CatalogSearch
+        sections={sections}
+        itemLabel="hook"
+        itemLabelPlural="hooks"
+        searchLabel="Search hooks"
+        placeholder="Search by hook name or behavior…"
+        emptyTitle="No hooks found"
+        emptyDescription="Try a broader term such as state, focus, storage, observer, or editor."
       />
     </main>
-  )
-}
-
-function HookGroup({
-  title,
-  items,
-}: {
-  title: string
-  items: ReturnType<typeof getRegistry>["items"]
-}) {
-  return (
-    <section className="mt-12">
-      <div className="mb-4 flex items-center gap-3">
-        <h2 className="text-2xl font-semibold">{title}</h2>
-        <Badge variant="secondary">{items.length}</Badge>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <Link
-            key={item.name}
-            href={`/components/${item.name}/`}
-            prefetch={false}
-            className="rounded-lg border px-3 py-2 font-mono text-sm transition-colors hover:bg-muted"
-          >
-            {item.name}
-          </Link>
-        ))}
-      </div>
-    </section>
   )
 }

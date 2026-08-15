@@ -9,8 +9,9 @@ const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
 const catalogPages = [
   "app/components/page.tsx",
-  "app/hooks/page.tsx",
   "app/editors/page.tsx",
+  "components/catalog-search.tsx",
+  "components/registry-item-detail.tsx",
 ]
 
 function componentLinks(path) {
@@ -29,13 +30,7 @@ function componentLinks(path) {
       ts.isIdentifier(node.tagName) &&
       node.tagName.text === "Link"
     ) {
-      const href = node.attributes.properties.find(
-        (property) =>
-          ts.isJsxAttribute(property) && property.name.text === "href"
-      )
-      const hrefSource = href?.initializer?.getText(source) ?? ""
-
-      if (hrefSource.includes("/components/")) links.push(node)
+      links.push(node)
     }
 
     ts.forEachChild(node, visit)
@@ -45,12 +40,12 @@ function componentLinks(path) {
   return { links, source }
 }
 
-test("large static catalogs do not eagerly prefetch component routes", () => {
+test("static catalog links do not eagerly prefetch destination routes", () => {
   for (const relativePath of catalogPages) {
     const path = resolve(docsRoot, relativePath)
     const { links, source } = componentLinks(path)
 
-    assert.ok(links.length > 0, `${relativePath} must contain component links.`)
+    assert.ok(links.length > 0, `${relativePath} must contain catalog links.`)
 
     for (const link of links) {
       const prefetch = link.attributes.properties.find(
@@ -63,7 +58,7 @@ test("large static catalogs do not eagerly prefetch component routes", () => {
           ts.isJsxAttribute(prefetch) &&
           ts.isJsxExpression(prefetch.initializer) &&
           prefetch.initializer.expression?.kind === ts.SyntaxKind.FalseKeyword,
-        `${relativePath} component links must set prefetch={false}: ${link.getText(source)}`
+        `${relativePath} catalog links must set prefetch={false}: ${link.getText(source)}`
       )
     }
   }

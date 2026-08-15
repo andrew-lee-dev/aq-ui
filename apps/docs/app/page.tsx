@@ -56,7 +56,7 @@ export default function HomePage() {
             href="/components/"
             className={cn(buttonVariants({ size: "lg" }))}
           >
-            Browse catalog <ArrowRightIcon data-icon="inline-end" />
+            Browse components <ArrowRightIcon data-icon="inline-end" />
           </Link>
           <a
             href="https://github.com/aq-ui/aq-ui"

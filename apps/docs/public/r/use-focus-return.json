@@ -1,0 +1,95 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-focus-return",
+  "type": "registry:hook",
+  "title": "Use Focus Return",
+  "description": "Open-code aq-ui React hook for Use Focus Return.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-focus-return.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\n\nexport interface FocusReturnControls {\n  capture: () => void\n  restore: () => void\n}\n\nexport interface UseFocusReturnOptions {\n  enabled?: boolean\n  preventScroll?: boolean\n  fallback?: Target<HTMLElement>\n}\n\nexport function useFocusReturn({\n  enabled = true,\n  preventScroll = true,\n  fallback,\n}: UseFocusReturnOptions = {}): FocusReturnControls {\n  const capturedRef = React.useRef<HTMLElement | null>(null)\n\n  const capture = React.useCallback(() => {\n    if (\n      typeof document !== \"undefined\" &&\n      document.activeElement instanceof HTMLElement\n    ) {\n      capturedRef.current = document.activeElement\n    }\n  }, [])\n\n  const restore = React.useCallback(() => {\n    const element =\n      (capturedRef.current?.isConnected ? capturedRef.current : null) ??\n      resolveTarget(fallback)\n    element?.focus({ preventScroll })\n    capturedRef.current = null\n  }, [fallback, preventScroll])\n\n  React.useEffect(() => {\n    if (!enabled) return\n    capture()\n    return restore\n  }, [capture, enabled, restore])\n\n  return { capture, restore }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-a0a36b1a03e0e6dba15710384c964d403030c3de4bcab911ed607d092309dc9f",
+    "api": [
+      {
+        "name": "FocusReturnControls",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface FocusReturnControls",
+        "members": [
+          {
+            "name": "capture",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "restore",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "useFocusReturn",
+        "kind": "function",
+        "line": 18,
+        "signature": "function useFocusReturn({ enabled = true, preventScroll = true, fallback, }: UseFocusReturnOptions = {}): FocusReturnControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseFocusReturnOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "FocusReturnControls",
+        "usage": "const result = useFocusReturn(/* arguments */)"
+      },
+      {
+        "name": "UseFocusReturnOptions",
+        "kind": "interface",
+        "line": 12,
+        "signature": "interface UseFocusReturnOptions",
+        "members": [
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "preventScroll",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "fallback",
+            "kind": "property",
+            "optional": true,
+            "type": "Target<HTMLElement>"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-focus-return",
+      "importStatement": "import { useFocusReturn } from \"@/hooks/use-focus-return\"",
+      "primaryExport": "useFocusReturn",
+      "example": "const result = useFocusReturn(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,530 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "questionnaire",
+  "type": "registry:ui",
+  "title": "Questionnaire",
+  "description": "Open-code aq-ui accessible component family for Questionnaire.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "use-isomorphic-layout-effect",
+    "use-merged-refs",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/questionnaire.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { useRender } from \"@base-ui/react/use-render\"\nimport { CheckIcon } from \"lucide-react\"\n\nimport { buttonVariants, type Button } from \"@/components/ui/button\"\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\nimport { useMergedRefs } from \"@/hooks/use-merged-refs\"\nimport { cn } from \"@/lib/utils\"\n\nexport type QuestionnaireItemStatus = \"unanswered\" | \"answered\" | \"skipped\"\nexport type QuestionnaireShortcutMode = \"letters\" | \"numbers\"\n\nexport interface QuestionnaireChoiceDefinition {\n  disabled?: boolean\n  value: string\n}\n\nexport interface QuestionnaireItemDefinition {\n  choices?: readonly QuestionnaireChoiceDefinition[]\n  disabled?: boolean\n  name: string\n  required?: boolean\n}\n\nexport interface QuestionnaireRootState {\n  current: number\n  first: boolean\n  last: boolean\n  total: number\n}\n\nexport type QuestionnaireProps = Omit<\n  React.ComponentPropsWithoutRef<\"form\">,\n  \"defaultValue\" | \"value\"\n> & {\n  defaultItem?: string\n  item?: string\n  items?: readonly QuestionnaireItemDefinition[]\n  onItemChange?: (item: string) => void\n  shortcuts?: QuestionnaireShortcutMode\n}\n\ninterface QuestionnaireItemRecord {\n  disabled: boolean\n  element: HTMLFieldSetElement\n  focus: () => void\n  focusInvalid: () => void\n  name: string\n  required: boolean\n  reset: () => void\n  skip: () => void\n  status: QuestionnaireItemStatus\n  validate: () => boolean\n}\n\ninterface QuestionnaireRootContextValue extends QuestionnaireRootState {\n  activeItem: QuestionnaireItemRecord | null\n  activeItemName: string | null\n  definitionByName: ReadonlyMap<string, QuestionnaireItemDefinition>\n  goNext: () => void\n  goPrevious: () => void\n  registerItem: (item: QuestionnaireItemRecord) => () => void\n  shortcuts: QuestionnaireShortcutMode | null\n  skipCurrent: () => void\n}\n\ninterface AnswerState {\n  defaultFilled: boolean\n  filled: boolean\n}\n\ninterface ChoiceRegistration {\n  disabled: boolean\n  element: HTMLInputElement\n  id: string\n  value: string\n}\n\ninterface QuestionnaireItemContextValue {\n  active: boolean\n  answers: Readonly<Record<string, AnswerState>>\n  disabled: boolean\n  invalid: boolean\n  multiple: boolean\n  name: string\n  registerAnswer: (id: string, defaultFilled: boolean) => () => void\n  registerChoice: (choice: ChoiceRegistration) => () => void\n  registerDescription: (id: string) => () => void\n  registerError: (id: string) => () => void\n  required: boolean\n  setAnswerDefault: (id: string, filled: boolean) => void\n  setAnswerFromInteraction: (\n    id: string,\n    filled: boolean,\n    exclusive: boolean\n  ) => void\n  shortcutFor: (id: string, value: string) => string | null\n  skipped: boolean\n  status: QuestionnaireItemStatus\n  syncAnswer: (id: string, filled: boolean) => void\n}\n\ninterface QuestionnaireProgressState\n  extends QuestionnaireRootState, Record<string, unknown> {}\n\ninterface QuestionnaireChoiceState extends Record<string, unknown> {\n  checked: boolean\n  disabled: boolean\n  invalid: boolean\n  shortcut: string | null\n  type: \"checkbox\" | \"radio\"\n}\n\ninterface QuestionnaireInputState extends Record<string, unknown> {\n  disabled: boolean\n  filled: boolean\n  invalid: boolean\n}\n\ninterface QuestionnaireNavigationState extends Record<string, unknown> {\n  disabled: boolean\n  shortcut: \"Enter\" | null\n  status: QuestionnaireItemStatus | null\n  visible: boolean\n}\n\nconst QuestionnaireRootContext =\n  React.createContext<QuestionnaireRootContextValue | null>(null)\nconst QuestionnaireItemContext =\n  React.createContext<QuestionnaireItemContextValue | null>(null)\n\nfunction useQuestionnaireRoot(component: string) {\n  const context = React.useContext(QuestionnaireRootContext)\n  if (!context)\n    throw new Error(`${component} must be used within Questionnaire.`)\n  return context\n}\n\nfunction useQuestionnaireItem(component: string) {\n  const context = React.useContext(QuestionnaireItemContext)\n  if (!context) {\n    throw new Error(`${component} must be used within QuestionnaireItem.`)\n  }\n  return context\n}\n\nfunction sortByDocumentOrder<T extends { element: Element }>(items: T[]) {\n  return [...items].sort((left, right) => {\n    if (left.element === right.element || typeof Node === \"undefined\") return 0\n    const position = left.element.compareDocumentPosition(right.element)\n    if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1\n    if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1\n    return 0\n  })\n}\n\nfunction isTextEntryTarget(target: EventTarget | null) {\n  if (!(target instanceof HTMLElement)) return false\n  if (target.isContentEditable) return true\n  if (\n    target instanceof HTMLTextAreaElement ||\n    target instanceof HTMLSelectElement\n  ) {\n    return true\n  }\n  return (\n    target instanceof HTMLInputElement &&\n    ![\"button\", \"checkbox\", \"radio\", \"reset\", \"submit\"].includes(target.type)\n  )\n}\n\nfunction shortcutSequence(mode: QuestionnaireShortcutMode | null) {\n  if (mode === \"letters\") return \"abcdefghijklmnopqrstuvwxyz\".split(\"\")\n  if (mode === \"numbers\") return \"1234567890\".split(\"\")\n  return []\n}\n\nconst Questionnaire = React.forwardRef<HTMLFormElement, QuestionnaireProps>(\n  (\n    {\n      children,\n      className,\n      defaultItem,\n      item,\n      items,\n      noValidate = true,\n      onItemChange,\n      onKeyDown,\n      onReset,\n      onSubmit,\n      shortcuts,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const definitions = React.useMemo(\n      () => new Map(items?.map((definition) => [definition.name, definition])),\n      [items]\n    )\n    const initialItem =\n      defaultItem ??\n      items?.find((definition) => !definition.disabled)?.name ??\n      null\n    const [uncontrolledItem, setUncontrolledItem] = React.useState<\n      string | null\n    >(initialItem)\n    const [records, setRecords] = React.useState<QuestionnaireItemRecord[]>([])\n    const formRef = React.useRef<HTMLFormElement | null>(null)\n    const ref = useMergedRefs(forwardedRef, formRef)\n    const controlled = item !== undefined\n    const activeItemName = controlled ? item : uncontrolledItem\n\n    const registerItem = React.useCallback(\n      (record: QuestionnaireItemRecord) => {\n        setRecords((current) => [\n          ...current.filter(\n            (candidate) =>\n              candidate.element !== record.element &&\n              candidate.name !== record.name\n          ),\n          record,\n        ])\n        return () => {\n          setRecords((current) =>\n            current.filter((candidate) => candidate !== record)\n          )\n        }\n      },\n      []\n    )\n\n    const orderedItems = React.useMemo(() => {\n      const enabledRecords = sortByDocumentOrder(\n        records.filter((record) => !record.disabled)\n      )\n      if (!items) return enabledRecords\n      const recordByName = new Map(\n        enabledRecords.map((record) => [record.name, record])\n      )\n      return items.flatMap((definition) => {\n        if (definition.disabled) return []\n        const record = recordByName.get(definition.name)\n        return record ? [record] : []\n      })\n    }, [items, records])\n\n    const activeIndex = orderedItems.findIndex(\n      (record) => record.name === activeItemName\n    )\n    const activeItem =\n      activeIndex >= 0 ? (orderedItems[activeIndex] ?? null) : null\n    const total = orderedItems.length\n    const current = activeIndex < 0 ? 0 : activeIndex + 1\n    const first = total > 0 && activeIndex === 0\n    const last = total > 0 && activeIndex === total - 1\n\n    const setActiveItem = React.useCallback(\n      (name: string) => {\n        if (name === activeItemName) return\n        if (!controlled) setUncontrolledItem(name)\n        onItemChange?.(name)\n      },\n      [activeItemName, controlled, onItemChange]\n    )\n\n    useIsomorphicLayoutEffect(() => {\n      if (orderedItems.length === 0 || activeIndex >= 0) return\n      setActiveItem(orderedItems[0]!.name)\n    }, [activeIndex, orderedItems, setActiveItem])\n\n    const goPrevious = React.useCallback(() => {\n      if (activeIndex <= 0) return\n      setActiveItem(orderedItems[activeIndex - 1]!.name)\n    }, [activeIndex, orderedItems, setActiveItem])\n\n    const goNext = React.useCallback(() => {\n      if (!activeItem || activeIndex >= total - 1) return\n      if (!activeItem.validate()) {\n        activeItem.focusInvalid()\n        return\n      }\n      setActiveItem(orderedItems[activeIndex + 1]!.name)\n    }, [activeIndex, activeItem, orderedItems, setActiveItem, total])\n\n    const skipCurrent = React.useCallback(() => {\n      if (!activeItem || activeItem.required) return\n      activeItem.skip()\n      if (!last) {\n        setActiveItem(orderedItems[activeIndex + 1]!.name)\n        return\n      }\n      queueMicrotask(() => formRef.current?.requestSubmit())\n    }, [activeIndex, activeItem, last, orderedItems, setActiveItem])\n\n    const context = React.useMemo<QuestionnaireRootContextValue>(\n      () => ({\n        activeItem,\n        activeItemName,\n        current,\n        definitionByName: definitions,\n        first,\n        goNext,\n        goPrevious,\n        last,\n        registerItem,\n        shortcuts: shortcuts ?? null,\n        skipCurrent,\n        total,\n      }),\n      [\n        activeItem,\n        activeItemName,\n        current,\n        definitions,\n        first,\n        goNext,\n        goPrevious,\n        last,\n        registerItem,\n        shortcuts,\n        skipCurrent,\n        total,\n      ]\n    )\n\n    return (\n      <QuestionnaireRootContext.Provider value={context}>\n        <form\n          ref={ref}\n          data-slot=\"questionnaire\"\n          data-shortcuts={shortcuts}\n          className={cn(\"flex w-full min-w-0 flex-col gap-4\", className)}\n          noValidate={noValidate}\n          onKeyDown={(event) => {\n            onKeyDown?.(event)\n            if (event.defaultPrevented || event.nativeEvent.isComposing) return\n\n            if (\n              event.key === \"Enter\" &&\n              (event.metaKey || event.ctrlKey) &&\n              !event.altKey &&\n              !event.shiftKey\n            ) {\n              event.preventDefault()\n              if (!event.repeat) {\n                if (last) formRef.current?.requestSubmit()\n                else goNext()\n              }\n              return\n            }\n\n            if (\n              !event.metaKey &&\n              !event.ctrlKey &&\n              !event.altKey &&\n              !isTextEntryTarget(event.target)\n            ) {\n              if (event.key === \"ArrowLeft\") {\n                event.preventDefault()\n                if (!event.repeat) goPrevious()\n                return\n              }\n              if (\n                event.key === \"ArrowRight\" &&\n                activeItem?.status !== \"unanswered\"\n              ) {\n                event.preventDefault()\n                if (!event.repeat) goNext()\n                return\n              }\n            }\n\n            if (\n              shortcuts &&\n              !event.metaKey &&\n              !event.ctrlKey &&\n              !event.altKey &&\n              !isTextEntryTarget(event.target)\n            ) {\n              const key = event.key.toLowerCase()\n              const choice =\n                activeItem?.element.querySelector<HTMLInputElement>(\n                  `[data-questionnaire-shortcut=\"${key}\"] input:not(:disabled)`\n                )\n              if (choice) {\n                event.preventDefault()\n                if (!event.repeat) {\n                  choice.focus()\n                  choice.click()\n                }\n              }\n            }\n          }}\n          onReset={(event) => {\n            onReset?.(event)\n            if (event.defaultPrevented) return\n            records.forEach((record) => record.reset())\n            const next =\n              orderedItems.find((record) => record.name === defaultItem) ??\n              orderedItems[0]\n            if (next) setActiveItem(next.name)\n          }}\n          onSubmit={(event) => {\n            const invalidItem = orderedItems.find(\n              (record) => !record.validate()\n            )\n            if (invalidItem) {\n              event.preventDefault()\n              setActiveItem(invalidItem.name)\n              queueMicrotask(() => invalidItem.focusInvalid())\n              return\n            }\n            onSubmit?.(event)\n          }}\n          {...props}\n        >\n          {children}\n        </form>\n      </QuestionnaireRootContext.Provider>\n    )\n  }\n)\nQuestionnaire.displayName = \"Questionnaire\"\n\nexport type QuestionnaireProgressProps = useRender.ComponentProps<\n  \"div\",\n  QuestionnaireProgressState\n>\n\nconst QuestionnaireProgress = React.forwardRef<\n  HTMLDivElement,\n  QuestionnaireProgressProps\n>(({ children, className, render, ...props }, forwardedRef) => {\n  const { current, first, last, total } = useQuestionnaireRoot(\n    \"QuestionnaireProgress\"\n  )\n  const text = total ? `Question ${current} of ${total}` : undefined\n  return useRender<QuestionnaireProgressState, HTMLDivElement>({\n    defaultTagName: \"div\",\n    ref: forwardedRef,\n    render,\n    state: { current, first, last, total },\n    props: {\n      ...props,\n      \"aria-label\": \"Questionnaire progress\",\n      \"aria-live\": \"polite\",\n      \"aria-valuemax\": total || undefined,\n      \"aria-valuemin\": total ? 1 : undefined,\n      \"aria-valuenow\": total ? current : undefined,\n      \"aria-valuetext\": text,\n      \"data-slot\": \"questionnaire-progress\",\n      className: cn(\n        \"min-h-[1lh] w-fit min-w-[14ch] text-xs font-medium text-muted-foreground tabular-nums\",\n        className\n      ),\n      children: children ?? text,\n      role: \"progressbar\",\n    },\n  })\n})\nQuestionnaireProgress.displayName = \"QuestionnaireProgress\"\n\nexport type QuestionnaireItemProps = Omit<\n  React.ComponentPropsWithoutRef<\"fieldset\">,\n  \"name\" | \"value\"\n> & {\n  invalid?: boolean\n  name: string\n  multiple?: boolean\n  onStatusChange?: (status: QuestionnaireItemStatus) => void\n  required?: boolean\n}\n\nconst QuestionnaireItem = React.forwardRef<\n  HTMLFieldSetElement,\n  QuestionnaireItemProps\n>(\n  (\n    {\n      \"aria-describedby\": ariaDescribedBy,\n      children,\n      className,\n      disabled = false,\n      invalid: invalidProp = false,\n      multiple = false,\n      name,\n      onStatusChange,\n      required = false,\n      tabIndex = -1,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const root = useQuestionnaireRoot(\"QuestionnaireItem\")\n    const registerRootItem = root.registerItem\n    const [element, setElement] = React.useState<HTMLFieldSetElement | null>(\n      null\n    )\n    const ref = useMergedRefs(forwardedRef, setElement)\n    const [answers, setAnswers] = React.useState<Record<string, AnswerState>>(\n      {}\n    )\n    const [choices, setChoices] = React.useState<ChoiceRegistration[]>([])\n    const [descriptions, setDescriptions] = React.useState<string[]>([])\n    const [errors, setErrors] = React.useState<string[]>([])\n    const [attempted, setAttempted] = React.useState(false)\n    const [skipped, setSkipped] = React.useState(false)\n    const active = root.activeItemName === name\n    const answered = Object.values(answers).some((answer) => answer.filled)\n    const status: QuestionnaireItemStatus = skipped\n      ? \"skipped\"\n      : answered\n        ? \"answered\"\n        : \"unanswered\"\n    const valid = disabled || status === \"answered\" || (!required && skipped)\n    const invalid = invalidProp || (attempted && !valid)\n    const previousStatusRef = React.useRef(status)\n\n    React.useEffect(() => {\n      if (previousStatusRef.current === status) return\n      previousStatusRef.current = status\n      onStatusChange?.(status)\n    }, [onStatusChange, status])\n\n    const registerAnswer = React.useCallback(\n      (id: string, defaultFilled: boolean) => {\n        setAnswers((current) =>\n          current[id]\n            ? current\n            : {\n                ...current,\n                [id]: { defaultFilled, filled: defaultFilled },\n              }\n        )\n        return () => {\n          setAnswers((current) => {\n            if (!current[id]) return current\n            const next = { ...current }\n            delete next[id]\n            return next\n          })\n        }\n      },\n      []\n    )\n\n    const setAnswerDefault = React.useCallback(\n      (id: string, defaultFilled: boolean) => {\n        setAnswers((current) => {\n          const answer = current[id]\n          if (!answer || answer.defaultFilled === defaultFilled) return current\n          return {\n            ...current,\n            [id]: { ...answer, defaultFilled },\n          }\n        })\n      },\n      []\n    )\n\n    const syncAnswer = React.useCallback((id: string, filled: boolean) => {\n      setAnswers((current) => {\n        const answer = current[id]\n        if (!answer || answer.filled === filled) return current\n        return { ...current, [id]: { ...answer, filled } }\n      })\n    }, [])\n\n    const setAnswerFromInteraction = React.useCallback(\n      (id: string, filled: boolean, exclusive: boolean) => {\n        setSkipped(false)\n        setAnswers((current) => {\n          const next = { ...current }\n          if (exclusive && filled) {\n            for (const [answerId, answer] of Object.entries(next)) {\n              next[answerId] = { ...answer, filled: answerId === id }\n            }\n          } else if (next[id]) {\n            next[id] = { ...next[id], filled }\n          }\n          return next\n        })\n      },\n      []\n    )\n\n    const registerChoice = React.useCallback((choice: ChoiceRegistration) => {\n      setChoices((current) => [\n        ...current.filter(\n          (candidate) =>\n            candidate.id !== choice.id && candidate.element !== choice.element\n        ),\n        choice,\n      ])\n      return () =>\n        setChoices((current) =>\n          current.filter((candidate) => candidate !== choice)\n        )\n    }, [])\n\n    const registerDescription = React.useCallback((id: string) => {\n      setDescriptions((current) =>\n        current.includes(id) ? current : [...current, id]\n      )\n      return () =>\n        setDescriptions((current) => current.filter((value) => value !== id))\n    }, [])\n\n    const registerError = React.useCallback((id: string) => {\n      setErrors((current) =>\n        current.includes(id) ? current : [...current, id]\n      )\n      return () =>\n        setErrors((current) => current.filter((value) => value !== id))\n    }, [])\n\n    const reset = React.useCallback(() => {\n      setAttempted(false)\n      setSkipped(false)\n      setAnswers((current) =>\n        Object.fromEntries(\n          Object.entries(current).map(([id, answer]) => [\n            id,\n            { ...answer, filled: answer.defaultFilled },\n          ])\n        )\n      )\n    }, [])\n\n    const skip = React.useCallback(() => {\n      if (required) return\n      setAttempted(false)\n      setSkipped(true)\n      setAnswers((current) =>\n        Object.fromEntries(\n          Object.entries(current).map(([id, answer]) => [\n            id,\n            { ...answer, filled: false },\n          ])\n        )\n      )\n    }, [required])\n\n    const validate = React.useCallback(() => {\n      setAttempted(true)\n      if (invalidProp || !valid) return false\n      if (!element || noValidateFor(element)) return true\n      const invalidControl = Array.from(element.elements).find(\n        (control): control is HTMLInputElement =>\n          control instanceof HTMLInputElement &&\n          control.willValidate &&\n          !control.validity.valid\n      )\n      if (!invalidControl) return true\n      invalidControl.reportValidity()\n      return false\n    }, [element, invalidProp, valid])\n\n    const focus = React.useCallback(() => {\n      const preferred = element?.querySelector<HTMLElement>(\n        \"input[data-filled]:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled)\"\n      )\n      ;(preferred ?? element)?.focus()\n    }, [element])\n\n    const focusInvalid = React.useCallback(() => {\n      const target = element?.querySelector<HTMLElement>(\n        \"input:not(:disabled), textarea:not(:disabled), select:not(:disabled)\"\n      )\n      ;(target ?? element)?.focus()\n    }, [element])\n\n    useIsomorphicLayoutEffect(() => {\n      if (!element) return\n      return registerRootItem({\n        disabled,\n        element,\n        focus,\n        focusInvalid,\n        name,\n        required,\n        reset,\n        skip,\n        status,\n        validate,\n      })\n    }, [\n      disabled,\n      element,\n      focus,\n      focusInvalid,\n      name,\n      required,\n      reset,\n      registerRootItem,\n      skip,\n      status,\n      validate,\n    ])\n\n    useIsomorphicLayoutEffect(() => {\n      element?.toggleAttribute(\"inert\", !active)\n    }, [active, element])\n\n    const sortedChoices = React.useMemo(\n      () => sortByDocumentOrder(choices.filter((choice) => !choice.disabled)),\n      [choices]\n    )\n    const definition = root.definitionByName.get(name)\n    const shortcutFor = React.useCallback(\n      (id: string, value: string) => {\n        const sequence = shortcutSequence(root.shortcuts)\n        if (sequence.length === 0) return null\n        if (definition?.choices) {\n          const index = definition.choices\n            .filter((choice) => !choice.disabled)\n            .findIndex((choice) => choice.value === value)\n          return index < 0 ? null : (sequence[index] ?? null)\n        }\n        const index = sortedChoices.findIndex((choice) => choice.id === id)\n        return index < 0 ? null : (sequence[index] ?? null)\n      },\n      [definition, root.shortcuts, sortedChoices]\n    )\n\n    const context = React.useMemo<QuestionnaireItemContextValue>(\n      () => ({\n        active,\n        answers,\n        disabled,\n        invalid,\n        multiple,\n        name,\n        registerAnswer,\n        registerChoice,\n        registerDescription,\n        registerError,\n        required,\n        setAnswerDefault,\n        setAnswerFromInteraction,\n        shortcutFor,\n        skipped,\n        status,\n        syncAnswer,\n      }),\n      [\n        active,\n        answers,\n        disabled,\n        invalid,\n        multiple,\n        name,\n        registerAnswer,\n        registerChoice,\n        registerDescription,\n        registerError,\n        required,\n        setAnswerDefault,\n        setAnswerFromInteraction,\n        shortcutFor,\n        skipped,\n        status,\n        syncAnswer,\n      ]\n    )\n    const describedBy = [\n      ...descriptions,\n      ...(invalid ? errors : []),\n      ariaDescribedBy,\n    ]\n      .filter(Boolean)\n      .join(\" \")\n\n    return (\n      <QuestionnaireItemContext.Provider value={context}>\n        <fieldset\n          ref={ref}\n          data-slot=\"questionnaire-item\"\n          data-active={active ? \"\" : undefined}\n          data-disabled={disabled ? \"\" : undefined}\n          data-invalid={invalid ? \"\" : undefined}\n          data-multiple={multiple ? \"\" : undefined}\n          data-required={required ? \"\" : undefined}\n          data-status={status}\n          aria-describedby={describedBy || undefined}\n          aria-invalid={invalid || undefined}\n          className={cn(\n            \"flex min-w-0 flex-col gap-4 border-0 p-0 outline-none\",\n            className\n          )}\n          disabled={disabled}\n          hidden={!active}\n          tabIndex={tabIndex}\n          {...props}\n        >\n          {children}\n        </fieldset>\n      </QuestionnaireItemContext.Provider>\n    )\n  }\n)\nQuestionnaireItem.displayName = \"QuestionnaireItem\"\n\nfunction noValidateFor(element: HTMLFieldSetElement) {\n  return element.form?.noValidate !== false\n}\n\nexport type QuestionnaireTitleProps = useRender.ComponentProps<\"legend\">\n\nconst QuestionnaireTitle = React.forwardRef<\n  HTMLLegendElement,\n  QuestionnaireTitleProps\n>(({ className, render, ...props }, forwardedRef) => {\n  useQuestionnaireItem(\"QuestionnaireTitle\")\n  return useRender<Record<string, never>, HTMLLegendElement>({\n    defaultTagName: \"legend\",\n    ref: forwardedRef,\n    render,\n    props: {\n      ...props,\n      \"data-slot\": \"questionnaire-title\",\n      className: cn(\n        \"font-heading text-base leading-snug font-medium text-pretty [&:not(:has(~[data-slot=questionnaire-description]))]:mb-4\",\n        className\n      ),\n    },\n  })\n})\nQuestionnaireTitle.displayName = \"QuestionnaireTitle\"\n\nexport type QuestionnaireDescriptionProps = useRender.ComponentProps<\"p\">\n\nconst QuestionnaireDescription = React.forwardRef<\n  HTMLParagraphElement,\n  QuestionnaireDescriptionProps\n>(({ className, id: idProp, render, ...props }, forwardedRef) => {\n  const { registerDescription } = useQuestionnaireItem(\n    \"QuestionnaireDescription\"\n  )\n  const generatedId = React.useId()\n  const id = idProp ?? generatedId\n  useIsomorphicLayoutEffect(\n    () => registerDescription(id),\n    [id, registerDescription]\n  )\n  return useRender<Record<string, never>, HTMLParagraphElement>({\n    defaultTagName: \"p\",\n    ref: forwardedRef,\n    render,\n    props: {\n      ...props,\n      \"data-slot\": \"questionnaire-description\",\n      className: cn(\"text-sm text-pretty text-muted-foreground\", className),\n      id,\n    },\n  })\n})\nQuestionnaireDescription.displayName = \"QuestionnaireDescription\"\n\ninterface QuestionnaireChoicesState extends Record<string, unknown> {\n  shortcuts: QuestionnaireShortcutMode | null\n}\n\nexport type QuestionnaireChoicesProps = useRender.ComponentProps<\n  \"div\",\n  QuestionnaireChoicesState\n>\n\nconst QuestionnaireChoices = React.forwardRef<\n  HTMLDivElement,\n  QuestionnaireChoicesProps\n>(({ className, render, ...props }, forwardedRef) => {\n  useQuestionnaireItem(\"QuestionnaireChoices\")\n  const { shortcuts } = useQuestionnaireRoot(\"QuestionnaireChoices\")\n  return useRender<QuestionnaireChoicesState, HTMLDivElement>({\n    defaultTagName: \"div\",\n    ref: forwardedRef,\n    render,\n    state: { shortcuts },\n    props: {\n      ...props,\n      \"data-slot\": \"questionnaire-choices\",\n      className: cn(\n        \"group/questionnaire-choices grid min-w-0 gap-2\",\n        className\n      ),\n    },\n  })\n})\nQuestionnaireChoices.displayName = \"QuestionnaireChoices\"\n\nexport type QuestionnaireChoiceProps = Omit<\n  useRender.ComponentProps<\"label\", QuestionnaireChoiceState>,\n  \"onChange\"\n> & {\n  checked?: boolean\n  defaultChecked?: boolean\n  disabled?: boolean\n  onChange?: React.ChangeEventHandler<HTMLInputElement>\n  value: string\n}\n\nconst QuestionnaireChoice = React.forwardRef<\n  HTMLLabelElement,\n  QuestionnaireChoiceProps\n>(\n  (\n    {\n      checked,\n      children,\n      className,\n      defaultChecked = false,\n      disabled = false,\n      onChange,\n      render,\n      value,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const item = useQuestionnaireItem(\"QuestionnaireChoice\")\n    const registerAnswer = item.registerAnswer\n    const registerChoice = item.registerChoice\n    const setAnswerDefault = item.setAnswerDefault\n    const syncAnswer = item.syncAnswer\n    const id = React.useId()\n    const [input, setInput] = React.useState<HTMLInputElement | null>(null)\n    const controlled = checked !== undefined\n    const selected = item.answers[id]?.filled ?? defaultChecked\n    const effectiveChecked = item.skipped\n      ? false\n      : controlled\n        ? checked\n        : selected\n    const effectiveDisabled = item.disabled || disabled\n    const type = item.multiple ? \"checkbox\" : \"radio\"\n    const shortcut = item.shortcutFor(id, value)\n\n    useIsomorphicLayoutEffect(\n      () => registerAnswer(id, defaultChecked),\n      [defaultChecked, id, registerAnswer]\n    )\n    React.useEffect(() => {\n      setAnswerDefault(id, defaultChecked)\n    }, [defaultChecked, id, setAnswerDefault])\n    React.useEffect(() => {\n      if (controlled) syncAnswer(id, Boolean(checked))\n    }, [checked, controlled, id, syncAnswer])\n    useIsomorphicLayoutEffect(() => {\n      if (!input) return\n      return registerChoice({\n        disabled,\n        element: input,\n        id,\n        value,\n      })\n    }, [disabled, id, input, registerChoice, value])\n\n    const state = React.useMemo<QuestionnaireChoiceState>(\n      () => ({\n        checked: effectiveChecked,\n        disabled: effectiveDisabled,\n        invalid: item.invalid,\n        shortcut,\n        type,\n      }),\n      [effectiveChecked, effectiveDisabled, item.invalid, shortcut, type]\n    )\n\n    return useRender<QuestionnaireChoiceState, HTMLLabelElement>({\n      defaultTagName: \"label\",\n      ref: forwardedRef,\n      render,\n      state,\n      props: {\n        ...props,\n        \"data-checked\": effectiveChecked ? \"\" : undefined,\n        \"data-slot\": \"questionnaire-choice\",\n        \"data-unchecked\": effectiveChecked ? undefined : \"\",\n        \"data-questionnaire-shortcut\": shortcut ?? undefined,\n        className: cn(\n          \"group/questionnaire-choice relative flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg border border-input bg-transparent px-3 py-2.5 text-start text-sm transition-colors outline-none select-none hover:bg-muted/50 has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-3 has-[>input:focus-visible]:ring-ring/50 data-invalid:border-destructive dark:bg-input/20 data-checked:border-primary/40 data-checked:bg-muted dark:data-checked:bg-muted\",\n          \"data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50\",\n          className\n        ),\n        children: (\n          <>\n            <input\n              ref={setInput}\n              data-slot=\"questionnaire-choice-input\"\n              aria-invalid={item.invalid || undefined}\n              aria-keyshortcuts={\n                [shortcut, effectiveChecked ? \"Enter\" : null]\n                  .filter(Boolean)\n                  .join(\" \") || undefined\n              }\n              checked={effectiveChecked}\n              className=\"absolute inset-0 z-10 size-full cursor-pointer opacity-0\"\n              disabled={effectiveDisabled}\n              id={id}\n              name={item.skipped ? undefined : item.name}\n              required={item.required && !item.multiple}\n              type={type}\n              value={value}\n              onChange={(event) => {\n                onChange?.(event)\n                if (event.defaultPrevented) return\n                if (\n                  !controlled ||\n                  (item.skipped &&\n                    Boolean(checked) === event.currentTarget.checked)\n                ) {\n                  item.setAnswerFromInteraction(\n                    id,\n                    controlled ? Boolean(checked) : event.currentTarget.checked,\n                    !item.multiple\n                  )\n                }\n              }}\n            />\n            <span\n              aria-hidden=\"true\"\n              data-slot=\"questionnaire-choice-indicator\"\n              className=\"pointer-events-none relative flex size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-[4px] border border-input group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[type=radio]/questionnaire-choice:rounded-full group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground dark:bg-input/30 dark:group-data-checked/questionnaire-choice:bg-primary\"\n            >\n              <span\n                data-slot=\"questionnaire-choice-indicator-dot\"\n                className=\"hidden size-2 rounded-full bg-primary-foreground group-data-[type=checkbox]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block\"\n              />\n              <CheckIcon\n                data-slot=\"questionnaire-choice-indicator-check\"\n                className=\"hidden size-3.5 group-data-[type=radio]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block\"\n              />\n            </span>\n            <span\n              data-slot=\"questionnaire-choice-label\"\n              className=\"flex min-w-0 flex-1 flex-col gap-0.5 leading-snug\"\n            >\n              {children}\n            </span>\n            <span\n              aria-hidden=\"true\"\n              data-slot=\"questionnaire-choice-shortcut\"\n              className=\"pointer-events-none ms-auto hidden size-5 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-md border border-input bg-background font-mono text-[0.625rem] leading-none font-medium text-muted-foreground group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[shortcut]/questionnaire-choice:inline-flex\"\n              hidden={shortcut === null}\n            >\n              {shortcut}\n            </span>\n          </>\n        ),\n      },\n    })\n  }\n)\nQuestionnaireChoice.displayName = \"QuestionnaireChoice\"\n\nconst QuestionnaireChoiceDescription = React.forwardRef<\n  HTMLSpanElement,\n  React.ComponentPropsWithoutRef<\"span\">\n>(({ className, ...props }, forwardedRef) => (\n  <span\n    ref={forwardedRef}\n    data-slot=\"questionnaire-choice-description\"\n    className={cn(\"text-muted-foreground\", className)}\n    {...props}\n  />\n))\nQuestionnaireChoiceDescription.displayName = \"QuestionnaireChoiceDescription\"\n\nexport type QuestionnaireInputType =\n  | \"date\"\n  | \"datetime-local\"\n  | \"email\"\n  | \"month\"\n  | \"number\"\n  | \"password\"\n  | \"search\"\n  | \"tel\"\n  | \"text\"\n  | \"time\"\n  | \"url\"\n  | \"week\"\n\nexport type QuestionnaireInputProps = Omit<\n  useRender.ComponentProps<\"input\", QuestionnaireInputState>,\n  \"form\" | \"name\" | \"type\"\n> & {\n  type?: QuestionnaireInputType\n}\n\nconst QuestionnaireInput = React.forwardRef<\n  HTMLInputElement,\n  QuestionnaireInputProps\n>(\n  (\n    {\n      className,\n      defaultValue = \"\",\n      disabled = false,\n      onChange,\n      render,\n      type = \"text\",\n      value,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const item = useQuestionnaireItem(\"QuestionnaireInput\")\n    const registerAnswer = item.registerAnswer\n    const setAnswerDefault = item.setAnswerDefault\n    const syncAnswer = item.syncAnswer\n    const id = React.useId()\n    const controlled = value !== undefined\n    const defaultText = String(defaultValue ?? \"\")\n    const defaultFilled = defaultText.trim().length > 0\n    const filled = controlled\n      ? String(value ?? \"\").trim().length > 0\n      : (item.answers[id]?.filled ?? defaultFilled)\n    const effectiveDisabled = item.disabled || disabled\n\n    useIsomorphicLayoutEffect(\n      () => registerAnswer(id, defaultFilled),\n      [defaultFilled, id, registerAnswer]\n    )\n    React.useEffect(() => {\n      setAnswerDefault(id, defaultFilled)\n    }, [defaultFilled, id, setAnswerDefault])\n    React.useEffect(() => {\n      if (controlled) syncAnswer(id, filled)\n    }, [controlled, filled, id, syncAnswer])\n\n    return (\n      <div\n        data-slot=\"questionnaire-input-wrapper\"\n        className=\"group/questionnaire-input relative w-full min-w-0\"\n      >\n        {useRender<QuestionnaireInputState, HTMLInputElement>({\n          defaultTagName: \"input\",\n          ref: forwardedRef,\n          render,\n          state: {\n            disabled: effectiveDisabled,\n            filled,\n            invalid: item.invalid,\n          },\n          props: {\n            ...props,\n            \"aria-invalid\": item.invalid || undefined,\n            \"data-empty\": filled ? undefined : \"\",\n            \"data-filled\": filled ? \"\" : undefined,\n            \"data-slot\": \"questionnaire-input\",\n            className: cn(\n              \"h-8 min-h-11 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-[color,box-shadow,background-color] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 sm:min-h-0 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40\",\n              \"selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground\",\n              className\n            ),\n            disabled: effectiveDisabled,\n            defaultValue: controlled ? undefined : defaultValue,\n            id,\n            name: filled && !item.skipped ? item.name : undefined,\n            required: item.required,\n            type,\n            value: controlled ? value : undefined,\n            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {\n              onChange?.(event)\n              if (event.defaultPrevented) return\n              item.setAnswerFromInteraction(\n                id,\n                event.currentTarget.value.trim().length > 0,\n                !item.multiple\n              )\n            },\n          },\n        })}\n      </div>\n    )\n  }\n)\nQuestionnaireInput.displayName = \"QuestionnaireInput\"\n\ninterface QuestionnaireErrorState extends Record<string, unknown> {\n  invalid: boolean\n}\n\nexport type QuestionnaireErrorProps = useRender.ComponentProps<\n  \"p\",\n  QuestionnaireErrorState\n>\n\nconst QuestionnaireError = React.forwardRef<\n  HTMLParagraphElement,\n  QuestionnaireErrorProps\n>(({ children, className, id: idProp, render, ...props }, forwardedRef) => {\n  const item = useQuestionnaireItem(\"QuestionnaireError\")\n  const registerError = item.registerError\n  const generatedId = React.useId()\n  const id = idProp ?? generatedId\n  useIsomorphicLayoutEffect(() => registerError(id), [id, registerError])\n  return useRender<QuestionnaireErrorState, HTMLParagraphElement>({\n    defaultTagName: \"p\",\n    ref: forwardedRef,\n    render,\n    state: { invalid: item.invalid },\n    props: {\n      ...props,\n      \"data-slot\": \"questionnaire-error\",\n      className: cn(\"mt-2 text-sm text-destructive\", className),\n      children:\n        children ??\n        (item.required\n          ? \"Choose an answer to continue.\"\n          : \"Choose an answer or skip this question.\"),\n      hidden: !item.invalid,\n      id,\n      role: item.invalid ? \"alert\" : undefined,\n    },\n  })\n})\nQuestionnaireError.displayName = \"QuestionnaireError\"\n\nconst QuestionnaireActions = React.forwardRef<\n  HTMLDivElement,\n  React.ComponentPropsWithoutRef<\"div\">\n>(({ className, ...props }, forwardedRef) => (\n  <div\n    ref={forwardedRef}\n    data-slot=\"questionnaire-actions\"\n    className={cn(\n      \"grid min-h-11 w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 sm:min-h-8\",\n      className\n    )}\n    {...props}\n  />\n))\nQuestionnaireActions.displayName = \"QuestionnaireActions\"\n\ntype NavigationKind = \"previous\" | \"skip\" | \"next\" | \"submit\"\n\ntype QuestionnaireNavigationProps = useRender.ComponentProps<\n  \"button\",\n  QuestionnaireNavigationState\n> &\n  Pick<React.ComponentProps<typeof Button>, \"size\" | \"variant\"> & {\n    navigation: NavigationKind\n  }\n\nconst QuestionnaireNavigation = React.forwardRef<\n  HTMLButtonElement,\n  QuestionnaireNavigationProps\n>(\n  (\n    {\n      children,\n      className,\n      disabled = false,\n      navigation,\n      onClick,\n      render,\n      size = \"default\",\n      tabIndex,\n      type,\n      variant,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const root = useQuestionnaireRoot(`Questionnaire${navigation}`)\n    const visible =\n      navigation === \"previous\"\n        ? root.total > 1 && !root.first\n        : navigation === \"skip\"\n          ? root.activeItem?.required === false\n          : navigation === \"next\"\n            ? root.total > 1 && !root.last\n            : root.total > 0 && root.last\n    const shortcut =\n      visible && !disabled && (navigation === \"next\" || navigation === \"submit\")\n        ? \"Enter\"\n        : null\n    const finalVariant =\n      variant ??\n      (navigation === \"previous\" || navigation === \"skip\"\n        ? \"outline\"\n        : \"default\")\n    const labels: Record<NavigationKind, string> = {\n      next: \"Next\",\n      previous: \"Previous\",\n      skip: \"Skip\",\n      submit: \"Submit\",\n    }\n    const positions: Record<NavigationKind, string> = {\n      next: \"col-start-3 row-start-1 min-h-11 justify-self-end sm:min-h-0\",\n      previous:\n        \"col-start-1 row-start-1 min-h-11 justify-self-start sm:min-h-0\",\n      skip: \"col-start-2 row-start-1 min-h-11 justify-self-end sm:min-h-0\",\n      submit: \"col-start-3 row-start-1 min-h-11 justify-self-end sm:min-h-0\",\n    }\n    const state: QuestionnaireNavigationState = {\n      disabled,\n      shortcut,\n      status: root.activeItem?.status ?? null,\n      visible,\n    }\n\n    return useRender<QuestionnaireNavigationState, HTMLButtonElement>({\n      defaultTagName: \"button\",\n      ref: forwardedRef,\n      render,\n      state,\n      props: {\n        ...props,\n        \"aria-hidden\": visible ? undefined : true,\n        \"aria-keyshortcuts\": shortcut ?? undefined,\n        \"data-hidden\": visible ? undefined : \"\",\n        \"data-slot\": `questionnaire-${navigation}`,\n        \"data-size\": size,\n        \"data-variant\": finalVariant,\n        \"data-visible\": visible ? \"\" : undefined,\n        className: cn(\n          buttonVariants({ size, variant: finalVariant }),\n          positions[navigation],\n          className\n        ),\n        children: children ?? labels[navigation],\n        disabled,\n        hidden: !visible,\n        inert: visible ? undefined : true,\n        tabIndex: visible ? tabIndex : -1,\n        type: type ?? (navigation === \"submit\" ? \"submit\" : \"button\"),\n        onClick: (event: React.MouseEvent<HTMLButtonElement>) => {\n          onClick?.(event)\n          if (event.defaultPrevented || disabled) return\n          if (navigation === \"previous\") root.goPrevious()\n          else if (navigation === \"skip\") root.skipCurrent()\n          else if (navigation === \"next\") root.goNext()\n        },\n      },\n    })\n  }\n)\nQuestionnaireNavigation.displayName = \"QuestionnaireNavigation\"\n\nexport type QuestionnaireNavigationButtonProps = Omit<\n  QuestionnaireNavigationProps,\n  \"navigation\"\n>\n\nconst QuestionnairePrevious = React.forwardRef<\n  HTMLButtonElement,\n  QuestionnaireNavigationButtonProps\n>((props, ref) => (\n  <QuestionnaireNavigation ref={ref} navigation=\"previous\" {...props} />\n))\nQuestionnairePrevious.displayName = \"QuestionnairePrevious\"\n\nconst QuestionnaireSkip = React.forwardRef<\n  HTMLButtonElement,\n  QuestionnaireNavigationButtonProps\n>((props, ref) => (\n  <QuestionnaireNavigation ref={ref} navigation=\"skip\" {...props} />\n))\nQuestionnaireSkip.displayName = \"QuestionnaireSkip\"\n\nconst QuestionnaireNext = React.forwardRef<\n  HTMLButtonElement,\n  QuestionnaireNavigationButtonProps\n>((props, ref) => (\n  <QuestionnaireNavigation ref={ref} navigation=\"next\" {...props} />\n))\nQuestionnaireNext.displayName = \"QuestionnaireNext\"\n\nconst QuestionnaireSubmit = React.forwardRef<\n  HTMLButtonElement,\n  QuestionnaireNavigationButtonProps\n>((props, ref) => (\n  <QuestionnaireNavigation ref={ref} navigation=\"submit\" {...props} />\n))\nQuestionnaireSubmit.displayName = \"QuestionnaireSubmit\"\n\nexport {\n  Questionnaire,\n  QuestionnaireActions,\n  QuestionnaireChoice,\n  QuestionnaireChoiceDescription,\n  QuestionnaireChoices,\n  QuestionnaireDescription,\n  QuestionnaireError,\n  QuestionnaireInput,\n  QuestionnaireItem,\n  QuestionnaireNext,\n  QuestionnairePrevious,\n  QuestionnaireProgress,\n  QuestionnaireSkip,\n  QuestionnaireSubmit,\n  QuestionnaireTitle,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-808026d4c1d513b5be62bba73a648e411863f57a284600cf2b38e2f14d6e52d4",
+    "api": [
+      {
+        "name": "Questionnaire",
+        "kind": "const",
+        "line": 180,
+        "signature": "const Questionnaire = React.forwardRef<HTMLFormElement, QuestionnaireProps>(…)",
+        "propsType": "QuestionnaireProps",
+        "props": [
+          {
+            "name": "defaultItem",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "item",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "items",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly QuestionnaireItemDefinition[]"
+          },
+          {
+            "name": "onItemChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: string) => void"
+          },
+          {
+            "name": "shortcuts",
+            "kind": "property",
+            "optional": true,
+            "type": "QuestionnaireShortcutMode"
+          }
+        ],
+        "usage": "<Questionnaire />"
+      },
+      {
+        "name": "QuestionnaireActions",
+        "kind": "const",
+        "line": 1223,
+        "signature": "const QuestionnaireActions = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<\"div\">>(…)",
+        "propsType": "React.ComponentPropsWithoutRef<\"div\">",
+        "usage": "<QuestionnaireActions />"
+      },
+      {
+        "name": "QuestionnaireChoice",
+        "kind": "const",
+        "line": 905,
+        "signature": "const QuestionnaireChoice = React.forwardRef<HTMLLabelElement, QuestionnaireChoiceProps>(…)",
+        "propsType": "QuestionnaireChoiceProps",
+        "props": [
+          {
+            "name": "checked",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "defaultChecked",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ChangeEventHandler<HTMLInputElement>"
+          },
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          }
+        ],
+        "usage": "<QuestionnaireChoice />"
+      },
+      {
+        "name": "QuestionnaireChoiceDefinition",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface QuestionnaireChoiceDefinition",
+        "members": [
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireChoiceDescription",
+        "kind": "const",
+        "line": 1059,
+        "signature": "const QuestionnaireChoiceDescription = React.forwardRef<HTMLSpanElement, React.ComponentPropsWithoutRef<\"span\">>(…)",
+        "propsType": "React.ComponentPropsWithoutRef<\"span\">",
+        "usage": "<QuestionnaireChoiceDescription />"
+      },
+      {
+        "name": "QuestionnaireChoiceProps",
+        "kind": "type",
+        "line": 894,
+        "signature": "type QuestionnaireChoiceProps = Omit<useRender.ComponentProps<\"label\", QuestionnaireChoiceState>, \"onChange\"> & { … }",
+        "members": [
+          {
+            "name": "checked",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "defaultChecked",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ChangeEventHandler<HTMLInputElement>"
+          },
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireChoices",
+        "kind": "const",
+        "line": 871,
+        "signature": "const QuestionnaireChoices = React.forwardRef<HTMLDivElement, QuestionnaireChoicesProps>(…)",
+        "propsType": "QuestionnaireChoicesProps",
+        "usage": "<QuestionnaireChoices />"
+      },
+      {
+        "name": "QuestionnaireChoicesProps",
+        "kind": "type",
+        "line": 866,
+        "signature": "type QuestionnaireChoicesProps = useRender.ComponentProps<\"div\", QuestionnaireChoicesState>"
+      },
+      {
+        "name": "QuestionnaireDescription",
+        "kind": "const",
+        "line": 835,
+        "signature": "const QuestionnaireDescription = React.forwardRef<HTMLParagraphElement, QuestionnaireDescriptionProps>(…)",
+        "propsType": "QuestionnaireDescriptionProps",
+        "usage": "<QuestionnaireDescription />"
+      },
+      {
+        "name": "QuestionnaireDescriptionProps",
+        "kind": "type",
+        "line": 833,
+        "signature": "type QuestionnaireDescriptionProps = useRender.ComponentProps<\"p\">"
+      },
+      {
+        "name": "QuestionnaireError",
+        "kind": "const",
+        "line": 1192,
+        "signature": "const QuestionnaireError = React.forwardRef<HTMLParagraphElement, QuestionnaireErrorProps>(…)",
+        "propsType": "QuestionnaireErrorProps",
+        "usage": "<QuestionnaireError />"
+      },
+      {
+        "name": "QuestionnaireErrorProps",
+        "kind": "type",
+        "line": 1187,
+        "signature": "type QuestionnaireErrorProps = useRender.ComponentProps<\"p\", QuestionnaireErrorState>"
+      },
+      {
+        "name": "QuestionnaireInput",
+        "kind": "const",
+        "line": 1093,
+        "signature": "const QuestionnaireInput = React.forwardRef<HTMLInputElement, QuestionnaireInputProps>(…)",
+        "propsType": "QuestionnaireInputProps",
+        "props": [
+          {
+            "name": "type",
+            "kind": "property",
+            "optional": true,
+            "type": "QuestionnaireInputType",
+            "default": "\"text\""
+          }
+        ],
+        "usage": "<QuestionnaireInput />"
+      },
+      {
+        "name": "QuestionnaireInputProps",
+        "kind": "type",
+        "line": 1086,
+        "signature": "type QuestionnaireInputProps = Omit<useRender.ComponentProps<\"input\", QuestionnaireInputState>, \"form\" | \"name\" | \"type\"> & { … }",
+        "members": [
+          {
+            "name": "type",
+            "kind": "property",
+            "optional": true,
+            "type": "QuestionnaireInputType",
+            "default": "\"text\""
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireInputType",
+        "kind": "type",
+        "line": 1072,
+        "signature": "type QuestionnaireInputType = \"date\" | \"datetime-local\" | \"email\" | \"month\" | \"number\" | \"password\" | \"search\" | \"tel\" | \"text\" | \"time\" | \"url\" | \"week\""
+      },
+      {
+        "name": "QuestionnaireItem",
+        "kind": "const",
+        "line": 476,
+        "signature": "const QuestionnaireItem = React.forwardRef<HTMLFieldSetElement, QuestionnaireItemProps>(…)",
+        "propsType": "QuestionnaireItemProps",
+        "props": [
+          {
+            "name": "invalid",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onStatusChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(status: QuestionnaireItemStatus) => void"
+          },
+          {
+            "name": "required",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "usage": "<QuestionnaireItem />"
+      },
+      {
+        "name": "QuestionnaireItemDefinition",
+        "kind": "interface",
+        "line": 20,
+        "signature": "interface QuestionnaireItemDefinition",
+        "members": [
+          {
+            "name": "choices",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly QuestionnaireChoiceDefinition[]"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "required",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireItemProps",
+        "kind": "type",
+        "line": 465,
+        "signature": "type QuestionnaireItemProps = Omit<React.ComponentPropsWithoutRef<\"fieldset\">, \"name\" | \"value\"> & { … }",
+        "members": [
+          {
+            "name": "invalid",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onStatusChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(status: QuestionnaireItemStatus) => void"
+          },
+          {
+            "name": "required",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireItemStatus",
+        "kind": "type",
+        "line": 12,
+        "signature": "type QuestionnaireItemStatus = \"unanswered\" | \"answered\" | \"skipped\""
+      },
+      {
+        "name": "QuestionnaireNavigationButtonProps",
+        "kind": "type",
+        "line": 1345,
+        "signature": "type QuestionnaireNavigationButtonProps = Omit<QuestionnaireNavigationProps, \"navigation\">"
+      },
+      {
+        "name": "QuestionnaireNext",
+        "kind": "const",
+        "line": 1366,
+        "signature": "const QuestionnaireNext = React.forwardRef<HTMLButtonElement, QuestionnaireNavigationButtonProps>(…)",
+        "propsType": "QuestionnaireNavigationButtonProps",
+        "usage": "<QuestionnaireNext />"
+      },
+      {
+        "name": "QuestionnairePrevious",
+        "kind": "const",
+        "line": 1350,
+        "signature": "const QuestionnairePrevious = React.forwardRef<HTMLButtonElement, QuestionnaireNavigationButtonProps>(…)",
+        "propsType": "QuestionnaireNavigationButtonProps",
+        "usage": "<QuestionnairePrevious />"
+      },
+      {
+        "name": "QuestionnaireProgress",
+        "kind": "const",
+        "line": 432,
+        "signature": "const QuestionnaireProgress = React.forwardRef<HTMLDivElement, QuestionnaireProgressProps>(…)",
+        "propsType": "QuestionnaireProgressProps",
+        "usage": "<QuestionnaireProgress />"
+      },
+      {
+        "name": "QuestionnaireProgressProps",
+        "kind": "type",
+        "line": 427,
+        "signature": "type QuestionnaireProgressProps = useRender.ComponentProps<\"div\", QuestionnaireProgressState>"
+      },
+      {
+        "name": "QuestionnaireProps",
+        "kind": "type",
+        "line": 34,
+        "signature": "type QuestionnaireProps = Omit<React.ComponentPropsWithoutRef<\"form\">, \"defaultValue\" | \"value\"> & { … }",
+        "members": [
+          {
+            "name": "defaultItem",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "item",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "items",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly QuestionnaireItemDefinition[]"
+          },
+          {
+            "name": "onItemChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: string) => void"
+          },
+          {
+            "name": "shortcuts",
+            "kind": "property",
+            "optional": true,
+            "type": "QuestionnaireShortcutMode"
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireRootState",
+        "kind": "interface",
+        "line": 27,
+        "signature": "interface QuestionnaireRootState",
+        "members": [
+          {
+            "name": "current",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "first",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "last",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "total",
+            "kind": "property",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "QuestionnaireShortcutMode",
+        "kind": "type",
+        "line": 13,
+        "signature": "type QuestionnaireShortcutMode = \"letters\" | \"numbers\""
+      },
+      {
+        "name": "QuestionnaireSkip",
+        "kind": "const",
+        "line": 1358,
+        "signature": "const QuestionnaireSkip = React.forwardRef<HTMLButtonElement, QuestionnaireNavigationButtonProps>(…)",
+        "propsType": "QuestionnaireNavigationButtonProps",
+        "usage": "<QuestionnaireSkip />"
+      },
+      {
+        "name": "QuestionnaireSubmit",
+        "kind": "const",
+        "line": 1374,
+        "signature": "const QuestionnaireSubmit = React.forwardRef<HTMLButtonElement, QuestionnaireNavigationButtonProps>(…)",
+        "propsType": "QuestionnaireNavigationButtonProps",
+        "usage": "<QuestionnaireSubmit />"
+      },
+      {
+        "name": "QuestionnaireTitle",
+        "kind": "const",
+        "line": 812,
+        "signature": "const QuestionnaireTitle = React.forwardRef<HTMLLegendElement, QuestionnaireTitleProps>(…)",
+        "propsType": "QuestionnaireTitleProps",
+        "usage": "<QuestionnaireTitle />"
+      },
+      {
+        "name": "QuestionnaireTitleProps",
+        "kind": "type",
+        "line": 810,
+        "signature": "type QuestionnaireTitleProps = useRender.ComponentProps<\"legend\">"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/questionnaire",
+      "importStatement": "import { Questionnaire } from \"@/components/ui/questionnaire\"",
+      "primaryExport": "Questionnaire",
+      "example": "<Questionnaire />"
+    },
+    "ssr": false
+  }
+}

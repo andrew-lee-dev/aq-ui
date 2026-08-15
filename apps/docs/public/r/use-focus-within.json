@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-focus-within",
+  "type": "registry:hook",
+  "title": "Use Focus Within",
+  "description": "Open-code aq-ui React hook for Use Focus Within.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-focus-within.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\n\nexport function useFocusWithin<T extends Element>(\n  target: Target<T>,\n  enabled = true\n): boolean {\n  const [focused, setFocused] = React.useState(false)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const element = resolveTarget(target)\n    if (!element) return\n    const onFocusIn = () => setFocused(true)\n    const onFocusOut: EventListener = (nativeEvent) => {\n      const event = nativeEvent as FocusEvent\n      if (\n        !event.relatedTarget ||\n        !(event.relatedTarget instanceof Node) ||\n        !element.contains(event.relatedTarget)\n      ) {\n        setFocused(false)\n      }\n    }\n    element.addEventListener(\"focusin\", onFocusIn)\n    element.addEventListener(\"focusout\", onFocusOut)\n    return () => {\n      element.removeEventListener(\"focusin\", onFocusIn)\n      element.removeEventListener(\"focusout\", onFocusOut)\n    }\n  }, [enabled, target])\n\n  return focused\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-5c2aab7fb3fdd456493bd6b89300e7fdde8ca719d604a5a7dd09890689c73c7f",
+    "api": [
+      {
+        "name": "useFocusWithin",
+        "kind": "function",
+        "line": 7,
+        "signature": "function useFocusWithin<T extends Element>(target: Target<T>, enabled = true): boolean",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "enabled",
+            "kind": "parameter",
+            "optional": true,
+            "default": "true"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useFocusWithin(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-focus-within",
+      "importStatement": "import { useFocusWithin } from \"@/hooks/use-focus-within\"",
+      "primaryExport": "useFocusWithin",
+      "example": "const result = useFocusWithin(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input-otp",
+  "type": "registry:ui",
+  "title": "Input Otp",
+  "description": "Open-code aq-ui accessible component family for Input Otp.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "input-otp@^1.4.2",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/input-otp.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { OTPInput, OTPInputContext } from \"input-otp\"\n\nimport { cn } from \"@/lib/utils\"\nimport { MinusIcon } from \"lucide-react\"\n\nconst InputOTP = React.forwardRef<\n  React.ComponentRef<typeof OTPInput>,\n  React.ComponentProps<typeof OTPInput> & {\n    containerClassName?: string\n  }\n>(function InputOTP({ className, containerClassName, ...props }, ref) {\n  return (\n    <OTPInput\n      ref={ref}\n      data-slot=\"input-otp\"\n      containerClassName={cn(\n        \"cn-input-otp flex items-center has-disabled:opacity-50\",\n        containerClassName\n      )}\n      spellCheck={false}\n      className={cn(\"disabled:cursor-not-allowed\", className)}\n      {...props}\n    />\n  )\n})\nInputOTP.displayName = \"InputOTP\"\n\nconst InputOTPGroup = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function InputOTPGroup({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"input-otp-group\"\n      className={cn(\n        \"flex items-center rounded-lg has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nInputOTPGroup.displayName = \"InputOTPGroup\"\n\nconst InputOTPSlot = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & {\n    index: number\n  }\n>(function InputOTPSlot({ index, className, ...props }, ref) {\n  const inputOTPContext = React.useContext(OTPInputContext)\n  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}\n\n  return (\n    <div\n      ref={ref}\n      data-slot=\"input-otp-slot\"\n      data-active={isActive}\n      className={cn(\n        \"relative flex size-8 items-center justify-center border-y border-e border-input text-sm transition-all outline-none first:rounded-s-lg first:border-s last:rounded-e-lg aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-3 data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40\",\n        className\n      )}\n      {...props}\n    >\n      {char}\n      {hasFakeCaret && (\n        <div className=\"pointer-events-none absolute inset-0 flex items-center justify-center\">\n          <div className=\"h-4 w-px animate-caret-blink bg-foreground duration-1000\" />\n        </div>\n      )}\n    </div>\n  )\n})\nInputOTPSlot.displayName = \"InputOTPSlot\"\n\nconst InputOTPSeparator = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function InputOTPSeparator({ ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"input-otp-separator\"\n      className=\"flex items-center [&_svg:not([class*='size-'])]:size-4\"\n      role=\"separator\"\n      {...props}\n    >\n      <MinusIcon />\n    </div>\n  )\n})\nInputOTPSeparator.displayName = \"InputOTPSeparator\"\n\nexport { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-c72ea14c8164fd6dc4ab65f77aa4a408b810edfecbb595824cd8f5d5de9e72bb",
+    "api": [
+      {
+        "name": "InputOTP",
+        "kind": "const",
+        "line": 9,
+        "signature": "const InputOTP = React.forwardRef<React.ComponentRef<typeof OTPInput>, React.ComponentProps<typeof OTPInput> & { containerClassName?: string }>(…)",
+        "propsType": "React.ComponentProps<typeof OTPInput> & { containerClassName?: string }",
+        "props": [
+          {
+            "name": "containerClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ],
+        "usage": "<InputOTP />"
+      },
+      {
+        "name": "InputOTPGroup",
+        "kind": "const",
+        "line": 31,
+        "signature": "const InputOTPGroup = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<InputOTPGroup />"
+      },
+      {
+        "name": "InputOTPSeparator",
+        "kind": "const",
+        "line": 80,
+        "signature": "const InputOTPSeparator = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<InputOTPSeparator />"
+      },
+      {
+        "name": "InputOTPSlot",
+        "kind": "const",
+        "line": 49,
+        "signature": "const InputOTPSlot = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { index: number }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { index: number }",
+        "props": [
+          {
+            "name": "index",
+            "kind": "property",
+            "type": "number"
+          }
+        ],
+        "usage": "<InputOTPSlot />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/input-otp",
+      "importStatement": "import { InputOTP } from \"@/components/ui/input-otp\"",
+      "primaryExport": "InputOTP",
+      "example": "<InputOTP />"
+    },
+    "ssr": false
+  }
+}

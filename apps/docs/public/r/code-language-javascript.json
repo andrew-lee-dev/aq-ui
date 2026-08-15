@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-javascript",
+  "type": "registry:lib",
+  "title": "Code Language Javascript",
+  "description": "Open-code aq-ui shared library for Code Language Javascript.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-javascript@^6.2.5"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-javascript.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"javascript\", async () => {\n  const { javascript } = await import(\"@codemirror/lang-javascript\")\n  return javascript()\n})\n\nconst codeLanguageJavaScript = \"javascript\" as const\n\nexport { codeLanguageJavaScript }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-0ae723dfb32af2df64a2c97ebb0422c5fb30412f903bd2cf3b8c9853f13d1dc5",
+    "api": [
+      {
+        "name": "codeLanguageJavaScript",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageJavaScript = \"javascript\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-javascript",
+      "importStatement": "import { codeLanguageJavaScript } from \"@/lib/code-language-javascript\"",
+      "primaryExport": "codeLanguageJavaScript"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

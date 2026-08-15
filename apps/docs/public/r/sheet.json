@@ -1,0 +1,116 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "sheet",
+  "type": "registry:ui",
+  "title": "Sheet",
+  "description": "Open-code aq-ui accessible component family for Sheet.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/sheet.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Dialog as SheetPrimitive } from \"@base-ui/react/dialog\"\n\nimport { cn } from \"@/lib/utils\"\nimport { Button } from \"@/components/ui/button\"\nimport { XIcon } from \"lucide-react\"\n\nfunction Sheet({ ...props }: SheetPrimitive.Root.Props) {\n  return <SheetPrimitive.Root data-slot=\"sheet\" {...props} />\n}\n\nconst SheetTrigger = React.forwardRef<\n  HTMLButtonElement,\n  SheetPrimitive.Trigger.Props\n>(function SheetTrigger({ ...props }, ref) {\n  return (\n    <SheetPrimitive.Trigger ref={ref} data-slot=\"sheet-trigger\" {...props} />\n  )\n})\nSheetTrigger.displayName = \"SheetTrigger\"\n\nconst SheetClose = React.forwardRef<\n  React.ComponentRef<typeof SheetPrimitive.Close>,\n  SheetPrimitive.Close.Props\n>(function SheetClose({ ...props }, ref) {\n  return <SheetPrimitive.Close ref={ref} data-slot=\"sheet-close\" {...props} />\n})\nSheetClose.displayName = \"SheetClose\"\n\nfunction SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {\n  return <SheetPrimitive.Portal data-slot=\"sheet-portal\" {...props} />\n}\n\nconst SheetOverlay = React.forwardRef<\n  React.ComponentRef<typeof SheetPrimitive.Backdrop>,\n  SheetPrimitive.Backdrop.Props\n>(function SheetOverlay({ className, ...props }, ref) {\n  return (\n    <SheetPrimitive.Backdrop\n      ref={ref}\n      data-slot=\"sheet-overlay\"\n      className={cn(\n        \"fixed inset-0 z-50 bg-black/10 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nSheetOverlay.displayName = \"SheetOverlay\"\n\nconst SheetContent = React.forwardRef<\n  React.ComponentRef<typeof SheetPrimitive.Popup>,\n  SheetPrimitive.Popup.Props & {\n    side?: \"top\" | \"right\" | \"bottom\" | \"left\"\n    showCloseButton?: boolean\n  }\n>(function SheetContent(\n  { className, children, side = \"right\", showCloseButton = true, ...props },\n  ref\n) {\n  return (\n    <SheetPortal>\n      <SheetOverlay />\n      <SheetPrimitive.Popup\n        ref={ref}\n        data-slot=\"sheet-content\"\n        data-side={side}\n        className={cn(\n          \"fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem] data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm\",\n          className\n        )}\n        {...props}\n      >\n        {children}\n        {showCloseButton && (\n          <SheetPrimitive.Close\n            data-slot=\"sheet-close\"\n            render={\n              <Button\n                variant=\"ghost\"\n                className=\"absolute end-3 top-3\"\n                size=\"icon-sm\"\n              />\n            }\n          >\n            <XIcon />\n            <span className=\"sr-only\">Close</span>\n          </SheetPrimitive.Close>\n        )}\n      </SheetPrimitive.Popup>\n    </SheetPortal>\n  )\n})\nSheetContent.displayName = \"SheetContent\"\n\nconst SheetHeader = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function SheetHeader({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"sheet-header\"\n      className={cn(\"flex flex-col gap-0.5 p-4\", className)}\n      {...props}\n    />\n  )\n})\nSheetHeader.displayName = \"SheetHeader\"\n\nconst SheetFooter = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function SheetFooter({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"sheet-footer\"\n      className={cn(\"mt-auto flex flex-col gap-2 p-4\", className)}\n      {...props}\n    />\n  )\n})\nSheetFooter.displayName = \"SheetFooter\"\n\nconst SheetTitle = React.forwardRef<\n  React.ComponentRef<typeof SheetPrimitive.Title>,\n  SheetPrimitive.Title.Props\n>(function SheetTitle({ className, ...props }, ref) {\n  return (\n    <SheetPrimitive.Title\n      ref={ref}\n      data-slot=\"sheet-title\"\n      className={cn(\n        \"font-heading text-base font-medium text-foreground\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nSheetTitle.displayName = \"SheetTitle\"\n\nconst SheetDescription = React.forwardRef<\n  React.ComponentRef<typeof SheetPrimitive.Description>,\n  SheetPrimitive.Description.Props\n>(function SheetDescription({ className, ...props }, ref) {\n  return (\n    <SheetPrimitive.Description\n      ref={ref}\n      data-slot=\"sheet-description\"\n      className={cn(\"text-sm text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nSheetDescription.displayName = \"SheetDescription\"\n\nexport {\n  Sheet,\n  SheetTrigger,\n  SheetClose,\n  SheetContent,\n  SheetHeader,\n  SheetFooter,\n  SheetTitle,\n  SheetDescription,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-12c8e606295044a6445abff249ad17c022e555755a5c311202be8ae6b0f5016c",
+    "api": [
+      {
+        "name": "Sheet",
+        "kind": "function",
+        "line": 10,
+        "signature": "function Sheet({ ...props }: SheetPrimitive.Root.Props)",
+        "propsType": "SheetPrimitive.Root.Props",
+        "usage": "<Sheet />"
+      },
+      {
+        "name": "SheetClose",
+        "kind": "const",
+        "line": 24,
+        "signature": "const SheetClose = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Close>, SheetPrimitive.Close.Props>(…)",
+        "propsType": "SheetPrimitive.Close.Props",
+        "usage": "<SheetClose />"
+      },
+      {
+        "name": "SheetContent",
+        "kind": "const",
+        "line": 54,
+        "signature": "const SheetContent = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Popup>, SheetPrimitive.Popup.Props & { side?: \"top\" | \"right\" | \"bottom\" | \"left\" showCloseButton?: boolean }>(…)",
+        "propsType": "SheetPrimitive.Popup.Props & { side?: \"top\" | \"right\" | \"bottom\" | \"left\" showCloseButton?: boolean }",
+        "props": [
+          {
+            "name": "side",
+            "kind": "property",
+            "optional": true,
+            "type": "\"top\" | \"right\" | \"bottom\" | \"left\"",
+            "default": "\"right\""
+          },
+          {
+            "name": "showCloseButton",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ],
+        "usage": "<SheetContent />"
+      },
+      {
+        "name": "SheetDescription",
+        "kind": "const",
+        "line": 147,
+        "signature": "const SheetDescription = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Description>, SheetPrimitive.Description.Props>(…)",
+        "propsType": "SheetPrimitive.Description.Props",
+        "usage": "<SheetDescription />"
+      },
+      {
+        "name": "SheetFooter",
+        "kind": "const",
+        "line": 114,
+        "signature": "const SheetFooter = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<SheetFooter />"
+      },
+      {
+        "name": "SheetHeader",
+        "kind": "const",
+        "line": 99,
+        "signature": "const SheetHeader = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<SheetHeader />"
+      },
+      {
+        "name": "SheetTitle",
+        "kind": "const",
+        "line": 129,
+        "signature": "const SheetTitle = React.forwardRef<React.ComponentRef<typeof SheetPrimitive.Title>, SheetPrimitive.Title.Props>(…)",
+        "propsType": "SheetPrimitive.Title.Props",
+        "usage": "<SheetTitle />"
+      },
+      {
+        "name": "SheetTrigger",
+        "kind": "const",
+        "line": 14,
+        "signature": "const SheetTrigger = React.forwardRef<HTMLButtonElement, SheetPrimitive.Trigger.Props>(…)",
+        "propsType": "SheetPrimitive.Trigger.Props",
+        "usage": "<SheetTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/sheet",
+      "importStatement": "import { Sheet } from \"@/components/ui/sheet\"",
+      "primaryExport": "Sheet",
+      "example": "<Sheet />"
+    },
+    "ssr": false
+  }
+}

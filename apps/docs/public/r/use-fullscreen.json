@@ -1,0 +1,86 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-fullscreen",
+  "type": "registry:hook",
+  "title": "Use Fullscreen",
+  "description": "Open-code aq-ui React hook for Use Fullscreen.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-fullscreen.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\n\nexport interface FullscreenControls {\n  active: boolean\n  supported: boolean\n  error: unknown\n  enter: () => Promise<boolean>\n  exit: () => Promise<boolean>\n  toggle: () => Promise<boolean>\n}\n\nexport function useFullscreen(target?: Target<Element>): FullscreenControls {\n  const [active, setActive] = React.useState(false)\n  const [error, setError] = React.useState<unknown>()\n  const supported =\n    typeof document !== \"undefined\" && \"fullscreenEnabled\" in document\n\n  const enter = React.useCallback(async () => {\n    const element =\n      resolveTarget(target) ??\n      (typeof document === \"undefined\" ? null : document.documentElement)\n    if (!element?.requestFullscreen) return false\n    try {\n      await element.requestFullscreen()\n      return true\n    } catch (fullscreenError) {\n      setError(fullscreenError)\n      return false\n    }\n  }, [target])\n\n  const exit = React.useCallback(async () => {\n    if (typeof document === \"undefined\" || !document.fullscreenElement) {\n      return false\n    }\n    try {\n      await document.exitFullscreen()\n      return true\n    } catch (fullscreenError) {\n      setError(fullscreenError)\n      return false\n    }\n  }, [])\n\n  const toggle = React.useCallback(\n    () => (active ? exit() : enter()),\n    [active, enter, exit]\n  )\n\n  React.useEffect(() => {\n    if (typeof document === \"undefined\") return\n    const update = () => {\n      const element = resolveTarget(target)\n      setActive(\n        element\n          ? document.fullscreenElement === element\n          : Boolean(document.fullscreenElement)\n      )\n    }\n    document.addEventListener(\"fullscreenchange\", update)\n    update()\n    return () => document.removeEventListener(\"fullscreenchange\", update)\n  }, [target])\n\n  return { active, supported, error, enter, exit, toggle }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-c7fc35fbdc07df08baee02877db080b636a2a421608434cf420135492085c2bd",
+    "api": [
+      {
+        "name": "FullscreenControls",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface FullscreenControls",
+        "members": [
+          {
+            "name": "active",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "type": "unknown"
+          },
+          {
+            "name": "enter",
+            "kind": "property",
+            "type": "() => Promise<boolean>"
+          },
+          {
+            "name": "exit",
+            "kind": "property",
+            "type": "() => Promise<boolean>"
+          },
+          {
+            "name": "toggle",
+            "kind": "property",
+            "type": "() => Promise<boolean>"
+          }
+        ]
+      },
+      {
+        "name": "useFullscreen",
+        "kind": "function",
+        "line": 16,
+        "signature": "function useFullscreen(target?: Target<Element>): FullscreenControls",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "optional": true,
+            "type": "Target<Element>"
+          }
+        ],
+        "returns": "FullscreenControls",
+        "usage": "const result = useFullscreen(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-fullscreen",
+      "importStatement": "import { useFullscreen } from \"@/hooks/use-fullscreen\"",
+      "primaryExport": "useFullscreen",
+      "example": "const result = useFullscreen(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

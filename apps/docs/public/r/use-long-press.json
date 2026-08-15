@@ -1,0 +1,141 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-long-press",
+  "type": "registry:hook",
+  "title": "Use Long Press",
+  "description": "Open-code aq-ui React hook for Use Long Press.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-long-press.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseLongPressOptions {\n  delay?: number\n  movementTolerance?: number\n  disabled?: boolean\n  preventDefault?: boolean\n  onStart?: () => void\n  onCancel?: () => void\n  onFinish?: () => void\n}\n\nexport interface LongPressBind<T extends HTMLElement> {\n  onPointerDown: React.PointerEventHandler<T>\n  onPointerMove: React.PointerEventHandler<T>\n  onPointerUp: React.PointerEventHandler<T>\n  onPointerCancel: React.PointerEventHandler<T>\n  onPointerLeave: React.PointerEventHandler<T>\n}\n\nexport function useLongPress<T extends HTMLElement>(\n  callback: (event: React.PointerEvent<T>) => void,\n  {\n    delay = 500,\n    movementTolerance = 10,\n    disabled = false,\n    preventDefault = true,\n    onStart,\n    onCancel,\n    onFinish,\n  }: UseLongPressOptions = {}\n): LongPressBind<T> {\n  const callbackStable = useStableCallback(callback)\n  const onStartStable = useStableCallback(onStart)\n  const onCancelStable = useStableCallback(onCancel)\n  const onFinishStable = useStableCallback(onFinish)\n  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const originRef = React.useRef({ x: 0, y: 0 })\n  const eventRef = React.useRef<React.PointerEvent<T> | null>(null)\n  const triggeredRef = React.useRef(false)\n\n  const cancel = React.useCallback(() => {\n    const wasActive = timerRef.current !== null || eventRef.current !== null\n    if (timerRef.current !== null) clearTimeout(timerRef.current)\n    timerRef.current = null\n    eventRef.current = null\n    if (wasActive && !triggeredRef.current) onCancelStable()\n    triggeredRef.current = false\n  }, [onCancelStable])\n\n  React.useEffect(() => {\n    if (disabled) cancel()\n    return cancel\n  }, [cancel, disabled])\n\n  return React.useMemo(\n    () => ({\n      onPointerDown(event: React.PointerEvent<T>) {\n        if (disabled || event.button !== 0) return\n        if (preventDefault) event.preventDefault()\n        originRef.current = { x: event.clientX, y: event.clientY }\n        eventRef.current = event\n        triggeredRef.current = false\n        onStartStable()\n        timerRef.current = setTimeout(\n          () => {\n            timerRef.current = null\n            triggeredRef.current = true\n            if (eventRef.current) callbackStable(eventRef.current)\n            onFinishStable()\n          },\n          Math.max(0, delay)\n        )\n      },\n      onPointerMove(event: React.PointerEvent<T>) {\n        if (timerRef.current === null) return\n        const distance = Math.hypot(\n          event.clientX - originRef.current.x,\n          event.clientY - originRef.current.y\n        )\n        if (distance > movementTolerance) cancel()\n      },\n      onPointerUp: cancel,\n      onPointerCancel: cancel,\n      onPointerLeave: cancel,\n    }),\n    [\n      callbackStable,\n      cancel,\n      delay,\n      disabled,\n      movementTolerance,\n      onFinishStable,\n      onStartStable,\n      preventDefault,\n    ]\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-a2d9b039078b6833107390496851df9401a2714625b5aa732c306e849af63848",
+    "api": [
+      {
+        "name": "LongPressBind",
+        "kind": "interface",
+        "line": 17,
+        "signature": "interface LongPressBind<T extends HTMLElement>",
+        "members": [
+          {
+            "name": "onPointerDown",
+            "kind": "property",
+            "type": "React.PointerEventHandler<T>"
+          },
+          {
+            "name": "onPointerMove",
+            "kind": "property",
+            "type": "React.PointerEventHandler<T>"
+          },
+          {
+            "name": "onPointerUp",
+            "kind": "property",
+            "type": "React.PointerEventHandler<T>"
+          },
+          {
+            "name": "onPointerCancel",
+            "kind": "property",
+            "type": "React.PointerEventHandler<T>"
+          },
+          {
+            "name": "onPointerLeave",
+            "kind": "property",
+            "type": "React.PointerEventHandler<T>"
+          }
+        ]
+      },
+      {
+        "name": "useLongPress",
+        "kind": "function",
+        "line": 25,
+        "signature": "function useLongPress<T extends HTMLElement>(callback: (event: React.PointerEvent<T>) => void, { delay = 500, movementTolerance = 10, disabled = false, preventDefault = true, onStart, onCancel, onFinish, }: UseLongPressOptions = {}): LongPressBind<T>",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "(event: React.PointerEvent<T>) => void"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseLongPressOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "LongPressBind<T>",
+        "usage": "const result = useLongPress(/* arguments */)"
+      },
+      {
+        "name": "UseLongPressOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseLongPressOptions",
+        "members": [
+          {
+            "name": "delay",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "500"
+          },
+          {
+            "name": "movementTolerance",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "10"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "preventDefault",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "onStart",
+            "kind": "property",
+            "optional": true,
+            "type": "() => void"
+          },
+          {
+            "name": "onCancel",
+            "kind": "property",
+            "optional": true,
+            "type": "() => void"
+          },
+          {
+            "name": "onFinish",
+            "kind": "property",
+            "optional": true,
+            "type": "() => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-long-press",
+      "importStatement": "import { useLongPress } from \"@/hooks/use-long-press\"",
+      "primaryExport": "useLongPress",
+      "example": "const result = useLongPress(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

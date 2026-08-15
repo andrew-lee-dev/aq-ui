@@ -1,0 +1,463 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-editor",
+  "type": "registry:ui",
+  "title": "Code Editor",
+  "description": "CodeMirror 6 editor with controlled state, lazy languages, diagnostics, search, folding, and token-aware themes.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/state@^6.7.1"
+  ],
+  "registryDependencies": [
+    "use-code-editor",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/code-editor.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport type { Extension } from \"@codemirror/state\"\n\nimport { cn } from \"@/lib/utils\"\nimport {\n  loadCodeLanguage,\n  registerCodeLanguage,\n  useCodeEditor,\n  type CodeDiagnostic,\n  type CodeEditorHandle,\n  type CodeLanguage,\n  type CodeLanguageLoader,\n} from \"@/hooks/use-code-editor\"\n\ninterface CodeEditorStatusBarProps extends React.ComponentProps<\"div\"> {\n  characters?: number\n  lines?: number\n  language?: CodeLanguage\n  languageStatus?: \"idle\" | \"loading\" | \"ready\" | \"error\"\n  error?: Error | null\n}\n\nfunction CodeEditorStatusBar({\n  className,\n  characters,\n  lines,\n  language,\n  languageStatus,\n  error,\n  children,\n  ...props\n}: CodeEditorStatusBarProps) {\n  return (\n    <div\n      data-slot=\"code-editor-status-bar\"\n      className={cn(\n        \"flex min-h-8 items-center gap-3 border-t bg-muted/30 px-3 text-xs text-muted-foreground\",\n        className\n      )}\n      role=\"status\"\n      aria-live=\"polite\"\n      {...props}\n    >\n      {children ?? (\n        <>\n          {language ? <span>{language}</span> : null}\n          {typeof lines === \"number\" ? (\n            <span>\n              {lines} {lines === 1 ? \"line\" : \"lines\"}\n            </span>\n          ) : null}\n          {typeof characters === \"number\" ? (\n            <span>{characters.toLocaleString()} characters</span>\n          ) : null}\n          {languageStatus === \"loading\" ? (\n            <span className=\"ms-auto\">Loading language…</span>\n          ) : null}\n          {languageStatus === \"error\" ? (\n            <span className=\"ms-auto text-destructive\" title={error?.message}>\n              Plain-text fallback\n            </span>\n          ) : null}\n        </>\n      )}\n    </div>\n  )\n}\n\ninterface CodeEditorProps extends Omit<\n  React.ComponentProps<\"div\">,\n  \"defaultValue\" | \"onChange\"\n> {\n  value?: string\n  defaultValue?: string\n  onChange?: (value: string) => void\n  language?: CodeLanguage\n  readOnly?: boolean\n  disabled?: boolean\n  lineNumbers?: boolean\n  lineWrapping?: boolean\n  foldGutter?: boolean\n  highlightActiveLine?: boolean\n  tabSize?: number\n  indentWithTab?: boolean\n  autofocus?: boolean\n  placeholder?: string\n  minHeight?: string | number\n  maxHeight?: string | number\n  diagnostics?: readonly CodeDiagnostic[]\n  extensions?: readonly Extension[]\n  statusBar?: boolean\n  onReady?: (handle: CodeEditorHandle) => void\n  onLanguageError?: (error: Error) => void\n}\n\ninterface CodeEditorMetrics {\n  characters: number\n  lines: number\n}\n\nconst emptyCodeEditorMetrics: CodeEditorMetrics = { characters: 0, lines: 1 }\n\nfunction getCodeEditorMetrics(value: string): CodeEditorMetrics {\n  let lines = 1\n  let index = value.indexOf(\"\\n\")\n\n  while (index !== -1) {\n    lines += 1\n    index = value.indexOf(\"\\n\", index + 1)\n  }\n\n  return { characters: value.length, lines }\n}\n\nconst CodeEditor = React.forwardRef<CodeEditorHandle, CodeEditorProps>(\n  function CodeEditor(\n    {\n      value,\n      defaultValue = \"\",\n      onChange,\n      language = \"plaintext\",\n      readOnly = false,\n      disabled = false,\n      lineNumbers = true,\n      lineWrapping = false,\n      foldGutter = true,\n      highlightActiveLine = true,\n      tabSize = 2,\n      indentWithTab = false,\n      autofocus = false,\n      placeholder = \"\",\n      minHeight = 160,\n      maxHeight,\n      diagnostics,\n      extensions,\n      statusBar = false,\n      onReady,\n      onLanguageError,\n      className,\n      style,\n      \"aria-label\": ariaLabel = \"Code editor\",\n      ...props\n    },\n    forwardedRef\n  ) {\n    const initialValue = value ?? defaultValue\n    const [metrics, setMetrics] = React.useState(() =>\n      statusBar ? getCodeEditorMetrics(initialValue) : emptyCodeEditorMetrics\n    )\n\n    const handleChange = React.useCallback(\n      (nextValue: string) => {\n        if (statusBar && value === undefined) {\n          setMetrics(getCodeEditorMetrics(nextValue))\n        }\n        onChange?.(nextValue)\n      },\n      [onChange, statusBar, value]\n    )\n\n    const {\n      containerRef,\n      handle,\n      language: normalizedLanguage,\n      languageStatus,\n      languageError,\n    } = useCodeEditor({\n      value,\n      defaultValue,\n      onChange: handleChange,\n      language,\n      readOnly,\n      disabled,\n      lineNumbers,\n      lineWrapping,\n      foldGutter,\n      highlightActiveLine,\n      tabSize,\n      indentWithTab,\n      autofocus,\n      placeholder,\n      diagnostics,\n      extensions,\n      ariaLabel,\n      onReady,\n      onLanguageError,\n    })\n\n    React.useImperativeHandle(forwardedRef, () => handle, [handle])\n\n    React.useEffect(() => {\n      if (!statusBar || value !== undefined) return\n      const nextMetrics = getCodeEditorMetrics(handle.getValue())\n      let active = true\n      queueMicrotask(() => {\n        if (!active) return\n        setMetrics((current) =>\n          current.characters === nextMetrics.characters &&\n          current.lines === nextMetrics.lines\n            ? current\n            : nextMetrics\n        )\n      })\n      return () => {\n        active = false\n      }\n    }, [handle, statusBar, value])\n\n    const controlledMetrics = React.useMemo(\n      () =>\n        statusBar && value !== undefined ? getCodeEditorMetrics(value) : null,\n      [statusBar, value]\n    )\n    const displayedMetrics = controlledMetrics ?? metrics\n\n    const editorStyle: React.CSSProperties = {\n      minHeight,\n      maxHeight,\n      ...style,\n    }\n\n    return (\n      <div\n        data-slot=\"code-editor\"\n        data-language={normalizedLanguage}\n        data-language-status={languageStatus}\n        data-disabled={disabled ? \"\" : undefined}\n        data-readonly={readOnly ? \"\" : undefined}\n        className={cn(\n          \"overflow-hidden rounded-lg border bg-background text-foreground shadow-xs transition-[border-color,box-shadow] outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 data-disabled:pointer-events-none data-disabled:opacity-50\",\n          className\n        )}\n        style={editorStyle}\n        {...props}\n      >\n        <div\n          ref={containerRef}\n          data-slot=\"code-editor-content\"\n          className=\"max-h-[inherit] min-h-[inherit] overflow-hidden [&_.cm-editor]:max-h-[inherit] [&_.cm-editor]:min-h-[inherit] [&_.cm-scroller]:overflow-auto\"\n        />\n        {statusBar ? (\n          <CodeEditorStatusBar\n            characters={displayedMetrics.characters}\n            lines={displayedMetrics.lines}\n            language={normalizedLanguage}\n            languageStatus={languageStatus}\n            error={languageError}\n          />\n        ) : null}\n      </div>\n    )\n  }\n)\n\nexport {\n  CodeEditor,\n  CodeEditorStatusBar,\n  loadCodeLanguage,\n  registerCodeLanguage,\n  useCodeEditor,\n}\nexport type {\n  CodeDiagnostic,\n  CodeEditorHandle,\n  CodeEditorProps,\n  CodeEditorStatusBarProps,\n  CodeLanguage,\n  CodeLanguageLoader,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-eae84cdada3145ffc6a5f1af53cfa1142216f982874b2d83adc5c8b90b9efc39",
+    "api": [
+      {
+        "name": "CodeDiagnostic",
+        "kind": "type",
+        "line": 11,
+        "signature": "export type { CodeDiagnostic } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor"
+      },
+      {
+        "name": "CodeEditor",
+        "kind": "const",
+        "line": 117,
+        "signature": "const CodeEditor = React.forwardRef<CodeEditorHandle, CodeEditorProps>(…)",
+        "propsType": "CodeEditorProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeLanguage",
+            "default": "\"plaintext\""
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "lineNumbers",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "lineWrapping",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "foldGutter",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "highlightActiveLine",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "tabSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "2"
+          },
+          {
+            "name": "indentWithTab",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "minHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number",
+            "default": "160"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number"
+          },
+          {
+            "name": "diagnostics",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly CodeDiagnostic[]"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly Extension[]"
+          },
+          {
+            "name": "statusBar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onReady",
+            "kind": "property",
+            "optional": true,
+            "type": "(handle: CodeEditorHandle) => void"
+          },
+          {
+            "name": "onLanguageError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ],
+        "usage": "<CodeEditor />"
+      },
+      {
+        "name": "CodeEditorHandle",
+        "kind": "type",
+        "line": 12,
+        "signature": "export type { CodeEditorHandle } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor"
+      },
+      {
+        "name": "CodeEditorProps",
+        "kind": "interface",
+        "line": 71,
+        "signature": "interface CodeEditorProps extends Omit< React.ComponentProps<\"div\">, \"defaultValue\" | \"onChange\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeLanguage",
+            "default": "\"plaintext\""
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "lineNumbers",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "lineWrapping",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "foldGutter",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "highlightActiveLine",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "tabSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "2"
+          },
+          {
+            "name": "indentWithTab",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "minHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number",
+            "default": "160"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number"
+          },
+          {
+            "name": "diagnostics",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly CodeDiagnostic[]"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly Extension[]"
+          },
+          {
+            "name": "statusBar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onReady",
+            "kind": "property",
+            "optional": true,
+            "type": "(handle: CodeEditorHandle) => void"
+          },
+          {
+            "name": "onLanguageError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ]
+      },
+      {
+        "name": "CodeEditorStatusBar",
+        "kind": "function",
+        "line": 25,
+        "signature": "function CodeEditorStatusBar({ className, characters, lines, language, languageStatus, error, children, ...props }: CodeEditorStatusBarProps)",
+        "propsType": "CodeEditorStatusBarProps",
+        "props": [
+          {
+            "name": "characters",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "lines",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeLanguage"
+          },
+          {
+            "name": "languageStatus",
+            "kind": "property",
+            "optional": true,
+            "type": "\"idle\" | \"loading\" | \"ready\" | \"error\""
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "optional": true,
+            "type": "Error | null"
+          }
+        ],
+        "usage": "<CodeEditorStatusBar />"
+      },
+      {
+        "name": "CodeEditorStatusBarProps",
+        "kind": "interface",
+        "line": 17,
+        "signature": "interface CodeEditorStatusBarProps extends React.ComponentProps<\"div\">",
+        "members": [
+          {
+            "name": "characters",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "lines",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeLanguage"
+          },
+          {
+            "name": "languageStatus",
+            "kind": "property",
+            "optional": true,
+            "type": "\"idle\" | \"loading\" | \"ready\" | \"error\""
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "optional": true,
+            "type": "Error | null"
+          }
+        ]
+      },
+      {
+        "name": "CodeLanguage",
+        "kind": "type",
+        "line": 13,
+        "signature": "export type { CodeLanguage } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor"
+      },
+      {
+        "name": "CodeLanguageLoader",
+        "kind": "type",
+        "line": 14,
+        "signature": "export type { CodeLanguageLoader } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor"
+      },
+      {
+        "name": "loadCodeLanguage",
+        "kind": "function",
+        "line": 8,
+        "signature": "export { loadCodeLanguage } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor",
+        "usage": "loadCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "registerCodeLanguage",
+        "kind": "function",
+        "line": 9,
+        "signature": "export { registerCodeLanguage } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor",
+        "usage": "registerCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "useCodeEditor",
+        "kind": "function",
+        "line": 10,
+        "signature": "export { useCodeEditor } from \"@/hooks/use-code-editor\"",
+        "source": "@/hooks/use-code-editor",
+        "usage": "const result = useCodeEditor(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/code-editor",
+      "importStatement": "import { CodeEditor } from \"@/components/ui/code-editor\"",
+      "primaryExport": "CodeEditor",
+      "example": "<CodeEditor />"
+    },
+    "ssr": false
+  }
+}

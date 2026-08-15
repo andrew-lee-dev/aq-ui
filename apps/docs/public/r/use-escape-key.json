@@ -1,0 +1,97 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-escape-key",
+  "type": "registry:hook",
+  "title": "Use Escape Key",
+  "description": "Open-code aq-ui React hook for Use Escape Key.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-escape-key.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseEscapeKeyOptions {\n  enabled?: boolean\n  capture?: boolean\n  preventDefault?: boolean\n  stopPropagation?: boolean\n  target?: Target<EventTarget>\n}\n\nexport function useEscapeKey(\n  callback: (event: KeyboardEvent) => void,\n  {\n    enabled = true,\n    capture = true,\n    preventDefault = false,\n    stopPropagation = false,\n    target,\n  }: UseEscapeKeyOptions = {}\n): void {\n  const stableCallback = useStableCallback(callback)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const eventTarget =\n      resolveTarget(target) ??\n      (typeof document === \"undefined\" ? null : document)\n    if (!eventTarget) return\n\n    const listener: EventListener = (event) => {\n      if (!(event instanceof KeyboardEvent) || event.key !== \"Escape\") return\n      if (preventDefault) event.preventDefault()\n      if (stopPropagation) event.stopPropagation()\n      stableCallback(event)\n    }\n    eventTarget.addEventListener(\"keydown\", listener, capture)\n    return () => eventTarget.removeEventListener(\"keydown\", listener, capture)\n  }, [\n    capture,\n    enabled,\n    preventDefault,\n    stableCallback,\n    stopPropagation,\n    target,\n  ])\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-03aca87b4f8fa282082adff61849affecd22838460b066f836ceee31b80223b1",
+    "api": [
+      {
+        "name": "useEscapeKey",
+        "kind": "function",
+        "line": 16,
+        "signature": "function useEscapeKey(callback: (event: KeyboardEvent) => void, { enabled = true, capture = true, preventDefault = false, stopPropagation = false, target, }: UseEscapeKeyOptions = {}): void",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "(event: KeyboardEvent) => void"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseEscapeKeyOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "void",
+        "usage": "const result = useEscapeKey(/* arguments */)"
+      },
+      {
+        "name": "UseEscapeKeyOptions",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface UseEscapeKeyOptions",
+        "members": [
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "capture",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "preventDefault",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "stopPropagation",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "target",
+            "kind": "property",
+            "optional": true,
+            "type": "Target<EventTarget>"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-escape-key",
+      "importStatement": "import { useEscapeKey } from \"@/hooks/use-escape-key\"",
+      "primaryExport": "useEscapeKey",
+      "example": "const result = useEscapeKey(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

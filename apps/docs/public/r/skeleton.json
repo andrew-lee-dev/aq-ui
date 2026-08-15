@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "skeleton",
+  "type": "registry:ui",
+  "title": "Skeleton",
+  "description": "Open-code aq-ui accessible component family for Skeleton.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/skeleton.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\n\nconst Skeleton = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function Skeleton({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"skeleton\"\n      className={cn(\"animate-pulse rounded-md bg-muted\", className)}\n      {...props}\n    />\n  )\n})\nSkeleton.displayName = \"Skeleton\"\n\nexport { Skeleton }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-2bc0e5c5fcdec1e2b71f5d320c8410f2ec4ad6ef83811244112f8e8959ae78fc",
+    "api": [
+      {
+        "name": "Skeleton",
+        "kind": "const",
+        "line": 4,
+        "signature": "const Skeleton = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<Skeleton />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/skeleton",
+      "importStatement": "import { Skeleton } from \"@/components/ui/skeleton\"",
+      "primaryExport": "Skeleton",
+      "example": "<Skeleton />"
+    },
+    "ssr": true
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-focus-visible",
+  "type": "registry:hook",
+  "title": "Use Focus Visible",
+  "description": "Open-code aq-ui React hook for Use Focus Visible.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-keyboard-modality"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-focus-visible.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useKeyboardModality } from \"@/hooks/use-keyboard-modality\"\n\nexport function useFocusVisible<T extends HTMLElement>(\n  target: Target<T>,\n  enabled = true\n): boolean {\n  const modality = useKeyboardModality()\n  const [focusVisible, setFocusVisible] = React.useState(false)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const element = resolveTarget(target)\n    if (!element) return\n    const onFocus = () => setFocusVisible(modality === \"keyboard\")\n    const onBlur = () => setFocusVisible(false)\n    element.addEventListener(\"focus\", onFocus)\n    element.addEventListener(\"blur\", onBlur)\n    return () => {\n      element.removeEventListener(\"focus\", onFocus)\n      element.removeEventListener(\"blur\", onBlur)\n    }\n  }, [enabled, modality, target])\n\n  return focusVisible\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-0c2ef3b1c5ce98c567388de48fdd852cfbd90ba6d42775e7e2c07d8dc3bc0924",
+    "api": [
+      {
+        "name": "useFocusVisible",
+        "kind": "function",
+        "line": 8,
+        "signature": "function useFocusVisible<T extends HTMLElement>(target: Target<T>, enabled = true): boolean",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "enabled",
+            "kind": "parameter",
+            "optional": true,
+            "default": "true"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useFocusVisible(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-focus-visible",
+      "importStatement": "import { useFocusVisible } from \"@/hooks/use-focus-visible\"",
+      "primaryExport": "useFocusVisible",
+      "example": "const result = useFocusVisible(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

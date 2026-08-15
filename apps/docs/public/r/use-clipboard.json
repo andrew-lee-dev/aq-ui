@@ -1,0 +1,100 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-clipboard",
+  "type": "registry:hook",
+  "title": "Use Clipboard",
+  "description": "Open-code aq-ui React hook for Use Clipboard.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-clipboard.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport interface UseClipboardOptions {\n  timeout?: number\n}\n\nexport interface ClipboardControls {\n  copied: boolean\n  value: string | undefined\n  error: unknown\n  supported: boolean\n  copy: (value: string) => Promise<boolean>\n  reset: () => void\n}\n\nexport function useClipboard({\n  timeout = 2_000,\n}: UseClipboardOptions = {}): ClipboardControls {\n  const [copied, setCopied] = React.useState(false)\n  const [value, setValue] = React.useState<string>()\n  const [error, setError] = React.useState<unknown>()\n  const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const supported = typeof navigator !== \"undefined\" && \"clipboard\" in navigator\n\n  const reset = React.useCallback(() => {\n    if (resetTimerRef.current !== null) clearTimeout(resetTimerRef.current)\n    resetTimerRef.current = null\n    setCopied(false)\n    setError(undefined)\n  }, [])\n\n  const copy = React.useCallback(\n    async (nextValue: string) => {\n      reset()\n      if (typeof navigator === \"undefined\" || !navigator.clipboard?.writeText) {\n        setError(new Error(\"Clipboard API is not supported\"))\n        return false\n      }\n      try {\n        await navigator.clipboard.writeText(nextValue)\n        setValue(nextValue)\n        setCopied(true)\n        if (timeout > 0) {\n          resetTimerRef.current = setTimeout(() => setCopied(false), timeout)\n        }\n        return true\n      } catch (copyError) {\n        setError(copyError)\n        return false\n      }\n    },\n    [reset, timeout]\n  )\n\n  React.useEffect(() => reset, [reset])\n\n  return { copied, value, error, supported, copy, reset }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-014c78f9180ccc59b8bd346706112870ffd7ccfab9882891f47be90e3ad6b564",
+    "api": [
+      {
+        "name": "ClipboardControls",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface ClipboardControls",
+        "members": [
+          {
+            "name": "copied",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string | undefined"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "type": "unknown"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "copy",
+            "kind": "property",
+            "type": "(value: string) => Promise<boolean>"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "useClipboard",
+        "kind": "function",
+        "line": 18,
+        "signature": "function useClipboard({ timeout = 2_000, }: UseClipboardOptions = {}): ClipboardControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseClipboardOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "ClipboardControls",
+        "usage": "const result = useClipboard(/* arguments */)"
+      },
+      {
+        "name": "UseClipboardOptions",
+        "kind": "interface",
+        "line": 5,
+        "signature": "interface UseClipboardOptions",
+        "members": [
+          {
+            "name": "timeout",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "2_000"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-clipboard",
+      "importStatement": "import { useClipboard } from \"@/hooks/use-clipboard\"",
+      "primaryExport": "useClipboard",
+      "example": "const result = useClipboard(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

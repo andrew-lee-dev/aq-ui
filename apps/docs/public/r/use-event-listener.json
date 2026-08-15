@@ -1,0 +1,80 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-event-listener",
+  "type": "registry:hook",
+  "title": "Use Event Listener",
+  "description": "Open-code aq-ui React hook for Use Event Listener.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-event-listener.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface EventListenerOptions extends AddEventListenerOptions {\n  enabled?: boolean\n}\n\nexport function useEventListener<TEvent extends Event>(\n  target: Target<EventTarget> | undefined,\n  eventName: string,\n  handler: (event: TEvent) => void,\n  { enabled = true, capture, once, passive, signal }: EventListenerOptions = {}\n): void {\n  const stableHandler = useStableCallback(handler)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const eventTarget =\n      resolveTarget(target) ?? (typeof window === \"undefined\" ? null : window)\n    if (!eventTarget) return\n\n    const listener: EventListener = (event) => {\n      stableHandler(event as TEvent)\n    }\n    const options = { capture, once, passive, signal }\n    eventTarget.addEventListener(eventName, listener, options)\n    return () => eventTarget.removeEventListener(eventName, listener, options)\n  }, [\n    capture,\n    enabled,\n    eventName,\n    once,\n    passive,\n    signal,\n    stableHandler,\n    target,\n  ])\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-8a42aa15c4de293ed4a4aae30f97ca7915360f15df276e0a4a9efe671a5b8b73",
+    "api": [
+      {
+        "name": "EventListenerOptions",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface EventListenerOptions extends AddEventListenerOptions",
+        "members": [
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      },
+      {
+        "name": "useEventListener",
+        "kind": "function",
+        "line": 12,
+        "signature": "function useEventListener<TEvent extends Event>(target: Target<EventTarget> | undefined, eventName: string, handler: (event: TEvent) => void, { enabled = true, capture, once, passive, signal }: EventListenerOptions = {}): void",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<EventTarget> | undefined"
+          },
+          {
+            "name": "eventName",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "handler",
+            "kind": "parameter",
+            "type": "(event: TEvent) => void"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "EventListenerOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "void",
+        "usage": "const result = useEventListener(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-event-listener",
+      "importStatement": "import { useEventListener } from \"@/hooks/use-event-listener\"",
+      "primaryExport": "useEventListener",
+      "example": "const result = useEventListener(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

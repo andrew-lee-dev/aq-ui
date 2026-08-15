@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-hover",
+  "type": "registry:hook",
+  "title": "Use Hover",
+  "description": "Open-code aq-ui React hook for Use Hover.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-hover.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\n\nexport function useHover<T extends Element>(\n  target: Target<T>,\n  enabled = true\n): boolean {\n  const [hovered, setHovered] = React.useState(false)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const element = resolveTarget(target)\n    if (!element) return\n    const enter = () => setHovered(true)\n    const leave = () => setHovered(false)\n    element.addEventListener(\"pointerenter\", enter)\n    element.addEventListener(\"pointerleave\", leave)\n    return () => {\n      element.removeEventListener(\"pointerenter\", enter)\n      element.removeEventListener(\"pointerleave\", leave)\n    }\n  }, [enabled, target])\n\n  return hovered\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-7fddec8a111c160ecbe02589271778ab28379c90ad7a8646cdcaf62a1eeb76e6",
+    "api": [
+      {
+        "name": "useHover",
+        "kind": "function",
+        "line": 7,
+        "signature": "function useHover<T extends Element>(target: Target<T>, enabled = true): boolean",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "enabled",
+            "kind": "parameter",
+            "optional": true,
+            "default": "true"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useHover(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-hover",
+      "importStatement": "import { useHover } from \"@/hooks/use-hover\"",
+      "primaryExport": "useHover",
+      "example": "const result = useHover(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

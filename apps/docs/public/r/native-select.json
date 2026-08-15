@@ -1,0 +1,67 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "native-select",
+  "type": "registry:ui",
+  "title": "Native Select",
+  "description": "Open-code aq-ui accessible component family for Native Select.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/native-select.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\nimport { ChevronDownIcon } from \"lucide-react\"\n\ntype NativeSelectProps = Omit<React.ComponentProps<\"select\">, \"size\"> & {\n  size?: \"sm\" | \"default\"\n}\n\nconst NativeSelect = React.forwardRef<\n  React.ComponentRef<\"select\">,\n  NativeSelectProps\n>(function NativeSelect({ className, size = \"default\", ...props }, ref) {\n  return (\n    <div\n      className={cn(\n        \"group/native-select relative w-fit has-[select:disabled]:opacity-50\",\n        className\n      )}\n      data-slot=\"native-select-wrapper\"\n      data-size={size}\n    >\n      <select\n        ref={ref}\n        data-slot=\"native-select\"\n        data-size={size}\n        className=\"h-8 w-full min-w-0 appearance-none rounded-lg border border-input bg-transparent py-1 ps-2.5 pe-8 text-sm transition-colors outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-[size=sm]:py-0.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40\"\n        {...props}\n      />\n      <ChevronDownIcon\n        className=\"pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground select-none\"\n        aria-hidden=\"true\"\n        data-slot=\"native-select-icon\"\n      />\n    </div>\n  )\n})\nNativeSelect.displayName = \"NativeSelect\"\n\nconst NativeSelectOption = React.forwardRef<\n  React.ComponentRef<\"option\">,\n  React.ComponentProps<\"option\">\n>(function NativeSelectOption({ className, ...props }, ref) {\n  return (\n    <option\n      ref={ref}\n      data-slot=\"native-select-option\"\n      className={cn(\"bg-[Canvas] text-[CanvasText]\", className)}\n      {...props}\n    />\n  )\n})\nNativeSelectOption.displayName = \"NativeSelectOption\"\n\nconst NativeSelectOptGroup = React.forwardRef<\n  React.ComponentRef<\"optgroup\">,\n  React.ComponentProps<\"optgroup\">\n>(function NativeSelectOptGroup({ className, ...props }, ref) {\n  return (\n    <optgroup\n      ref={ref}\n      data-slot=\"native-select-optgroup\"\n      className={cn(\"bg-[Canvas] text-[CanvasText]\", className)}\n      {...props}\n    />\n  )\n})\nNativeSelectOptGroup.displayName = \"NativeSelectOptGroup\"\n\nexport { NativeSelect, NativeSelectOptGroup, NativeSelectOption }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-032b6a9ddb120bcb90b9b4f91ddab69690114ee6d6ffc6e50fe634d1c87b9eaf",
+    "api": [
+      {
+        "name": "NativeSelect",
+        "kind": "const",
+        "line": 10,
+        "signature": "const NativeSelect = React.forwardRef<React.ComponentRef<\"select\">, NativeSelectProps>(…)",
+        "propsType": "NativeSelectProps",
+        "props": [
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "\"sm\" | \"default\"",
+            "default": "\"default\""
+          }
+        ],
+        "usage": "<NativeSelect />"
+      },
+      {
+        "name": "NativeSelectOptGroup",
+        "kind": "const",
+        "line": 55,
+        "signature": "const NativeSelectOptGroup = React.forwardRef<React.ComponentRef<\"optgroup\">, React.ComponentProps<\"optgroup\">>(…)",
+        "propsType": "React.ComponentProps<\"optgroup\">",
+        "usage": "<NativeSelectOptGroup />"
+      },
+      {
+        "name": "NativeSelectOption",
+        "kind": "const",
+        "line": 40,
+        "signature": "const NativeSelectOption = React.forwardRef<React.ComponentRef<\"option\">, React.ComponentProps<\"option\">>(…)",
+        "propsType": "React.ComponentProps<\"option\">",
+        "usage": "<NativeSelectOption />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/native-select",
+      "importStatement": "import { NativeSelect } from \"@/components/ui/native-select\"",
+      "primaryExport": "NativeSelect",
+      "example": "<NativeSelect />"
+    },
+    "ssr": true
+  }
+}

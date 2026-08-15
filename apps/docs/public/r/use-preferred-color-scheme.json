@@ -1,0 +1,55 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-preferred-color-scheme",
+  "type": "registry:hook",
+  "title": "Use Preferred Color Scheme",
+  "description": "Open-code aq-ui React hook for Use Preferred Color Scheme.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-media-query"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-preferred-color-scheme.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport { useMediaQuery } from \"@/hooks/use-media-query\"\n\nexport type PreferredColorScheme = \"light\" | \"dark\"\n\nexport function usePreferredColorScheme(\n  defaultValue: PreferredColorScheme = \"light\"\n): PreferredColorScheme {\n  const dark = useMediaQuery(\"(prefers-color-scheme: dark)\", {\n    defaultValue: defaultValue === \"dark\",\n  })\n  return dark ? \"dark\" : \"light\"\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-696f8ea7e4caf3083811bb80472235e28b2e566ef982408329be9fe295aaa1e8",
+    "api": [
+      {
+        "name": "PreferredColorScheme",
+        "kind": "type",
+        "line": 5,
+        "signature": "type PreferredColorScheme = \"light\" | \"dark\""
+      },
+      {
+        "name": "usePreferredColorScheme",
+        "kind": "function",
+        "line": 7,
+        "signature": "function usePreferredColorScheme(defaultValue: PreferredColorScheme = \"light\"): PreferredColorScheme",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "type": "PreferredColorScheme",
+            "default": "\"light\""
+          }
+        ],
+        "returns": "PreferredColorScheme",
+        "usage": "const result = usePreferredColorScheme(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-preferred-color-scheme",
+      "importStatement": "import { usePreferredColorScheme } from \"@/hooks/use-preferred-color-scheme\"",
+      "primaryExport": "usePreferredColorScheme",
+      "example": "const result = usePreferredColorScheme(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

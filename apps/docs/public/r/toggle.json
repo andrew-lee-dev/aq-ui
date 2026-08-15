@@ -1,0 +1,49 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "toggle",
+  "type": "registry:ui",
+  "title": "Toggle",
+  "description": "Open-code aq-ui accessible component family for Toggle.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/toggle.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Toggle as TogglePrimitive } from \"@base-ui/react/toggle\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst toggleVariants = cva(\n  \"group/toggle inline-flex items-center justify-center gap-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all outline-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-transparent\",\n        outline: \"border border-input bg-transparent hover:bg-muted\",\n      },\n      size: {\n        default:\n          \"h-8 min-w-8 px-2.5 has-data-[icon=inline-end]:pe-2 has-data-[icon=inline-start]:ps-2\",\n        sm: \"h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&_svg:not([class*='size-'])]:size-3.5\",\n        lg: \"h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pe-2 has-data-[icon=inline-start]:ps-2\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  }\n)\n\nconst Toggle = React.forwardRef<\n  React.ComponentRef<typeof TogglePrimitive>,\n  TogglePrimitive.Props & VariantProps<typeof toggleVariants>\n>(function Toggle(\n  { className, variant = \"default\", size = \"default\", ...props },\n  ref\n) {\n  return (\n    <TogglePrimitive\n      ref={ref}\n      data-slot=\"toggle\"\n      className={cn(toggleVariants({ variant, size, className }))}\n      {...props}\n    />\n  )\n})\nToggle.displayName = \"Toggle\"\n\nexport { Toggle, toggleVariants }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-02b1089a73b0cf2f71ac851d7add3299fb7f3e39c8d5f48bb4da10bd2b330fda",
+    "api": [
+      {
+        "name": "Toggle",
+        "kind": "const",
+        "line": 32,
+        "signature": "const Toggle = React.forwardRef<React.ComponentRef<typeof TogglePrimitive>, TogglePrimitive.Props & VariantProps<typeof toggleVariants>>(…)",
+        "propsType": "TogglePrimitive.Props & VariantProps<typeof toggleVariants>",
+        "usage": "<Toggle />"
+      },
+      {
+        "name": "toggleVariants",
+        "kind": "const",
+        "line": 10,
+        "signature": "const toggleVariants = cva(…)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/toggle",
+      "importStatement": "import { Toggle } from \"@/components/ui/toggle\"",
+      "primaryExport": "Toggle",
+      "example": "<Toggle />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,344 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-data-grid",
+  "type": "registry:hook",
+  "title": "Use Data Grid",
+  "description": "Open-code aq-ui React hook for Use Data Grid.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@tanstack/react-table@^8.21.3"
+  ],
+  "registryDependencies": [
+    "use-controllable-state"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-data-grid.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport {\n  getCoreRowModel,\n  getFilteredRowModel,\n  getPaginationRowModel,\n  getSortedRowModel,\n  useReactTable,\n  type ColumnDef,\n  type ColumnFiltersState,\n  type ColumnPinningState,\n  type PaginationState,\n  type Row,\n  type RowSelectionState,\n  type SortingState,\n  type Table,\n  type TableMeta,\n  type Updater,\n  type VisibilityState,\n} from \"@tanstack/react-table\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\n\nconst EMPTY_SORTING: SortingState = []\nconst EMPTY_FILTERS: ColumnFiltersState = []\nconst EMPTY_VISIBILITY: VisibilityState = {}\nconst EMPTY_PINNING: ColumnPinningState = {}\nconst EMPTY_SELECTION: RowSelectionState = {}\nconst DEFAULT_PAGINATION: PaginationState = { pageIndex: 0, pageSize: 10 }\n\nexport interface UseDataGridOptions<TData, TValue = unknown> {\n  data: TData[]\n  columns: ColumnDef<TData, TValue>[]\n  sorting?: SortingState\n  defaultSorting?: SortingState\n  onSortingChange?: (sorting: SortingState) => void\n  columnFilters?: ColumnFiltersState\n  defaultColumnFilters?: ColumnFiltersState\n  onColumnFiltersChange?: (filters: ColumnFiltersState) => void\n  columnVisibility?: VisibilityState\n  defaultColumnVisibility?: VisibilityState\n  onColumnVisibilityChange?: (visibility: VisibilityState) => void\n  columnPinning?: ColumnPinningState\n  defaultColumnPinning?: ColumnPinningState\n  onColumnPinningChange?: (pinning: ColumnPinningState) => void\n  rowSelection?: RowSelectionState\n  defaultRowSelection?: RowSelectionState\n  onRowSelectionChange?: (selection: RowSelectionState) => void\n  pagination?: PaginationState\n  defaultPagination?: PaginationState\n  onPaginationChange?: (pagination: PaginationState) => void\n  globalFilter?: unknown\n  defaultGlobalFilter?: unknown\n  onGlobalFilterChange?: (filter: unknown) => void\n  enableRowSelection?: boolean | ((row: Row<TData>) => boolean)\n  enableMultiRowSelection?: boolean | ((row: Row<TData>) => boolean)\n  getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string\n  manualFiltering?: boolean\n  manualSorting?: boolean\n  manualPagination?: boolean\n  pageCount?: number\n  rowCount?: number\n  meta?: TableMeta<TData>\n}\n\nexport interface DataGridController<TData> {\n  table: Table<TData>\n  sorting: SortingState\n  setSorting: (updater: Updater<SortingState>) => void\n  columnFilters: ColumnFiltersState\n  setColumnFilters: (updater: Updater<ColumnFiltersState>) => void\n  columnVisibility: VisibilityState\n  setColumnVisibility: (updater: Updater<VisibilityState>) => void\n  columnPinning: ColumnPinningState\n  setColumnPinning: (updater: Updater<ColumnPinningState>) => void\n  rowSelection: RowSelectionState\n  setRowSelection: (updater: Updater<RowSelectionState>) => void\n  pagination: PaginationState\n  setPagination: (updater: Updater<PaginationState>) => void\n  globalFilter: unknown\n  setGlobalFilter: (updater: Updater<unknown>) => void\n  reset: () => void\n}\n\nexport function useDataGrid<TData, TValue = unknown>({\n  data,\n  columns,\n  sorting: sortingProp,\n  defaultSorting = EMPTY_SORTING,\n  onSortingChange,\n  columnFilters: columnFiltersProp,\n  defaultColumnFilters = EMPTY_FILTERS,\n  onColumnFiltersChange,\n  columnVisibility: columnVisibilityProp,\n  defaultColumnVisibility = EMPTY_VISIBILITY,\n  onColumnVisibilityChange,\n  columnPinning: columnPinningProp,\n  defaultColumnPinning = EMPTY_PINNING,\n  onColumnPinningChange,\n  rowSelection: rowSelectionProp,\n  defaultRowSelection = EMPTY_SELECTION,\n  onRowSelectionChange,\n  pagination: paginationProp,\n  defaultPagination = DEFAULT_PAGINATION,\n  onPaginationChange,\n  globalFilter: globalFilterProp,\n  defaultGlobalFilter,\n  onGlobalFilterChange,\n  enableRowSelection,\n  enableMultiRowSelection,\n  getRowId,\n  manualFiltering = false,\n  manualSorting = false,\n  manualPagination = false,\n  pageCount,\n  rowCount,\n  meta,\n}: UseDataGridOptions<TData, TValue>): DataGridController<TData> {\n  const [sorting, setSorting] = useControllableState({\n    value: sortingProp,\n    defaultValue: defaultSorting,\n    onChange: onSortingChange,\n  })\n  const [columnFilters, setColumnFilters] = useControllableState({\n    value: columnFiltersProp,\n    defaultValue: defaultColumnFilters,\n    onChange: onColumnFiltersChange,\n  })\n  const [columnVisibility, setColumnVisibility] = useControllableState({\n    value: columnVisibilityProp,\n    defaultValue: defaultColumnVisibility,\n    onChange: onColumnVisibilityChange,\n  })\n  const [columnPinning, setColumnPinning] = useControllableState({\n    value: columnPinningProp,\n    defaultValue: defaultColumnPinning,\n    onChange: onColumnPinningChange,\n  })\n  const [rowSelection, setRowSelection] = useControllableState({\n    value: rowSelectionProp,\n    defaultValue: defaultRowSelection,\n    onChange: onRowSelectionChange,\n  })\n  const [pagination, setPagination] = useControllableState({\n    value: paginationProp,\n    defaultValue: defaultPagination,\n    onChange: onPaginationChange,\n  })\n  const [globalFilter, setGlobalFilter] = useControllableState<unknown>({\n    value: globalFilterProp,\n    defaultValue: defaultGlobalFilter,\n    onChange: onGlobalFilterChange,\n  })\n\n  // TanStack Table intentionally exposes mutable callback-backed table methods.\n  // eslint-disable-next-line react-hooks/incompatible-library\n  const table = useReactTable({\n    data,\n    columns,\n    state: {\n      sorting,\n      columnFilters,\n      columnVisibility,\n      columnPinning,\n      rowSelection,\n      pagination,\n      globalFilter,\n    },\n    enableRowSelection,\n    enableMultiRowSelection,\n    getRowId,\n    manualFiltering,\n    manualSorting,\n    manualPagination,\n    pageCount,\n    rowCount,\n    meta,\n    onSortingChange: setSorting,\n    onColumnFiltersChange: setColumnFilters,\n    onColumnVisibilityChange: setColumnVisibility,\n    onColumnPinningChange: setColumnPinning,\n    onRowSelectionChange: setRowSelection,\n    onPaginationChange: setPagination,\n    onGlobalFilterChange: setGlobalFilter,\n    getCoreRowModel: getCoreRowModel(),\n    getFilteredRowModel: manualFiltering ? undefined : getFilteredRowModel(),\n    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),\n    getPaginationRowModel: manualPagination\n      ? undefined\n      : getPaginationRowModel(),\n  })\n\n  const reset = React.useCallback(() => {\n    setSorting(defaultSorting)\n    setColumnFilters(defaultColumnFilters)\n    setColumnVisibility(defaultColumnVisibility)\n    setColumnPinning(defaultColumnPinning)\n    setRowSelection(defaultRowSelection)\n    setPagination(defaultPagination)\n    setGlobalFilter(defaultGlobalFilter)\n  }, [\n    defaultColumnFilters,\n    defaultColumnPinning,\n    defaultColumnVisibility,\n    defaultGlobalFilter,\n    defaultPagination,\n    defaultRowSelection,\n    defaultSorting,\n    setColumnFilters,\n    setColumnPinning,\n    setColumnVisibility,\n    setGlobalFilter,\n    setPagination,\n    setRowSelection,\n    setSorting,\n  ])\n\n  return {\n    table,\n    sorting,\n    setSorting,\n    columnFilters,\n    setColumnFilters,\n    columnVisibility,\n    setColumnVisibility,\n    columnPinning,\n    setColumnPinning,\n    rowSelection,\n    setRowSelection,\n    pagination,\n    setPagination,\n    globalFilter,\n    setGlobalFilter,\n    reset,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-beb4ee08eace161999b92898ab33a73edc09430c9f024d82956b0f32ae68381f",
+    "api": [
+      {
+        "name": "DataGridController",
+        "kind": "interface",
+        "line": 67,
+        "signature": "interface DataGridController<TData>",
+        "members": [
+          {
+            "name": "table",
+            "kind": "property",
+            "type": "Table<TData>"
+          },
+          {
+            "name": "sorting",
+            "kind": "property",
+            "type": "SortingState"
+          },
+          {
+            "name": "setSorting",
+            "kind": "property",
+            "type": "(updater: Updater<SortingState>) => void"
+          },
+          {
+            "name": "columnFilters",
+            "kind": "property",
+            "type": "ColumnFiltersState"
+          },
+          {
+            "name": "setColumnFilters",
+            "kind": "property",
+            "type": "(updater: Updater<ColumnFiltersState>) => void"
+          },
+          {
+            "name": "columnVisibility",
+            "kind": "property",
+            "type": "VisibilityState"
+          },
+          {
+            "name": "setColumnVisibility",
+            "kind": "property",
+            "type": "(updater: Updater<VisibilityState>) => void"
+          },
+          {
+            "name": "columnPinning",
+            "kind": "property",
+            "type": "ColumnPinningState"
+          },
+          {
+            "name": "setColumnPinning",
+            "kind": "property",
+            "type": "(updater: Updater<ColumnPinningState>) => void"
+          },
+          {
+            "name": "rowSelection",
+            "kind": "property",
+            "type": "RowSelectionState"
+          },
+          {
+            "name": "setRowSelection",
+            "kind": "property",
+            "type": "(updater: Updater<RowSelectionState>) => void"
+          },
+          {
+            "name": "pagination",
+            "kind": "property",
+            "type": "PaginationState"
+          },
+          {
+            "name": "setPagination",
+            "kind": "property",
+            "type": "(updater: Updater<PaginationState>) => void"
+          },
+          {
+            "name": "globalFilter",
+            "kind": "property",
+            "type": "unknown"
+          },
+          {
+            "name": "setGlobalFilter",
+            "kind": "property",
+            "type": "(updater: Updater<unknown>) => void"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "useDataGrid",
+        "kind": "function",
+        "line": 86,
+        "signature": "function useDataGrid<TData, TValue = unknown>({ data, columns, sorting: sortingProp, defaultSorting = EMPTY_SORTING, onSortingChange, columnFilters: columnFiltersProp, defaultColumnFilters = EMPTY_FILTERS, onColumnFiltersChange, columnVisibility: columnVisibilityProp, defaultColumnVis…): DataGridController<TData>",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UseDataGridOptions<TData, TValue>"
+          }
+        ],
+        "returns": "DataGridController<TData>",
+        "usage": "const result = useDataGrid(/* arguments */)"
+      },
+      {
+        "name": "UseDataGridOptions",
+        "kind": "interface",
+        "line": 32,
+        "signature": "interface UseDataGridOptions<TData, TValue = unknown>",
+        "members": [
+          {
+            "name": "data",
+            "kind": "property",
+            "type": "TData[]"
+          },
+          {
+            "name": "columns",
+            "kind": "property",
+            "type": "ColumnDef<TData, TValue>[]"
+          },
+          {
+            "name": "sorting",
+            "kind": "property",
+            "optional": true,
+            "type": "SortingState"
+          },
+          {
+            "name": "defaultSorting",
+            "kind": "property",
+            "optional": true,
+            "type": "SortingState",
+            "default": "EMPTY_SORTING"
+          },
+          {
+            "name": "onSortingChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(sorting: SortingState) => void"
+          },
+          {
+            "name": "columnFilters",
+            "kind": "property",
+            "optional": true,
+            "type": "ColumnFiltersState"
+          },
+          {
+            "name": "defaultColumnFilters",
+            "kind": "property",
+            "optional": true,
+            "type": "ColumnFiltersState",
+            "default": "EMPTY_FILTERS"
+          },
+          {
+            "name": "onColumnFiltersChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(filters: ColumnFiltersState) => void"
+          },
+          {
+            "name": "columnVisibility",
+            "kind": "property",
+            "optional": true,
+            "type": "VisibilityState"
+          },
+          {
+            "name": "defaultColumnVisibility",
+            "kind": "property",
+            "optional": true,
+            "type": "VisibilityState",
+            "default": "EMPTY_VISIBILITY"
+          },
+          {
+            "name": "onColumnVisibilityChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(visibility: VisibilityState) => void"
+          },
+          {
+            "name": "columnPinning",
+            "kind": "property",
+            "optional": true,
+            "type": "ColumnPinningState"
+          },
+          {
+            "name": "defaultColumnPinning",
+            "kind": "property",
+            "optional": true,
+            "type": "ColumnPinningState",
+            "default": "EMPTY_PINNING"
+          },
+          {
+            "name": "onColumnPinningChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(pinning: ColumnPinningState) => void"
+          },
+          {
+            "name": "rowSelection",
+            "kind": "property",
+            "optional": true,
+            "type": "RowSelectionState"
+          },
+          {
+            "name": "defaultRowSelection",
+            "kind": "property",
+            "optional": true,
+            "type": "RowSelectionState",
+            "default": "EMPTY_SELECTION"
+          },
+          {
+            "name": "onRowSelectionChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(selection: RowSelectionState) => void"
+          },
+          {
+            "name": "pagination",
+            "kind": "property",
+            "optional": true,
+            "type": "PaginationState"
+          },
+          {
+            "name": "defaultPagination",
+            "kind": "property",
+            "optional": true,
+            "type": "PaginationState",
+            "default": "DEFAULT_PAGINATION"
+          },
+          {
+            "name": "onPaginationChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(pagination: PaginationState) => void"
+          },
+          {
+            "name": "globalFilter",
+            "kind": "property",
+            "optional": true,
+            "type": "unknown"
+          },
+          {
+            "name": "defaultGlobalFilter",
+            "kind": "property",
+            "optional": true,
+            "type": "unknown"
+          },
+          {
+            "name": "onGlobalFilterChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(filter: unknown) => void"
+          },
+          {
+            "name": "enableRowSelection",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean | ((row: Row<TData>) => boolean)"
+          },
+          {
+            "name": "enableMultiRowSelection",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean | ((row: Row<TData>) => boolean)"
+          },
+          {
+            "name": "getRowId",
+            "kind": "property",
+            "optional": true,
+            "type": "(originalRow: TData, index: number, parent?: Row<TData>) => string"
+          },
+          {
+            "name": "manualFiltering",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "manualSorting",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "manualPagination",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "pageCount",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "rowCount",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "meta",
+            "kind": "property",
+            "optional": true,
+            "type": "TableMeta<TData>"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-data-grid",
+      "importStatement": "import { useDataGrid } from \"@/hooks/use-data-grid\"",
+      "primaryExport": "useDataGrid",
+      "example": "const result = useDataGrid(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-scroll-position",
+  "type": "registry:hook",
+  "title": "Use Scroll Position",
+  "description": "Open-code aq-ui React hook for Use Scroll Position.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-isomorphic-layout-effect"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-scroll-position.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\n\nexport interface ScrollPosition {\n  x: number\n  y: number\n}\n\nfunction readPosition(target: Element | Window): ScrollPosition {\n  if (target instanceof Window) {\n    return { x: target.scrollX, y: target.scrollY }\n  }\n  return { x: target.scrollLeft, y: target.scrollTop }\n}\n\nexport function useScrollPosition(\n  target?: Target<Element | Window>,\n  initialValue: ScrollPosition = { x: 0, y: 0 }\n): ScrollPosition {\n  const [position, setPosition] = React.useState(initialValue)\n\n  useIsomorphicLayoutEffect(() => {\n    const scrollTarget =\n      resolveTarget(target) ?? (typeof window === \"undefined\" ? null : window)\n    if (!scrollTarget) return\n    let frame = 0\n\n    const update = () => {\n      cancelAnimationFrame(frame)\n      frame = requestAnimationFrame(() => {\n        const next = readPosition(scrollTarget)\n        setPosition((current) =>\n          current.x === next.x && current.y === next.y ? current : next\n        )\n      })\n    }\n\n    scrollTarget.addEventListener(\"scroll\", update, { passive: true })\n    update()\n    return () => {\n      cancelAnimationFrame(frame)\n      scrollTarget.removeEventListener(\"scroll\", update)\n    }\n  }, [target])\n\n  return position\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-6102a5911fda2fcca3941a9d3807668e321ea0bbf04d4cd844f7df305ca83407",
+    "api": [
+      {
+        "name": "ScrollPosition",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface ScrollPosition",
+        "members": [
+          {
+            "name": "x",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "kind": "property",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "useScrollPosition",
+        "kind": "function",
+        "line": 20,
+        "signature": "function useScrollPosition(target?: Target<Element | Window>, initialValue: ScrollPosition = { x: 0, y: 0 }): ScrollPosition",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "optional": true,
+            "type": "Target<Element | Window>"
+          },
+          {
+            "name": "initialValue",
+            "kind": "parameter",
+            "optional": true,
+            "type": "ScrollPosition",
+            "default": "{ x: 0, y: 0 }"
+          }
+        ],
+        "returns": "ScrollPosition",
+        "usage": "const result = useScrollPosition(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-scroll-position",
+      "importStatement": "import { useScrollPosition } from \"@/hooks/use-scroll-position\"",
+      "primaryExport": "useScrollPosition",
+      "example": "const result = useScrollPosition(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

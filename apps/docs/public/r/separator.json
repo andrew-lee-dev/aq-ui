@@ -1,0 +1,42 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "separator",
+  "type": "registry:ui",
+  "title": "Separator",
+  "description": "Open-code aq-ui accessible component family for Separator.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/separator.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Separator as SeparatorPrimitive } from \"@base-ui/react/separator\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Separator = React.forwardRef<\n  React.ComponentRef<typeof SeparatorPrimitive>,\n  SeparatorPrimitive.Props\n>(function Separator({ className, orientation = \"horizontal\", ...props }, ref) {\n  return (\n    <SeparatorPrimitive\n      ref={ref}\n      data-slot=\"separator\"\n      orientation={orientation}\n      className={cn(\n        \"shrink-0 bg-border data-horizontal:h-px data-horizontal:w-full data-vertical:w-px data-vertical:self-stretch\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nSeparator.displayName = \"Separator\"\n\nexport { Separator }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-9d0aac191e47f4045259ef15db0dfaf30454a547d6fcbf91acf5489a14b6cd05",
+    "api": [
+      {
+        "name": "Separator",
+        "kind": "const",
+        "line": 9,
+        "signature": "const Separator = React.forwardRef<React.ComponentRef<typeof SeparatorPrimitive>, SeparatorPrimitive.Props>(…)",
+        "propsType": "SeparatorPrimitive.Props",
+        "usage": "<Separator />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/separator",
+      "importStatement": "import { Separator } from \"@/components/ui/separator\"",
+      "primaryExport": "Separator",
+      "example": "<Separator />"
+    },
+    "ssr": false
+  }
+}

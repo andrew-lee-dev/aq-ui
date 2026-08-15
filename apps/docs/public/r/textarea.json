@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "textarea",
+  "type": "registry:ui",
+  "title": "Textarea",
+  "description": "Open-code aq-ui accessible component family for Textarea.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/textarea.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Textarea = React.forwardRef<\n  React.ComponentRef<\"textarea\">,\n  React.ComponentProps<\"textarea\">\n>(function Textarea({ className, ...props }, ref) {\n  return (\n    <textarea\n      ref={ref}\n      data-slot=\"textarea\"\n      className={cn(\n        \"flex field-sizing-content min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTextarea.displayName = \"Textarea\"\n\nexport { Textarea }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-078728f2e08a598dc01b2ba94e77f4b27cdf967ccea82704b8b786a4e905606b",
+    "api": [
+      {
+        "name": "Textarea",
+        "kind": "const",
+        "line": 5,
+        "signature": "const Textarea = React.forwardRef<React.ComponentRef<\"textarea\">, React.ComponentProps<\"textarea\">>(…)",
+        "propsType": "React.ComponentProps<\"textarea\">",
+        "usage": "<Textarea />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/textarea",
+      "importStatement": "import { Textarea } from \"@/components/ui/textarea\"",
+      "primaryExport": "Textarea",
+      "example": "<Textarea />"
+    },
+    "ssr": true
+  }
+}

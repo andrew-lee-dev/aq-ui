@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-markdown",
+  "type": "registry:lib",
+  "title": "Code Language Markdown",
+  "description": "Open-code aq-ui shared library for Code Language Markdown.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-markdown@^6.5.2"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-markdown.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"markdown\", async () => {\n  const { markdown } = await import(\"@codemirror/lang-markdown\")\n  return markdown()\n})\n\nconst codeLanguageMarkdown = \"markdown\" as const\n\nexport { codeLanguageMarkdown }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-cfcedf544f7d7afc0fcab954c5bc5c4eedeaba0fefa37deeedc1a5d31b975b84",
+    "api": [
+      {
+        "name": "codeLanguageMarkdown",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageMarkdown = \"markdown\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-markdown",
+      "importStatement": "import { codeLanguageMarkdown } from \"@/lib/code-language-markdown\"",
+      "primaryExport": "codeLanguageMarkdown"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-file-drop",
+  "type": "registry:hook",
+  "title": "Use File Drop",
+  "description": "Open-code aq-ui React hook for Use File Drop.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-file-drop.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface FileDropRejection {\n  file: File\n  reason: \"type\" | \"size\" | \"multiple\"\n}\n\nexport interface UseFileDropOptions {\n  accept?: string[]\n  multiple?: boolean\n  maxSize?: number\n  disabled?: boolean\n  onDrop?: (files: File[]) => void\n  onReject?: (rejections: FileDropRejection[]) => void\n}\n\nexport interface FileDropBind<T extends HTMLElement> {\n  isDragging: boolean\n  files: File[]\n  rejections: FileDropRejection[]\n  reset: () => void\n  rootProps: {\n    onDragEnter: React.DragEventHandler<T>\n    onDragOver: React.DragEventHandler<T>\n    onDragLeave: React.DragEventHandler<T>\n    onDrop: React.DragEventHandler<T>\n  }\n}\n\nconst EMPTY_ACCEPT: string[] = []\n\nfunction acceptsFile(file: File, accepted: string[]) {\n  if (accepted.length === 0) return true\n  return accepted.some((pattern) => {\n    if (pattern.startsWith(\".\")) {\n      return file.name.toLowerCase().endsWith(pattern.toLowerCase())\n    }\n    if (pattern.endsWith(\"/*\")) {\n      return file.type.startsWith(pattern.slice(0, -1))\n    }\n    return file.type === pattern\n  })\n}\n\nexport function useFileDrop<T extends HTMLElement>({\n  accept = EMPTY_ACCEPT,\n  multiple = true,\n  maxSize = Number.POSITIVE_INFINITY,\n  disabled = false,\n  onDrop,\n  onReject,\n}: UseFileDropOptions = {}): FileDropBind<T> {\n  const [isDragging, setIsDragging] = React.useState(false)\n  const [files, setFiles] = React.useState<File[]>([])\n  const [rejections, setRejections] = React.useState<FileDropRejection[]>([])\n  const dragDepthRef = React.useRef(0)\n  const onDropStable = useStableCallback(onDrop)\n  const onRejectStable = useStableCallback(onReject)\n\n  const reset = React.useCallback(() => {\n    dragDepthRef.current = 0\n    setIsDragging(false)\n    setFiles([])\n    setRejections([])\n  }, [])\n\n  const rootProps = React.useMemo(\n    () => ({\n      onDragEnter(event: React.DragEvent<T>) {\n        if (disabled) return\n        event.preventDefault()\n        dragDepthRef.current += 1\n        if (event.dataTransfer.types.includes(\"Files\")) setIsDragging(true)\n      },\n      onDragOver(event: React.DragEvent<T>) {\n        if (disabled) return\n        event.preventDefault()\n        event.dataTransfer.dropEffect = \"copy\"\n      },\n      onDragLeave(event: React.DragEvent<T>) {\n        if (disabled) return\n        event.preventDefault()\n        dragDepthRef.current = Math.max(0, dragDepthRef.current - 1)\n        if (dragDepthRef.current === 0) setIsDragging(false)\n      },\n      onDrop(event: React.DragEvent<T>) {\n        if (disabled) return\n        event.preventDefault()\n        dragDepthRef.current = 0\n        setIsDragging(false)\n        const dropped = Array.from(event.dataTransfer.files)\n        const acceptedFiles: File[] = []\n        const rejectedFiles: FileDropRejection[] = []\n\n        dropped.forEach((file, index) => {\n          if (!multiple && index > 0) {\n            rejectedFiles.push({ file, reason: \"multiple\" })\n          } else if (file.size > maxSize) {\n            rejectedFiles.push({ file, reason: \"size\" })\n          } else if (!acceptsFile(file, accept)) {\n            rejectedFiles.push({ file, reason: \"type\" })\n          } else {\n            acceptedFiles.push(file)\n          }\n        })\n\n        setFiles(acceptedFiles)\n        setRejections(rejectedFiles)\n        if (acceptedFiles.length) onDropStable(acceptedFiles)\n        if (rejectedFiles.length) onRejectStable(rejectedFiles)\n      },\n    }),\n    [accept, disabled, maxSize, multiple, onDropStable, onRejectStable]\n  )\n\n  return { isDragging, files, rejections, reset, rootProps }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-f79a490555460899887eb3889f1b280bf304fb4ef34696f8c070afe35f332b40",
+    "api": [
+      {
+        "name": "FileDropBind",
+        "kind": "interface",
+        "line": 21,
+        "signature": "interface FileDropBind<T extends HTMLElement>",
+        "members": [
+          {
+            "name": "isDragging",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "files",
+            "kind": "property",
+            "type": "File[]"
+          },
+          {
+            "name": "rejections",
+            "kind": "property",
+            "type": "FileDropRejection[]"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "rootProps",
+            "kind": "property",
+            "type": "{ onDragEnter: React.DragEventHandler<T> onDragOver: React.DragEventHandler<T> onDragLeave: React.DragEventHandler<T> onDrop: React.DragEventHandler<T> }"
+          }
+        ]
+      },
+      {
+        "name": "FileDropRejection",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface FileDropRejection",
+        "members": [
+          {
+            "name": "file",
+            "kind": "property",
+            "type": "File"
+          },
+          {
+            "name": "reason",
+            "kind": "property",
+            "type": "\"type\" | \"size\" | \"multiple\""
+          }
+        ]
+      },
+      {
+        "name": "useFileDrop",
+        "kind": "function",
+        "line": 49,
+        "signature": "function useFileDrop<T extends HTMLElement>({ accept = EMPTY_ACCEPT, multiple = true, maxSize = Number.POSITIVE_INFINITY, disabled = false, onDrop, onReject, }: UseFileDropOptions = {}): FileDropBind<T>",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseFileDropOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "FileDropBind<T>",
+        "usage": "const result = useFileDrop(/* arguments */)"
+      },
+      {
+        "name": "UseFileDropOptions",
+        "kind": "interface",
+        "line": 12,
+        "signature": "interface UseFileDropOptions",
+        "members": [
+          {
+            "name": "accept",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]",
+            "default": "EMPTY_ACCEPT"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "maxSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onDrop",
+            "kind": "property",
+            "optional": true,
+            "type": "(files: File[]) => void"
+          },
+          {
+            "name": "onReject",
+            "kind": "property",
+            "optional": true,
+            "type": "(rejections: FileDropRejection[]) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-file-drop",
+      "importStatement": "import { useFileDrop } from \"@/hooks/use-file-drop\"",
+      "primaryExport": "useFileDrop",
+      "example": "const result = useFileDrop(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

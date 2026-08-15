@@ -1,0 +1,66 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "resizable",
+  "type": "registry:ui",
+  "title": "Resizable",
+  "description": "Open-code aq-ui accessible component family for Resizable.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "react-resizable-panels@^4.12.2"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/resizable.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport * as ResizablePrimitive from \"react-resizable-panels\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst ResizablePanelGroup = React.forwardRef<\n  HTMLDivElement,\n  ResizablePrimitive.GroupProps\n>(function ResizablePanelGroup({ className, ...props }, ref) {\n  return (\n    <ResizablePrimitive.Group\n      elementRef={ref}\n      data-slot=\"resizable-panel-group\"\n      className={cn(\n        \"flex h-full w-full aria-[orientation=vertical]:flex-col\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nResizablePanelGroup.displayName = \"ResizablePanelGroup\"\n\nconst ResizablePanel = React.forwardRef<\n  HTMLDivElement,\n  ResizablePrimitive.PanelProps\n>(function ResizablePanel({ ...props }, ref) {\n  return (\n    <ResizablePrimitive.Panel\n      elementRef={ref}\n      data-slot=\"resizable-panel\"\n      {...props}\n    />\n  )\n})\nResizablePanel.displayName = \"ResizablePanel\"\n\nconst ResizableHandle = React.forwardRef<\n  HTMLDivElement,\n  ResizablePrimitive.SeparatorProps & {\n    withHandle?: boolean\n  }\n>(function ResizableHandle({ withHandle, className, ...props }, ref) {\n  return (\n    <ResizablePrimitive.Separator\n      elementRef={ref}\n      data-slot=\"resizable-handle\"\n      className={cn(\n        \"relative flex w-px items-center justify-center bg-border ring-offset-background after:absolute after:inset-y-0 after:start-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:after:start-0 aria-[orientation=horizontal]:after:h-1 aria-[orientation=horizontal]:after:w-full aria-[orientation=horizontal]:after:translate-x-0 aria-[orientation=horizontal]:after:-translate-y-1/2 rtl:after:translate-x-1/2 rtl:aria-[orientation=horizontal]:after:-translate-x-0 [&[aria-orientation=horizontal]>div]:rotate-90\",\n        className\n      )}\n      {...props}\n    >\n      {withHandle && (\n        <div className=\"z-10 flex h-6 w-1 shrink-0 rounded-lg bg-border\" />\n      )}\n    </ResizablePrimitive.Separator>\n  )\n})\nResizableHandle.displayName = \"ResizableHandle\"\n\nexport { ResizableHandle, ResizablePanel, ResizablePanelGroup }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-74f44eae09fe34c733936f5ee235e684edd1138c2f64b3a7f5d4e58073fca285",
+    "api": [
+      {
+        "name": "ResizableHandle",
+        "kind": "const",
+        "line": 41,
+        "signature": "const ResizableHandle = React.forwardRef<HTMLDivElement, ResizablePrimitive.SeparatorProps & { withHandle?: boolean }>(…)",
+        "propsType": "ResizablePrimitive.SeparatorProps & { withHandle?: boolean }",
+        "props": [
+          {
+            "name": "withHandle",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ],
+        "usage": "<ResizableHandle />"
+      },
+      {
+        "name": "ResizablePanel",
+        "kind": "const",
+        "line": 27,
+        "signature": "const ResizablePanel = React.forwardRef<HTMLDivElement, ResizablePrimitive.PanelProps>(…)",
+        "propsType": "ResizablePrimitive.PanelProps",
+        "usage": "<ResizablePanel />"
+      },
+      {
+        "name": "ResizablePanelGroup",
+        "kind": "const",
+        "line": 9,
+        "signature": "const ResizablePanelGroup = React.forwardRef<HTMLDivElement, ResizablePrimitive.GroupProps>(…)",
+        "propsType": "ResizablePrimitive.GroupProps",
+        "usage": "<ResizablePanelGroup />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/resizable",
+      "importStatement": "import { ResizableHandle } from \"@/components/ui/resizable\"",
+      "primaryExport": "ResizableHandle",
+      "example": "<ResizableHandle />"
+    },
+    "ssr": false
+  }
+}

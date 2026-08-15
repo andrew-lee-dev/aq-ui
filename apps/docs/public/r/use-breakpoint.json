@@ -1,0 +1,88 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-breakpoint",
+  "type": "registry:hook",
+  "title": "Use Breakpoint",
+  "description": "Open-code aq-ui React hook for Use Breakpoint.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-media-query"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-breakpoint.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport { useMediaQuery } from \"@/hooks/use-media-query\"\n\nexport const breakpoints = {\n  sm: 640,\n  md: 768,\n  lg: 1024,\n  xl: 1280,\n  \"2xl\": 1536,\n} as const\n\nexport type Breakpoint = keyof typeof breakpoints\n\nexport interface UseBreakpointOptions {\n  direction?: \"up\" | \"down\"\n  defaultValue?: boolean\n}\n\nexport function useBreakpoint(\n  breakpoint: Breakpoint | number,\n  { direction = \"up\", defaultValue = false }: UseBreakpointOptions = {}\n): boolean {\n  const width =\n    typeof breakpoint === \"number\" ? breakpoint : breakpoints[breakpoint]\n  const query =\n    direction === \"up\"\n      ? \"(min-width: \" + width + \"px)\"\n      : \"(max-width: \" + Math.max(0, width - 0.02) + \"px)\"\n\n  return useMediaQuery(query, { defaultValue })\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-853b9896fc5557792de20f008de99d9be95eda89f2d53a13f9bdb8b881151210",
+    "api": [
+      {
+        "name": "Breakpoint",
+        "kind": "type",
+        "line": 13,
+        "signature": "type Breakpoint = keyof typeof breakpoints"
+      },
+      {
+        "name": "breakpoints",
+        "kind": "const",
+        "line": 5,
+        "signature": "const breakpoints = { sm: 640, md: 768, lg: 1024, xl: 1280, \"2xl\": 1536, } as const"
+      },
+      {
+        "name": "useBreakpoint",
+        "kind": "function",
+        "line": 20,
+        "signature": "function useBreakpoint(breakpoint: Breakpoint | number, { direction = \"up\", defaultValue = false }: UseBreakpointOptions = {}): boolean",
+        "parameters": [
+          {
+            "name": "breakpoint",
+            "kind": "parameter",
+            "type": "Breakpoint | number"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseBreakpointOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useBreakpoint(/* arguments */)"
+      },
+      {
+        "name": "UseBreakpointOptions",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface UseBreakpointOptions",
+        "members": [
+          {
+            "name": "direction",
+            "kind": "property",
+            "optional": true,
+            "type": "\"up\" | \"down\"",
+            "default": "\"up\""
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-breakpoint",
+      "importStatement": "import { useBreakpoint } from \"@/hooks/use-breakpoint\"",
+      "primaryExport": "useBreakpoint",
+      "example": "const result = useBreakpoint(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

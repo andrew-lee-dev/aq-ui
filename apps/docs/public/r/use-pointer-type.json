@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-pointer-type",
+  "type": "registry:hook",
+  "title": "Use Pointer Type",
+  "description": "Open-code aq-ui React hook for Use Pointer Type.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-pointer-type.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport type PointerInputType = \"mouse\" | \"pen\" | \"touch\" | null\n\nlet pointerType: PointerInputType = null\nlet pointerListening = false\nconst pointerListeners = new Set<() => void>()\n\nfunction onPointer(event: PointerEvent) {\n  const next =\n    event.pointerType === \"mouse\" ||\n    event.pointerType === \"pen\" ||\n    event.pointerType === \"touch\"\n      ? event.pointerType\n      : null\n  if (next === pointerType) return\n  pointerType = next\n  pointerListeners.forEach((listener) => listener())\n}\n\nfunction subscribe(listener: () => void) {\n  pointerListeners.add(listener)\n  if (!pointerListening && typeof window !== \"undefined\") {\n    window.addEventListener(\"pointerdown\", onPointer, { passive: true })\n    pointerListening = true\n  }\n  return () => {\n    pointerListeners.delete(listener)\n    if (pointerListeners.size === 0 && pointerListening) {\n      window.removeEventListener(\"pointerdown\", onPointer)\n      pointerListening = false\n    }\n  }\n}\n\nexport function usePointerType(\n  defaultValue: PointerInputType = null\n): PointerInputType {\n  return React.useSyncExternalStore(\n    subscribe,\n    () => pointerType,\n    () => defaultValue\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ced4ac22ad5bc3be941c2d69384e54ef9caa5b37001cd074e93b121eff74367c",
+    "api": [
+      {
+        "name": "PointerInputType",
+        "kind": "type",
+        "line": 5,
+        "signature": "type PointerInputType = \"mouse\" | \"pen\" | \"touch\" | null"
+      },
+      {
+        "name": "usePointerType",
+        "kind": "function",
+        "line": 38,
+        "signature": "function usePointerType(defaultValue: PointerInputType = null): PointerInputType",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "type": "PointerInputType",
+            "default": "null"
+          }
+        ],
+        "returns": "PointerInputType",
+        "usage": "const result = usePointerType(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-pointer-type",
+      "importStatement": "import { usePointerType } from \"@/hooks/use-pointer-type\"",
+      "primaryExport": "usePointerType",
+      "example": "const result = usePointerType(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

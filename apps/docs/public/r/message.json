@@ -1,0 +1,89 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "message",
+  "type": "registry:ui",
+  "title": "Message",
+  "description": "Open-code aq-ui accessible component family for Message.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/message.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst MessageGroup = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function MessageGroup({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"message-group\"\n      className={cn(\"flex min-w-0 flex-col gap-2\", className)}\n      {...props}\n    />\n  )\n})\nMessageGroup.displayName = \"MessageGroup\"\n\nconst Message = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & { align?: \"start\" | \"end\" }\n>(function Message({ className, align = \"start\", ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"message\"\n      data-align={align}\n      className={cn(\n        \"group/message relative flex w-full min-w-0 gap-2 text-sm data-[align=end]:flex-row-reverse\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMessage.displayName = \"Message\"\n\nconst MessageAvatar = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function MessageAvatar({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"message-avatar\"\n      className={cn(\n        \"flex w-fit min-w-8 shrink-0 items-center justify-center self-end overflow-hidden rounded-full bg-muted group-has-data-[slot=message-footer]/message:-translate-y-8\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMessageAvatar.displayName = \"MessageAvatar\"\n\nconst MessageContent = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function MessageContent({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"message-content\"\n      className={cn(\n        \"flex w-full min-w-0 flex-col gap-2.5 wrap-break-word group-data-[align=end]/message:*:data-slot:self-end\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMessageContent.displayName = \"MessageContent\"\n\nconst MessageHeader = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function MessageHeader({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"message-header\"\n      className={cn(\n        \"flex max-w-full min-w-0 items-center px-3 text-xs font-medium text-muted-foreground group-has-data-[variant=ghost]/message:px-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMessageHeader.displayName = \"MessageHeader\"\n\nconst MessageFooter = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function MessageFooter({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"message-footer\"\n      className={cn(\n        \"flex max-w-full min-w-0 items-center px-3 text-xs font-medium text-muted-foreground group-has-data-[variant=ghost]/message:px-0 group-data-[align=end]/message:justify-end\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMessageFooter.displayName = \"MessageFooter\"\n\nexport {\n  MessageGroup,\n  Message,\n  MessageAvatar,\n  MessageContent,\n  MessageFooter,\n  MessageHeader,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-d88cdc7628309f367e8b78e1e8e50b349618e4dec111e28cabc803bb2257d91c",
+    "api": [
+      {
+        "name": "Message",
+        "kind": "const",
+        "line": 20,
+        "signature": "const Message = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { align?: \"start\" | \"end\" }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { align?: \"start\" | \"end\" }",
+        "props": [
+          {
+            "name": "align",
+            "kind": "property",
+            "optional": true,
+            "type": "\"start\" | \"end\"",
+            "default": "\"start\""
+          }
+        ],
+        "usage": "<Message />"
+      },
+      {
+        "name": "MessageAvatar",
+        "kind": "const",
+        "line": 39,
+        "signature": "const MessageAvatar = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<MessageAvatar />"
+      },
+      {
+        "name": "MessageContent",
+        "kind": "const",
+        "line": 57,
+        "signature": "const MessageContent = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<MessageContent />"
+      },
+      {
+        "name": "MessageFooter",
+        "kind": "const",
+        "line": 93,
+        "signature": "const MessageFooter = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<MessageFooter />"
+      },
+      {
+        "name": "MessageGroup",
+        "kind": "const",
+        "line": 5,
+        "signature": "const MessageGroup = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<MessageGroup />"
+      },
+      {
+        "name": "MessageHeader",
+        "kind": "const",
+        "line": 75,
+        "signature": "const MessageHeader = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<MessageHeader />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/message",
+      "importStatement": "import { Message } from \"@/components/ui/message\"",
+      "primaryExport": "Message",
+      "example": "<Message />"
+    },
+    "ssr": true
+  }
+}

@@ -1,0 +1,280 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-stepper",
+  "type": "registry:hook",
+  "title": "Use Stepper",
+  "description": "Open-code aq-ui React hook for Use Stepper.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-controllable-state",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-stepper.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface StepperStep {\n  id: string\n  disabled?: boolean\n  optional?: boolean\n}\n\nexport type StepperStepState =\n  \"current\" | \"complete\" | \"upcoming\" | \"error\" | \"disabled\"\n\nexport interface StepperValidationContext<T extends StepperStep> {\n  step: T\n  target: T\n  signal: AbortSignal\n}\n\nexport type StepperValidationResult = boolean | string | void\n\nexport interface UseStepperOptions<T extends StepperStep> {\n  steps: T[]\n  value?: string\n  defaultValue?: string\n  onValueChange?: (value: string) => void\n  completedIds?: string[]\n  defaultCompletedIds?: string[]\n  onCompletedIdsChange?: (ids: string[]) => void\n  linear?: boolean\n  validate?: (\n    context: StepperValidationContext<T>\n  ) => StepperValidationResult | Promise<StepperValidationResult>\n  onComplete?: () => void\n}\n\nexport interface StepperController<T extends StepperStep> {\n  steps: T[]\n  value: string | undefined\n  currentStep: T | undefined\n  currentIndex: number\n  completedIds: string[]\n  isFirst: boolean\n  isLast: boolean\n  canPrevious: boolean\n  canNext: boolean\n  isValidating: boolean\n  validationError: string | undefined\n  goTo: (id: string) => Promise<boolean>\n  next: () => Promise<boolean>\n  previous: () => Promise<boolean>\n  completeStep: (id?: string) => void\n  uncompleteStep: (id: string) => void\n  complete: () => Promise<boolean>\n  reset: () => void\n  getStepState: (id: string) => StepperStepState\n}\n\nconst EMPTY_COMPLETED: string[] = []\n\nexport function useStepper<T extends StepperStep>({\n  steps,\n  value: valueProp,\n  defaultValue,\n  onValueChange,\n  completedIds: completedIdsProp,\n  defaultCompletedIds = EMPTY_COMPLETED,\n  onCompletedIdsChange,\n  linear = false,\n  validate,\n  onComplete,\n}: UseStepperOptions<T>): StepperController<T> {\n  const firstEnabled = steps.find((step) => !step.disabled)?.id\n  const initialValue = defaultValue ?? firstEnabled\n  const [requestedValue, setValue] = useControllableState<string>({\n    value: valueProp,\n    defaultValue: initialValue ?? \"\",\n    onChange: (nextValue) => {\n      if (nextValue) onValueChange?.(nextValue)\n    },\n  })\n  const [completedIds, setCompletedIds] = useControllableState({\n    value: completedIdsProp,\n    defaultValue: defaultCompletedIds,\n    onChange: onCompletedIdsChange,\n  })\n  const [isValidating, setIsValidating] = React.useState(false)\n  const [validationError, setValidationError] = React.useState<string>()\n  const validationControllerRef = React.useRef<AbortController | null>(null)\n  const validateStable = useStableCallback(validate)\n  const onCompleteStable = useStableCallback(onComplete)\n  const value = steps.some((step) => step.id === requestedValue)\n    ? requestedValue\n    : firstEnabled\n  const currentIndex = steps.findIndex((step) => step.id === value)\n  const currentStep = currentIndex >= 0 ? steps[currentIndex] : undefined\n\n  const completeStep = React.useCallback(\n    (id = value) => {\n      if (!id || completedIds.includes(id)) return\n      setCompletedIds([...completedIds, id])\n    },\n    [completedIds, setCompletedIds, value]\n  )\n\n  const uncompleteStep = React.useCallback(\n    (id: string) => {\n      setCompletedIds(completedIds.filter((completedId) => completedId !== id))\n    },\n    [completedIds, setCompletedIds]\n  )\n\n  const goTo = React.useCallback(\n    async (id: string) => {\n      const targetIndex = steps.findIndex((step) => step.id === id)\n      const target = steps[targetIndex]\n      if (!target || target.disabled || targetIndex === currentIndex) {\n        return Boolean(target && !target.disabled)\n      }\n\n      if (linear && targetIndex > currentIndex + 1) {\n        const prerequisites = steps.slice(\n          Math.max(0, currentIndex + 1),\n          targetIndex\n        )\n        if (\n          prerequisites.some(\n            (step) =>\n              !step.optional &&\n              !step.disabled &&\n              !completedIds.includes(step.id)\n          )\n        ) {\n          return false\n        }\n      }\n\n      if (targetIndex > currentIndex && currentStep && validate) {\n        validationControllerRef.current?.abort()\n        const controller = new AbortController()\n        validationControllerRef.current = controller\n        setIsValidating(true)\n        setValidationError(undefined)\n\n        try {\n          const result = await validateStable({\n            step: currentStep,\n            target,\n            signal: controller.signal,\n          })\n          if (controller.signal.aborted) return false\n          if (result === false || typeof result === \"string\") {\n            setValidationError(\n              typeof result === \"string\" ? result : \"Step validation failed\"\n            )\n            return false\n          }\n        } catch (error) {\n          if (controller.signal.aborted) return false\n          setValidationError(\n            error instanceof Error ? error.message : \"Step validation failed\"\n          )\n          return false\n        } finally {\n          if (validationControllerRef.current === controller) {\n            validationControllerRef.current = null\n            setIsValidating(false)\n          }\n        }\n      }\n\n      if (targetIndex > currentIndex && currentStep) {\n        completeStep(currentStep.id)\n      }\n      setValidationError(undefined)\n      setValue(id)\n      return true\n    },\n    [\n      completeStep,\n      completedIds,\n      currentIndex,\n      currentStep,\n      linear,\n      setValue,\n      steps,\n      validate,\n      validateStable,\n    ]\n  )\n\n  const next = React.useCallback(() => {\n    const nextStep = steps\n      .slice(currentIndex + 1)\n      .find((step) => !step.disabled)\n    return nextStep ? goTo(nextStep.id) : Promise.resolve(false)\n  }, [currentIndex, goTo, steps])\n\n  const previous = React.useCallback(() => {\n    const previousStep = steps\n      .slice(0, Math.max(0, currentIndex))\n      .reverse()\n      .find((step) => !step.disabled)\n    return previousStep ? goTo(previousStep.id) : Promise.resolve(false)\n  }, [currentIndex, goTo, steps])\n\n  const complete = React.useCallback(async () => {\n    if (!currentStep) return false\n    if (validate) {\n      validationControllerRef.current?.abort()\n      const controller = new AbortController()\n      validationControllerRef.current = controller\n      setIsValidating(true)\n      setValidationError(undefined)\n      try {\n        const result = await validateStable({\n          step: currentStep,\n          target: currentStep,\n          signal: controller.signal,\n        })\n        if (controller.signal.aborted) return false\n        if (result === false || typeof result === \"string\") {\n          setValidationError(\n            typeof result === \"string\" ? result : \"Step validation failed\"\n          )\n          return false\n        }\n      } catch (error) {\n        if (controller.signal.aborted) return false\n        setValidationError(\n          error instanceof Error ? error.message : \"Step validation failed\"\n        )\n        return false\n      } finally {\n        if (validationControllerRef.current === controller) {\n          validationControllerRef.current = null\n          setIsValidating(false)\n        }\n      }\n    }\n    completeStep(currentStep.id)\n    onCompleteStable()\n    return true\n  }, [completeStep, currentStep, onCompleteStable, validate, validateStable])\n\n  const reset = React.useCallback(() => {\n    validationControllerRef.current?.abort()\n    validationControllerRef.current = null\n    setIsValidating(false)\n    setValidationError(undefined)\n    setCompletedIds(defaultCompletedIds)\n    setValue(initialValue ?? \"\")\n  }, [defaultCompletedIds, initialValue, setCompletedIds, setValue])\n\n  React.useEffect(() => () => validationControllerRef.current?.abort(), [])\n\n  const getStepState = React.useCallback(\n    (id: string): StepperStepState => {\n      const step = steps.find((candidate) => candidate.id === id)\n      if (!step || step.disabled) return \"disabled\"\n      if (id === value) return validationError ? \"error\" : \"current\"\n      if (completedIds.includes(id)) return \"complete\"\n      return \"upcoming\"\n    },\n    [completedIds, steps, validationError, value]\n  )\n\n  const previousStep = steps\n    .slice(0, Math.max(0, currentIndex))\n    .reverse()\n    .find((step) => !step.disabled)\n  const nextStep = steps.slice(currentIndex + 1).find((step) => !step.disabled)\n\n  return {\n    steps,\n    value,\n    currentStep,\n    currentIndex,\n    completedIds,\n    isFirst: !previousStep,\n    isLast: !nextStep,\n    canPrevious: Boolean(previousStep) && !isValidating,\n    canNext: Boolean(nextStep) && !isValidating,\n    isValidating,\n    validationError,\n    goTo,\n    next,\n    previous,\n    completeStep,\n    uncompleteStep,\n    complete,\n    reset,\n    getStepState,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-e383627865aa4beefc718d3e0da1c1fa233fe14398d8c27ed5241b0c20928a53",
+    "api": [
+      {
+        "name": "StepperController",
+        "kind": "interface",
+        "line": 40,
+        "signature": "interface StepperController<T extends StepperStep>",
+        "members": [
+          {
+            "name": "steps",
+            "kind": "property",
+            "type": "T[]"
+          },
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string | undefined"
+          },
+          {
+            "name": "currentStep",
+            "kind": "property",
+            "type": "T | undefined"
+          },
+          {
+            "name": "currentIndex",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "completedIds",
+            "kind": "property",
+            "type": "string[]"
+          },
+          {
+            "name": "isFirst",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "isLast",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "canPrevious",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "canNext",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "isValidating",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "validationError",
+            "kind": "property",
+            "type": "string | undefined"
+          },
+          {
+            "name": "goTo",
+            "kind": "property",
+            "type": "(id: string) => Promise<boolean>"
+          },
+          {
+            "name": "next",
+            "kind": "property",
+            "type": "() => Promise<boolean>"
+          },
+          {
+            "name": "previous",
+            "kind": "property",
+            "type": "() => Promise<boolean>"
+          },
+          {
+            "name": "completeStep",
+            "kind": "property",
+            "type": "(id?: string) => void"
+          },
+          {
+            "name": "uncompleteStep",
+            "kind": "property",
+            "type": "(id: string) => void"
+          },
+          {
+            "name": "complete",
+            "kind": "property",
+            "type": "() => Promise<boolean>"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "getStepState",
+            "kind": "property",
+            "type": "(id: string) => StepperStepState"
+          }
+        ]
+      },
+      {
+        "name": "StepperStep",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface StepperStep",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "optional",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "StepperStepState",
+        "kind": "type",
+        "line": 14,
+        "signature": "type StepperStepState = \"current\" | \"complete\" | \"upcoming\" | \"error\" | \"disabled\""
+      },
+      {
+        "name": "StepperValidationContext",
+        "kind": "interface",
+        "line": 17,
+        "signature": "interface StepperValidationContext<T extends StepperStep>",
+        "members": [
+          {
+            "name": "step",
+            "kind": "property",
+            "type": "T"
+          },
+          {
+            "name": "target",
+            "kind": "property",
+            "type": "T"
+          },
+          {
+            "name": "signal",
+            "kind": "property",
+            "type": "AbortSignal"
+          }
+        ]
+      },
+      {
+        "name": "StepperValidationResult",
+        "kind": "type",
+        "line": 23,
+        "signature": "type StepperValidationResult = boolean | string | void"
+      },
+      {
+        "name": "useStepper",
+        "kind": "function",
+        "line": 64,
+        "signature": "function useStepper<T extends StepperStep>({ steps, value: valueProp, defaultValue, onValueChange, completedIds: completedIdsProp, defaultCompletedIds = EMPTY_COMPLETED, onCompletedIdsChange, linear = false, validate, onComplete, }: UseStepperOptions<T>): StepperController<T>",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UseStepperOptions<T>"
+          }
+        ],
+        "returns": "StepperController<T>",
+        "usage": "const result = useStepper(/* arguments */)"
+      },
+      {
+        "name": "UseStepperOptions",
+        "kind": "interface",
+        "line": 25,
+        "signature": "interface UseStepperOptions<T extends StepperStep>",
+        "members": [
+          {
+            "name": "steps",
+            "kind": "property",
+            "type": "T[]"
+          },
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "completedIds",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]"
+          },
+          {
+            "name": "defaultCompletedIds",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]",
+            "default": "EMPTY_COMPLETED"
+          },
+          {
+            "name": "onCompletedIdsChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(ids: string[]) => void"
+          },
+          {
+            "name": "linear",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "validate",
+            "kind": "property",
+            "optional": true,
+            "type": "( context: StepperValidationContext<T> ) => StepperValidationResult | Promise<StepperValidationResult>"
+          },
+          {
+            "name": "onComplete",
+            "kind": "property",
+            "optional": true,
+            "type": "() => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-stepper",
+      "importStatement": "import { useStepper } from \"@/hooks/use-stepper\"",
+      "primaryExport": "useStepper",
+      "example": "const result = useStepper(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

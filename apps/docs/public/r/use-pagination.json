@@ -1,0 +1,266 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-pagination",
+  "type": "registry:hook",
+  "title": "Use Pagination",
+  "description": "Open-code aq-ui React hook for Use Pagination.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-controllable-state"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-pagination.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\n\nexport type PaginationToken = number | \"ellipsis\"\n\nexport type PaginationItem =\n  | { type: \"page\"; page: number; key: string; selected: boolean }\n  | { type: \"ellipsis\"; key: string }\n\nexport interface UsePaginationOptions {\n  totalItems: number\n  page?: number\n  defaultPage?: number\n  pageSize?: number\n  defaultPageSize?: number\n  onPageChange?: (page: number) => void\n  onPageSizeChange?: (pageSize: number) => void\n  siblingCount?: number\n  boundaryCount?: number\n}\n\nexport interface PaginationControls {\n  page: number\n  pageSize: number\n  pageCount: number\n  totalItems: number\n  startIndex: number\n  endIndex: number\n  pages: PaginationToken[]\n  items: PaginationItem[]\n  canPrevious: boolean\n  canNext: boolean\n  setPage: (page: number) => void\n  setPageSize: (pageSize: number) => void\n  first: () => void\n  previous: () => void\n  next: () => void\n  last: () => void\n}\n\nfunction integer(value: number, minimum: number) {\n  return Math.max(minimum, Math.floor(Number.isFinite(value) ? value : minimum))\n}\n\nfunction range(start: number, end: number) {\n  return Array.from(\n    { length: Math.max(0, end - start + 1) },\n    (_, index) => start + index\n  )\n}\n\nexport function createPaginationRange(\n  page: number,\n  pageCount: number,\n  siblingCount = 1,\n  boundaryCount = 1\n): PaginationToken[] {\n  if (pageCount <= 0) return []\n  const siblings = integer(siblingCount, 0)\n  const boundaries = integer(boundaryCount, 0)\n  const totalSlots = boundaries * 2 + siblings * 2 + 3\n\n  if (pageCount <= totalSlots) return range(1, pageCount)\n\n  const startPages = range(1, Math.min(boundaries, pageCount))\n  const endPages = range(\n    Math.max(pageCount - boundaries + 1, boundaries + 1),\n    pageCount\n  )\n  const siblingsStart = Math.max(\n    Math.min(page - siblings, pageCount - boundaries - siblings * 2 - 1),\n    boundaries + 2\n  )\n  const siblingsEnd = Math.min(\n    Math.max(page + siblings, boundaries + siblings * 2 + 2),\n    endPages[0] ? endPages[0] - 2 : pageCount - 1\n  )\n\n  return [\n    ...startPages,\n    ...(siblingsStart > boundaries + 2\n      ? ([\"ellipsis\"] as const)\n      : boundaries + 1 < pageCount - boundaries\n        ? [boundaries + 1]\n        : []),\n    ...range(siblingsStart, siblingsEnd),\n    ...(siblingsEnd < pageCount - boundaries - 1\n      ? ([\"ellipsis\"] as const)\n      : pageCount - boundaries > boundaries\n        ? [pageCount - boundaries]\n        : []),\n    ...endPages,\n  ]\n}\n\nexport function usePagination({\n  totalItems,\n  page,\n  defaultPage = 1,\n  pageSize,\n  defaultPageSize = 10,\n  onPageChange,\n  onPageSizeChange,\n  siblingCount = 1,\n  boundaryCount = 1,\n}: UsePaginationOptions): PaginationControls {\n  const normalizedTotal = integer(totalItems, 0)\n  const [currentPageSize, setCurrentPageSize] = useControllableState({\n    value: pageSize,\n    defaultValue: integer(defaultPageSize, 1),\n    onChange: onPageSizeChange,\n  })\n  const normalizedPageSize = integer(currentPageSize, 1)\n  const pageCount = Math.ceil(normalizedTotal / normalizedPageSize)\n  const [requestedPage, setRequestedPage] = useControllableState({\n    value: page,\n    defaultValue: integer(defaultPage, 1),\n    onChange: onPageChange,\n  })\n  const currentPage =\n    pageCount === 0\n      ? 1\n      : Math.min(Math.max(1, integer(requestedPage, 1)), pageCount)\n\n  const setPage = React.useCallback(\n    (nextPage: number) => {\n      const maximum = Math.max(1, pageCount)\n      setRequestedPage(Math.min(Math.max(1, integer(nextPage, 1)), maximum))\n    },\n    [pageCount, setRequestedPage]\n  )\n\n  const updatePageSize = React.useCallback(\n    (nextPageSize: number) => {\n      const normalized = integer(nextPageSize, 1)\n      const firstVisibleItem = (currentPage - 1) * normalizedPageSize\n      setCurrentPageSize(normalized)\n      setRequestedPage(Math.floor(firstVisibleItem / normalized) + 1)\n    },\n    [currentPage, normalizedPageSize, setCurrentPageSize, setRequestedPage]\n  )\n\n  const pages = React.useMemo(\n    () =>\n      createPaginationRange(\n        currentPage,\n        pageCount,\n        siblingCount,\n        boundaryCount\n      ),\n    [boundaryCount, currentPage, pageCount, siblingCount]\n  )\n\n  const items = React.useMemo<PaginationItem[]>(() => {\n    return pages.map((token, index) => {\n      if (token === \"ellipsis\") {\n        return { type: \"ellipsis\", key: \"ellipsis-\" + index }\n      }\n      return {\n        type: \"page\",\n        page: token,\n        key: \"page-\" + token,\n        selected: token === currentPage,\n      }\n    })\n  }, [currentPage, pages])\n\n  const startIndex =\n    normalizedTotal === 0 ? 0 : (currentPage - 1) * normalizedPageSize + 1\n  const endIndex = Math.min(normalizedTotal, currentPage * normalizedPageSize)\n\n  return {\n    page: currentPage,\n    pageSize: normalizedPageSize,\n    pageCount,\n    totalItems: normalizedTotal,\n    startIndex,\n    endIndex,\n    pages,\n    items,\n    canPrevious: currentPage > 1,\n    canNext: currentPage < pageCount,\n    setPage,\n    setPageSize: updatePageSize,\n    first: () => setPage(1),\n    previous: () => setPage(currentPage - 1),\n    next: () => setPage(currentPage + 1),\n    last: () => setPage(pageCount),\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ae568443a14186a8d9ab6c6173ef6b9249e9314b623b0ce4353fbeae656c42e2",
+    "api": [
+      {
+        "name": "createPaginationRange",
+        "kind": "function",
+        "line": 55,
+        "signature": "function createPaginationRange(page: number, pageCount: number, siblingCount = 1, boundaryCount = 1): PaginationToken[]",
+        "parameters": [
+          {
+            "name": "page",
+            "kind": "parameter",
+            "type": "number"
+          },
+          {
+            "name": "pageCount",
+            "kind": "parameter",
+            "type": "number"
+          },
+          {
+            "name": "siblingCount",
+            "kind": "parameter",
+            "optional": true,
+            "default": "1"
+          },
+          {
+            "name": "boundaryCount",
+            "kind": "parameter",
+            "optional": true,
+            "default": "1"
+          }
+        ],
+        "returns": "PaginationToken[]",
+        "usage": "createPaginationRange(/* arguments */)"
+      },
+      {
+        "name": "PaginationControls",
+        "kind": "interface",
+        "line": 25,
+        "signature": "interface PaginationControls",
+        "members": [
+          {
+            "name": "page",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "pageSize",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "pageCount",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "totalItems",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "startIndex",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "endIndex",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "pages",
+            "kind": "property",
+            "type": "PaginationToken[]"
+          },
+          {
+            "name": "items",
+            "kind": "property",
+            "type": "PaginationItem[]"
+          },
+          {
+            "name": "canPrevious",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "canNext",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "setPage",
+            "kind": "property",
+            "type": "(page: number) => void"
+          },
+          {
+            "name": "setPageSize",
+            "kind": "property",
+            "type": "(pageSize: number) => void"
+          },
+          {
+            "name": "first",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "previous",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "next",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "last",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "PaginationItem",
+        "kind": "type",
+        "line": 9,
+        "signature": "type PaginationItem = { … } | { … }",
+        "members": [
+          {
+            "name": "type",
+            "kind": "property",
+            "type": "\"page\""
+          },
+          {
+            "name": "page",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "key",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "selected",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "PaginationToken",
+        "kind": "type",
+        "line": 7,
+        "signature": "type PaginationToken = number | \"ellipsis\""
+      },
+      {
+        "name": "usePagination",
+        "kind": "function",
+        "line": 99,
+        "signature": "function usePagination({ totalItems, page, defaultPage = 1, pageSize, defaultPageSize = 10, onPageChange, onPageSizeChange, siblingCount = 1, boundaryCount = 1, }: UsePaginationOptions): PaginationControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UsePaginationOptions"
+          }
+        ],
+        "returns": "PaginationControls",
+        "usage": "const result = usePagination(/* arguments */)"
+      },
+      {
+        "name": "UsePaginationOptions",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface UsePaginationOptions",
+        "members": [
+          {
+            "name": "totalItems",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "page",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "defaultPage",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "defaultPageSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "10"
+          },
+          {
+            "name": "onPageChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(page: number) => void"
+          },
+          {
+            "name": "onPageSizeChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(pageSize: number) => void"
+          },
+          {
+            "name": "siblingCount",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "boundaryCount",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "1"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-pagination",
+      "importStatement": "import { usePagination } from \"@/hooks/use-pagination\"",
+      "primaryExport": "usePagination",
+      "example": "const result = usePagination(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

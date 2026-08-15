@@ -1,0 +1,110 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-toast",
+  "type": "registry:hook",
+  "title": "Use Toast",
+  "description": "Open-code aq-ui React hook for Use Toast.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "toast"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-toast.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport type {\n  ToastManager,\n  ToastManagerAddOptions,\n  ToastManagerPromiseOptions,\n  ToastManagerUpdateOptions,\n} from \"@base-ui/react/toast\"\n\nimport { toast as defaultToastManager } from \"@/components/ui/toast\"\n\nexport type ToastInput<Data extends object> =\n  React.ReactNode | ToastManagerAddOptions<Data>\n\nexport interface ToastController<Data extends object> {\n  show: (options: ToastManagerAddOptions<Data>) => string\n  success: (input: ToastInput<Data>) => string\n  info: (input: ToastInput<Data>) => string\n  warning: (input: ToastInput<Data>) => string\n  error: (input: ToastInput<Data>) => string\n  loading: (input: ToastInput<Data>) => string\n  update: (id: string, options: ToastManagerUpdateOptions<Data>) => void\n  dismiss: (id?: string) => void\n  promise: <Value>(\n    promise: Promise<Value>,\n    options: ToastManagerPromiseOptions<Value, Data>\n  ) => Promise<Value>\n}\n\nfunction normalizeToast<Data extends object>(\n  input: ToastInput<Data>,\n  type: string\n): ToastManagerAddOptions<Data> {\n  if (\n    input !== null &&\n    typeof input === \"object\" &&\n    !React.isValidElement(input)\n  ) {\n    return { ...(input as ToastManagerAddOptions<Data>), type }\n  }\n  return { title: input, type }\n}\n\nexport function useToast<Data extends object = Record<string, unknown>>(\n  manager: ToastManager<Data> = defaultToastManager as ToastManager<Data>\n): ToastController<Data> {\n  return React.useMemo(\n    () => ({\n      show: (options) => manager.add(options),\n      success: (input) => manager.add(normalizeToast(input, \"success\")),\n      info: (input) => manager.add(normalizeToast(input, \"info\")),\n      warning: (input) => manager.add(normalizeToast(input, \"warning\")),\n      error: (input) => manager.add(normalizeToast(input, \"error\")),\n      loading: (input) =>\n        manager.add({ ...normalizeToast(input, \"loading\"), timeout: 0 }),\n      update: (id, options) => manager.update(id, options),\n      dismiss: (id) => manager.close(id),\n      promise: (promise, options) => manager.promise(promise, options),\n    }),\n    [manager]\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-fc415fc5b023f9128e4d6830f28a211e8c9f1fef052795f45a1f0bc88588fc6d",
+    "api": [
+      {
+        "name": "ToastController",
+        "kind": "interface",
+        "line": 16,
+        "signature": "interface ToastController<Data extends object>",
+        "members": [
+          {
+            "name": "show",
+            "kind": "property",
+            "type": "(options: ToastManagerAddOptions<Data>) => string"
+          },
+          {
+            "name": "success",
+            "kind": "property",
+            "type": "(input: ToastInput<Data>) => string"
+          },
+          {
+            "name": "info",
+            "kind": "property",
+            "type": "(input: ToastInput<Data>) => string"
+          },
+          {
+            "name": "warning",
+            "kind": "property",
+            "type": "(input: ToastInput<Data>) => string"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "type": "(input: ToastInput<Data>) => string"
+          },
+          {
+            "name": "loading",
+            "kind": "property",
+            "type": "(input: ToastInput<Data>) => string"
+          },
+          {
+            "name": "update",
+            "kind": "property",
+            "type": "(id: string, options: ToastManagerUpdateOptions<Data>) => void"
+          },
+          {
+            "name": "dismiss",
+            "kind": "property",
+            "type": "(id?: string) => void"
+          },
+          {
+            "name": "promise",
+            "kind": "property",
+            "type": "<Value>( promise: Promise<Value>, options: ToastManagerPromiseOptions<Value, Data> ) => Promise<Value>"
+          }
+        ]
+      },
+      {
+        "name": "ToastInput",
+        "kind": "type",
+        "line": 13,
+        "signature": "type ToastInput<Data extends object> = React.ReactNode | ToastManagerAddOptions<Data>"
+      },
+      {
+        "name": "useToast",
+        "kind": "function",
+        "line": 45,
+        "signature": "function useToast<Data extends object = Record<string, unknown>>(manager: ToastManager<Data> = defaultToastManager as ToastManager<Data>): ToastController<Data>",
+        "parameters": [
+          {
+            "name": "manager",
+            "kind": "parameter",
+            "optional": true,
+            "type": "ToastManager<Data>",
+            "default": "defaultToastManager as ToastManager<Data>"
+          }
+        ],
+        "returns": "ToastController<Data>",
+        "usage": "const result = useToast(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-toast",
+      "importStatement": "import { useToast } from \"@/hooks/use-toast\"",
+      "primaryExport": "useToast",
+      "example": "const result = useToast(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

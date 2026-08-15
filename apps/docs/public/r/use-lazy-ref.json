@@ -1,0 +1,45 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-lazy-ref",
+  "type": "registry:hook",
+  "title": "Use Lazy Ref",
+  "description": "Open-code aq-ui React hook for Use Lazy Ref.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-lazy-ref.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nconst UNINITIALIZED = Symbol(\"aq-ui.lazy-ref\")\n\nexport function useLazyRef<T>(initializer: () => T): React.MutableRefObject<T> {\n  const ref = React.useRef<T | typeof UNINITIALIZED>(UNINITIALIZED)\n\n  // This follows React's documented lazy-ref initialization pattern.\n  /* eslint-disable react-hooks/refs */\n  if (ref.current === UNINITIALIZED) {\n    ref.current = initializer()\n  }\n\n  return ref as React.MutableRefObject<T>\n  /* eslint-enable react-hooks/refs */\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-341343228df3033d080a5fc9fa491c5a4aac3d635025787de58cf0d67e58e506",
+    "api": [
+      {
+        "name": "useLazyRef",
+        "kind": "function",
+        "line": 7,
+        "signature": "function useLazyRef<T>(initializer: () => T): React.MutableRefObject<T>",
+        "parameters": [
+          {
+            "name": "initializer",
+            "kind": "parameter",
+            "type": "() => T"
+          }
+        ],
+        "returns": "React.MutableRefObject<T>",
+        "usage": "const result = useLazyRef(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-lazy-ref",
+      "importStatement": "import { useLazyRef } from \"@/hooks/use-lazy-ref\"",
+      "primaryExport": "useLazyRef",
+      "example": "const result = useLazyRef(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

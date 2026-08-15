@@ -1,0 +1,47 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "utils",
+  "type": "registry:lib",
+  "title": "Utils",
+  "description": "Open-code aq-ui shared library for Utils.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "clsx@^2.1.1",
+    "tailwind-merge@^3.6.0"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "lib/utils.ts",
+      "type": "registry:lib",
+      "content": "import { clsx, type ClassValue } from \"clsx\"\nimport { twMerge } from \"tailwind-merge\"\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs))\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d",
+    "api": [
+      {
+        "name": "cn",
+        "kind": "function",
+        "line": 4,
+        "signature": "function cn(...inputs: ClassValue[])",
+        "parameters": [
+          {
+            "name": "inputs",
+            "kind": "parameter",
+            "type": "ClassValue[]"
+          }
+        ],
+        "usage": "cn(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/utils",
+      "importStatement": "import { cn } from \"@/lib/utils\"",
+      "primaryExport": "cn",
+      "example": "cn(/* arguments */)"
+    },
+    "ssr": true
+  }
+}

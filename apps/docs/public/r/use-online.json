@@ -1,0 +1,46 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-online",
+  "type": "registry:hook",
+  "title": "Use Online",
+  "description": "Open-code aq-ui React hook for Use Online.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-online.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nconst listeners = new Set<() => void>()\nlet listening = false\n\nfunction notify() {\n  listeners.forEach((listener) => listener())\n}\n\nfunction subscribe(listener: () => void) {\n  listeners.add(listener)\n  if (!listening && typeof window !== \"undefined\") {\n    window.addEventListener(\"online\", notify)\n    window.addEventListener(\"offline\", notify)\n    listening = true\n  }\n  return () => {\n    listeners.delete(listener)\n    if (listeners.size === 0 && listening && typeof window !== \"undefined\") {\n      window.removeEventListener(\"online\", notify)\n      window.removeEventListener(\"offline\", notify)\n      listening = false\n    }\n  }\n}\n\nfunction getSnapshot() {\n  return typeof navigator === \"undefined\" ? true : navigator.onLine\n}\n\nexport function useOnline(defaultValue = true): boolean {\n  return React.useSyncExternalStore(subscribe, getSnapshot, () => defaultValue)\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-9c627dc6417cebc10cdb61ec1fac2345cd754c78935c691c5558fa21f6463175",
+    "api": [
+      {
+        "name": "useOnline",
+        "kind": "function",
+        "line": 33,
+        "signature": "function useOnline(defaultValue = true): boolean",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "default": "true"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useOnline(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-online",
+      "importStatement": "import { useOnline } from \"@/hooks/use-online\"",
+      "primaryExport": "useOnline",
+      "example": "const result = useOnline(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

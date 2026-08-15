@@ -1,0 +1,101 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-live-region",
+  "type": "registry:hook",
+  "title": "Use Live Region",
+  "description": "Open-code aq-ui React hook for Use Live Region.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-hydrated",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-live-region.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useHydrated } from \"@/hooks/use-hydrated\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport type LiveRegionPoliteness = \"polite\" | \"assertive\"\n\nexport interface UseLiveRegionOptions {\n  politeness?: LiveRegionPoliteness\n  clearAfter?: number\n}\n\nexport interface LiveRegionControls {\n  announce: (message: string) => void\n  clear: () => void\n  supported: boolean\n}\n\ninterface LiveRegionRecord {\n  element: HTMLDivElement\n  consumers: number\n}\n\nconst liveRegions = new WeakMap<\n  Document,\n  Map<LiveRegionPoliteness, LiveRegionRecord>\n>()\n\nfunction acquireRegion(\n  document: Document,\n  politeness: LiveRegionPoliteness\n): LiveRegionRecord {\n  let regions = liveRegions.get(document)\n  if (!regions) {\n    regions = new Map()\n    liveRegions.set(document, regions)\n  }\n  let record = regions.get(politeness)\n  if (!record) {\n    const element = document.createElement(\"div\")\n    element.setAttribute(\n      \"role\",\n      politeness === \"assertive\" ? \"alert\" : \"status\"\n    )\n    element.setAttribute(\"aria-live\", politeness)\n    element.setAttribute(\"aria-atomic\", \"true\")\n    Object.assign(element.style, {\n      border: \"0\",\n      clip: \"rect(0 0 0 0)\",\n      clipPath: \"inset(50%)\",\n      height: \"1px\",\n      margin: \"-1px\",\n      overflow: \"hidden\",\n      padding: \"0\",\n      position: \"absolute\",\n      whiteSpace: \"nowrap\",\n      width: \"1px\",\n    })\n    document.body.append(element)\n    record = { element, consumers: 0 }\n    regions.set(politeness, record)\n  }\n  record.consumers += 1\n  return record\n}\n\nexport function useLiveRegion({\n  politeness = \"polite\",\n  clearAfter = 7_000,\n}: UseLiveRegionOptions = {}): LiveRegionControls {\n  const regionRef = React.useRef<LiveRegionRecord | null>(null)\n  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const supported = useHydrated()\n\n  const clear = useStableCallback(() => {\n    if (timerRef.current !== null) clearTimeout(timerRef.current)\n    timerRef.current = null\n    if (regionRef.current) regionRef.current.element.textContent = \"\"\n  })\n\n  const announce = useStableCallback((message: string) => {\n    const record = regionRef.current\n    if (!record) return\n    clear()\n    // Clearing first ensures identical consecutive messages are announced.\n    requestAnimationFrame(() => {\n      if (!regionRef.current) return\n      record.element.textContent = message\n      if (clearAfter > 0) {\n        timerRef.current = setTimeout(clear, clearAfter)\n      }\n    })\n  })\n\n  React.useEffect(() => {\n    if (typeof document === \"undefined\") return\n    const record = acquireRegion(document, politeness)\n    regionRef.current = record\n    return () => {\n      clear()\n      regionRef.current = null\n      record.consumers -= 1\n      if (record.consumers === 0) {\n        record.element.remove()\n        liveRegions.get(document)?.delete(politeness)\n      }\n    }\n  }, [clear, politeness])\n\n  return { announce, clear, supported }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-217be0bba3e3aedd81b20c39e74fca30d39606c1c90647acd10c2799121b7b5b",
+    "api": [
+      {
+        "name": "LiveRegionControls",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface LiveRegionControls",
+        "members": [
+          {
+            "name": "announce",
+            "kind": "property",
+            "type": "(message: string) => void"
+          },
+          {
+            "name": "clear",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "LiveRegionPoliteness",
+        "kind": "type",
+        "line": 8,
+        "signature": "type LiveRegionPoliteness = \"polite\" | \"assertive\""
+      },
+      {
+        "name": "useLiveRegion",
+        "kind": "function",
+        "line": 69,
+        "signature": "function useLiveRegion({ politeness = \"polite\", clearAfter = 7_000, }: UseLiveRegionOptions = {}): LiveRegionControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseLiveRegionOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "LiveRegionControls",
+        "usage": "const result = useLiveRegion(/* arguments */)"
+      },
+      {
+        "name": "UseLiveRegionOptions",
+        "kind": "interface",
+        "line": 10,
+        "signature": "interface UseLiveRegionOptions",
+        "members": [
+          {
+            "name": "politeness",
+            "kind": "property",
+            "optional": true,
+            "type": "LiveRegionPoliteness",
+            "default": "\"polite\""
+          },
+          {
+            "name": "clearAfter",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "7_000"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-live-region",
+      "importStatement": "import { useLiveRegion } from \"@/hooks/use-live-region\"",
+      "primaryExport": "useLiveRegion",
+      "example": "const result = useLiveRegion(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

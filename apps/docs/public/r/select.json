@@ -1,0 +1,123 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "select",
+  "type": "registry:ui",
+  "title": "Select",
+  "description": "Open-code aq-ui accessible component family for Select.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/select.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Select as SelectPrimitive } from \"@base-ui/react/select\"\n\nimport { cn } from \"@/lib/utils\"\nimport { ChevronDownIcon, CheckIcon, ChevronUpIcon } from \"lucide-react\"\n\nconst Select = SelectPrimitive.Root\n\nconst SelectGroup = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.Group>,\n  SelectPrimitive.Group.Props\n>(function SelectGroup({ className, ...props }, ref) {\n  return (\n    <SelectPrimitive.Group\n      ref={ref}\n      data-slot=\"select-group\"\n      className={cn(\"scroll-my-1 p-1\", className)}\n      {...props}\n    />\n  )\n})\nSelectGroup.displayName = \"SelectGroup\"\n\nconst SelectValue = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.Value>,\n  SelectPrimitive.Value.Props\n>(function SelectValue({ className, ...props }, ref) {\n  return (\n    <SelectPrimitive.Value\n      ref={ref}\n      data-slot=\"select-value\"\n      className={cn(\"flex flex-1 text-start\", className)}\n      {...props}\n    />\n  )\n})\nSelectValue.displayName = \"SelectValue\"\n\nconst SelectTrigger = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.Trigger>,\n  SelectPrimitive.Trigger.Props & {\n    size?: \"sm\" | \"default\"\n  }\n>(function SelectTrigger(\n  { className, size = \"default\", children, ...props },\n  ref\n) {\n  return (\n    <SelectPrimitive.Trigger\n      ref={ref}\n      data-slot=\"select-trigger\"\n      data-size={size}\n      className={cn(\n        \"flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 ps-2.5 pe-2 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n      <SelectPrimitive.Icon\n        render={\n          <ChevronDownIcon className=\"pointer-events-none size-4 text-muted-foreground\" />\n        }\n      />\n    </SelectPrimitive.Trigger>\n  )\n})\nSelectTrigger.displayName = \"SelectTrigger\"\n\nconst SelectContent = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.Popup>,\n  SelectPrimitive.Popup.Props &\n    Pick<\n      SelectPrimitive.Positioner.Props,\n      \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" | \"alignItemWithTrigger\"\n    >\n>(function SelectContent(\n  {\n    className,\n    children,\n    side = \"bottom\",\n    sideOffset = 4,\n    align = \"center\",\n    alignOffset = 0,\n    alignItemWithTrigger = true,\n    ...props\n  },\n  ref\n) {\n  return (\n    <SelectPrimitive.Portal>\n      <SelectPrimitive.Positioner\n        side={side}\n        sideOffset={sideOffset}\n        align={align}\n        alignOffset={alignOffset}\n        alignItemWithTrigger={alignItemWithTrigger}\n        className=\"isolate z-50\"\n      >\n        <SelectPrimitive.Popup\n          ref={ref}\n          data-slot=\"select-content\"\n          data-align-trigger={alignItemWithTrigger}\n          className={cn(\n            \"relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-start-2 data-[side=inline-start]:slide-in-from-end-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95\",\n            className\n          )}\n          {...props}\n        >\n          <SelectScrollUpButton />\n          <SelectPrimitive.List>{children}</SelectPrimitive.List>\n          <SelectScrollDownButton />\n        </SelectPrimitive.Popup>\n      </SelectPrimitive.Positioner>\n    </SelectPrimitive.Portal>\n  )\n})\nSelectContent.displayName = \"SelectContent\"\n\nconst SelectLabel = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.GroupLabel>,\n  SelectPrimitive.GroupLabel.Props\n>(function SelectLabel({ className, ...props }, ref) {\n  return (\n    <SelectPrimitive.GroupLabel\n      ref={ref}\n      data-slot=\"select-label\"\n      className={cn(\"px-1.5 py-1 text-xs text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nSelectLabel.displayName = \"SelectLabel\"\n\nconst SelectItem = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.Item>,\n  SelectPrimitive.Item.Props\n>(function SelectItem({ className, children, ...props }, ref) {\n  return (\n    <SelectPrimitive.Item\n      ref={ref}\n      data-slot=\"select-item\"\n      className={cn(\n        \"relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 ps-1.5 pe-8 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2\",\n        className\n      )}\n      {...props}\n    >\n      <SelectPrimitive.ItemText className=\"flex flex-1 shrink-0 gap-2 whitespace-nowrap\">\n        {children}\n      </SelectPrimitive.ItemText>\n      <SelectPrimitive.ItemIndicator\n        render={\n          <span className=\"pointer-events-none absolute end-2 flex size-4 items-center justify-center\" />\n        }\n      >\n        <CheckIcon className=\"pointer-events-none\" />\n      </SelectPrimitive.ItemIndicator>\n    </SelectPrimitive.Item>\n  )\n})\nSelectItem.displayName = \"SelectItem\"\n\nconst SelectSeparator = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.Separator>,\n  SelectPrimitive.Separator.Props\n>(function SelectSeparator({ className, ...props }, ref) {\n  return (\n    <SelectPrimitive.Separator\n      ref={ref}\n      data-slot=\"select-separator\"\n      className={cn(\"pointer-events-none -mx-1 my-1 h-px bg-border\", className)}\n      {...props}\n    />\n  )\n})\nSelectSeparator.displayName = \"SelectSeparator\"\n\nconst SelectScrollUpButton = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.ScrollUpArrow>,\n  React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>\n>(function SelectScrollUpButton({ className, ...props }, ref) {\n  return (\n    <SelectPrimitive.ScrollUpArrow\n      ref={ref}\n      data-slot=\"select-scroll-up-button\"\n      className={cn(\n        \"top-0 z-10 flex w-full cursor-default items-center justify-center bg-popover py-1 [&_svg:not([class*='size-'])]:size-4\",\n        className\n      )}\n      {...props}\n    >\n      <ChevronUpIcon />\n    </SelectPrimitive.ScrollUpArrow>\n  )\n})\nSelectScrollUpButton.displayName = \"SelectScrollUpButton\"\n\nconst SelectScrollDownButton = React.forwardRef<\n  React.ComponentRef<typeof SelectPrimitive.ScrollDownArrow>,\n  React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>\n>(function SelectScrollDownButton({ className, ...props }, ref) {\n  return (\n    <SelectPrimitive.ScrollDownArrow\n      ref={ref}\n      data-slot=\"select-scroll-down-button\"\n      className={cn(\n        \"bottom-0 z-10 flex w-full cursor-default items-center justify-center bg-popover py-1 [&_svg:not([class*='size-'])]:size-4\",\n        className\n      )}\n      {...props}\n    >\n      <ChevronDownIcon />\n    </SelectPrimitive.ScrollDownArrow>\n  )\n})\nSelectScrollDownButton.displayName = \"SelectScrollDownButton\"\n\nexport {\n  Select,\n  SelectContent,\n  SelectGroup,\n  SelectItem,\n  SelectLabel,\n  SelectScrollDownButton,\n  SelectScrollUpButton,\n  SelectSeparator,\n  SelectTrigger,\n  SelectValue,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-cb6b332f73e0cd6cfbf11c2b3a5e549adcea015be1460efa5b915909cc0bacdc",
+    "api": [
+      {
+        "name": "Select",
+        "kind": "const",
+        "line": 9,
+        "signature": "const Select = SelectPrimitive.Root",
+        "usage": "<Select />"
+      },
+      {
+        "name": "SelectContent",
+        "kind": "const",
+        "line": 72,
+        "signature": "const SelectContent = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Popup>, SelectPrimitive.Popup.Props & Pick< SelectPrimitive.Positioner.Props, \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" | \"alignItemWithTrigger\" >>(…)",
+        "propsType": "SelectPrimitive.Popup.Props & Pick< SelectPrimitive.Positioner.Props, \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" | \"alignItemWithTrigger\" >",
+        "usage": "<SelectContent />"
+      },
+      {
+        "name": "SelectGroup",
+        "kind": "const",
+        "line": 11,
+        "signature": "const SelectGroup = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Group>, SelectPrimitive.Group.Props>(…)",
+        "propsType": "SelectPrimitive.Group.Props",
+        "usage": "<SelectGroup />"
+      },
+      {
+        "name": "SelectItem",
+        "kind": "const",
+        "line": 137,
+        "signature": "const SelectItem = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Item>, SelectPrimitive.Item.Props>(…)",
+        "propsType": "SelectPrimitive.Item.Props",
+        "usage": "<SelectItem />"
+      },
+      {
+        "name": "SelectLabel",
+        "kind": "const",
+        "line": 122,
+        "signature": "const SelectLabel = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.GroupLabel>, SelectPrimitive.GroupLabel.Props>(…)",
+        "propsType": "SelectPrimitive.GroupLabel.Props",
+        "usage": "<SelectLabel />"
+      },
+      {
+        "name": "SelectScrollDownButton",
+        "kind": "const",
+        "line": 201,
+        "signature": "const SelectScrollDownButton = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.ScrollDownArrow>, React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>>(…)",
+        "propsType": "React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>",
+        "usage": "<SelectScrollDownButton />"
+      },
+      {
+        "name": "SelectScrollUpButton",
+        "kind": "const",
+        "line": 181,
+        "signature": "const SelectScrollUpButton = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.ScrollUpArrow>, React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>>(…)",
+        "propsType": "React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>",
+        "usage": "<SelectScrollUpButton />"
+      },
+      {
+        "name": "SelectSeparator",
+        "kind": "const",
+        "line": 166,
+        "signature": "const SelectSeparator = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Separator>, SelectPrimitive.Separator.Props>(…)",
+        "propsType": "SelectPrimitive.Separator.Props",
+        "usage": "<SelectSeparator />"
+      },
+      {
+        "name": "SelectTrigger",
+        "kind": "const",
+        "line": 41,
+        "signature": "const SelectTrigger = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Trigger>, SelectPrimitive.Trigger.Props & { size?: \"sm\" | \"default\" }>(…)",
+        "propsType": "SelectPrimitive.Trigger.Props & { size?: \"sm\" | \"default\" }",
+        "props": [
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "\"sm\" | \"default\"",
+            "default": "\"default\""
+          }
+        ],
+        "usage": "<SelectTrigger />"
+      },
+      {
+        "name": "SelectValue",
+        "kind": "const",
+        "line": 26,
+        "signature": "const SelectValue = React.forwardRef<React.ComponentRef<typeof SelectPrimitive.Value>, SelectPrimitive.Value.Props>(…)",
+        "propsType": "SelectPrimitive.Value.Props",
+        "usage": "<SelectValue />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/select",
+      "importStatement": "import { Select } from \"@/components/ui/select\"",
+      "primaryExport": "Select",
+      "example": "<Select />"
+    },
+    "ssr": false
+  }
+}

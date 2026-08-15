@@ -1,0 +1,50 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "scroll-area",
+  "type": "registry:ui",
+  "title": "Scroll Area",
+  "description": "Open-code aq-ui accessible component family for Scroll Area.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/scroll-area.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { ScrollArea as ScrollAreaPrimitive } from \"@base-ui/react/scroll-area\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst ScrollArea = React.forwardRef<\n  React.ComponentRef<typeof ScrollAreaPrimitive.Root>,\n  ScrollAreaPrimitive.Root.Props\n>(function ScrollArea({ className, children, ...props }, ref) {\n  return (\n    <ScrollAreaPrimitive.Root\n      ref={ref}\n      data-slot=\"scroll-area\"\n      className={cn(\"relative\", className)}\n      {...props}\n    >\n      <ScrollAreaPrimitive.Viewport\n        data-slot=\"scroll-area-viewport\"\n        className=\"size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1\"\n      >\n        {children}\n      </ScrollAreaPrimitive.Viewport>\n      <ScrollBar />\n      <ScrollAreaPrimitive.Corner />\n    </ScrollAreaPrimitive.Root>\n  )\n})\nScrollArea.displayName = \"ScrollArea\"\n\nconst ScrollBar = React.forwardRef<\n  React.ComponentRef<typeof ScrollAreaPrimitive.Scrollbar>,\n  ScrollAreaPrimitive.Scrollbar.Props\n>(function ScrollBar({ className, orientation = \"vertical\", ...props }, ref) {\n  return (\n    <ScrollAreaPrimitive.Scrollbar\n      ref={ref}\n      data-slot=\"scroll-area-scrollbar\"\n      data-orientation={orientation}\n      orientation={orientation}\n      className={cn(\n        \"flex touch-none p-px transition-colors select-none data-horizontal:h-2.5 data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2.5 data-vertical:border-s data-vertical:border-s-transparent\",\n        className\n      )}\n      {...props}\n    >\n      <ScrollAreaPrimitive.Thumb\n        data-slot=\"scroll-area-thumb\"\n        className=\"relative flex-1 rounded-full bg-border\"\n      />\n    </ScrollAreaPrimitive.Scrollbar>\n  )\n})\nScrollBar.displayName = \"ScrollBar\"\n\nexport { ScrollArea, ScrollBar }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-cbff9eaa119ef3ba47cf36d42cdc816224df0cbbde1b4ed7d556bc80f098cf88",
+    "api": [
+      {
+        "name": "ScrollArea",
+        "kind": "const",
+        "line": 8,
+        "signature": "const ScrollArea = React.forwardRef<React.ComponentRef<typeof ScrollAreaPrimitive.Root>, ScrollAreaPrimitive.Root.Props>(…)",
+        "propsType": "ScrollAreaPrimitive.Root.Props",
+        "usage": "<ScrollArea />"
+      },
+      {
+        "name": "ScrollBar",
+        "kind": "const",
+        "line": 32,
+        "signature": "const ScrollBar = React.forwardRef<React.ComponentRef<typeof ScrollAreaPrimitive.Scrollbar>, ScrollAreaPrimitive.Scrollbar.Props>(…)",
+        "propsType": "ScrollAreaPrimitive.Scrollbar.Props",
+        "usage": "<ScrollBar />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/scroll-area",
+      "importStatement": "import { ScrollArea } from \"@/components/ui/scroll-area\"",
+      "primaryExport": "ScrollArea",
+      "example": "<ScrollArea />"
+    },
+    "ssr": false
+  }
+}

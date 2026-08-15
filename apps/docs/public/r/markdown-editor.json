@@ -1,0 +1,517 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "markdown-editor",
+  "type": "registry:ui",
+  "title": "Markdown Editor",
+  "description": "CommonMark and GFM source editor with write, preview, split, formatting, uploads, and deferred rendering.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "hast-util-sanitize@^5.0.2",
+    "lucide-react@^1.31.0",
+    "unified@^11.0.5"
+  ],
+  "registryDependencies": [
+    "button",
+    "code-editor",
+    "code-language-markdown",
+    "markdown-renderer",
+    "upload",
+    "use-code-editor",
+    "use-markdown-editor",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/markdown-editor.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport \"@/lib/code-language-markdown\"\n\nimport * as React from \"react\"\nimport type { PluggableList } from \"unified\"\nimport type { Schema } from \"hast-util-sanitize\"\nimport {\n  BoldIcon,\n  BracesIcon,\n  Columns2Icon,\n  EyeIcon,\n  Heading2Icon,\n  ImageIcon,\n  ItalicIcon,\n  LinkIcon,\n  ListChecksIcon,\n  ListIcon,\n  ListOrderedIcon,\n  Loader2Icon,\n  Maximize2Icon,\n  Minimize2Icon,\n  PencilIcon,\n  QuoteIcon,\n  StrikethroughIcon,\n  TableIcon,\n} from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { CodeEditor } from \"@/components/ui/code-editor\"\nimport {\n  MarkdownRenderer,\n  type MarkdownRendererProps,\n} from \"@/components/ui/markdown-renderer\"\nimport type { CodeEditorHandle } from \"@/hooks/use-code-editor\"\nimport {\n  useMarkdownEditor,\n  type MarkdownCommand,\n  type MarkdownEditorMode,\n} from \"@/hooks/use-markdown-editor\"\nimport type { EditorAssetUploadAdapter } from \"@/lib/upload\"\nimport { cn } from \"@/lib/utils\"\n\ninterface MarkdownEditorContextValue {\n  editor: CodeEditorHandle | null\n  mode: MarkdownEditorMode\n  setMode: (mode: MarkdownEditorMode) => void\n  runCommand: (command: MarkdownCommand) => void\n  fullscreen: boolean\n  toggleFullscreen: () => void\n  disabled: boolean\n  readOnly: boolean\n  uploading: boolean\n}\n\nconst MarkdownEditorContext =\n  React.createContext<MarkdownEditorContextValue | null>(null)\n\nconst emptyMarkdownPlugins: PluggableList = []\n\nfunction safeUploadedMarkdownUrl(value: string) {\n  const url = value.trim()\n  if (url.startsWith(\"/\") && !url.startsWith(\"//\")) return url\n\n  try {\n    const parsed = new URL(url)\n    return parsed.protocol === \"https:\" || parsed.protocol === \"http:\"\n      ? url\n      : null\n  } catch {\n    return null\n  }\n}\n\nfunction useMarkdownEditorContext() {\n  return React.useContext(MarkdownEditorContext)\n}\n\nconst toolbarCommands: Array<{\n  command: MarkdownCommand\n  label: string\n  icon: React.ComponentType<{\n    className?: string\n    \"aria-hidden\"?: React.AriaAttributes[\"aria-hidden\"]\n  }>\n}> = [\n  { command: \"bold\", label: \"Bold\", icon: BoldIcon },\n  { command: \"italic\", label: \"Italic\", icon: ItalicIcon },\n  { command: \"strike\", label: \"Strikethrough\", icon: StrikethroughIcon },\n  { command: \"heading\", label: \"Heading\", icon: Heading2Icon },\n  { command: \"bullet-list\", label: \"Bullet list\", icon: ListIcon },\n  { command: \"ordered-list\", label: \"Ordered list\", icon: ListOrderedIcon },\n  { command: \"task-list\", label: \"Task list\", icon: ListChecksIcon },\n  { command: \"quote\", label: \"Quote\", icon: QuoteIcon },\n  { command: \"link\", label: \"Link\", icon: LinkIcon },\n  { command: \"image\", label: \"Image\", icon: ImageIcon },\n  { command: \"table\", label: \"Table\", icon: TableIcon },\n  { command: \"code\", label: \"Code\", icon: BracesIcon },\n]\n\ninterface MarkdownEditorToolbarProps extends React.ComponentProps<\"div\"> {\n  hideModeSwitcher?: boolean\n  hideFullscreen?: boolean\n}\n\nfunction MarkdownEditorToolbar({\n  className,\n  hideModeSwitcher = false,\n  hideFullscreen = false,\n  children,\n  ...props\n}: MarkdownEditorToolbarProps) {\n  const context = useMarkdownEditorContext()\n\n  return (\n    <div\n      data-slot=\"markdown-editor-toolbar\"\n      role=\"toolbar\"\n      aria-label=\"Markdown formatting\"\n      className={cn(\n        \"flex min-h-10 flex-wrap items-center gap-0.5 border-b bg-muted/30 p-1\",\n        className\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          {toolbarCommands.map(({ command, label, icon: Icon }) => (\n            <Button\n              key={command}\n              type=\"button\"\n              variant=\"ghost\"\n              size=\"icon-sm\"\n              aria-label={label}\n              title={label}\n              disabled={!context || context.disabled || context.readOnly}\n              onClick={() => context?.runCommand(command)}\n            >\n              <Icon aria-hidden={true} />\n            </Button>\n          ))}\n\n          {!hideModeSwitcher ? (\n            <div\n              className=\"ms-auto flex items-center gap-0.5\"\n              role=\"group\"\n              aria-label=\"View mode\"\n            >\n              <Button\n                type=\"button\"\n                variant={context?.mode === \"write\" ? \"secondary\" : \"ghost\"}\n                size=\"icon-sm\"\n                aria-label=\"Write mode\"\n                title=\"Write mode\"\n                onClick={() => context?.setMode(\"write\")}\n              >\n                <PencilIcon aria-hidden=\"true\" />\n              </Button>\n              <Button\n                type=\"button\"\n                variant={context?.mode === \"split\" ? \"secondary\" : \"ghost\"}\n                size=\"icon-sm\"\n                aria-label=\"Split mode\"\n                title=\"Split mode\"\n                onClick={() => context?.setMode(\"split\")}\n              >\n                <Columns2Icon aria-hidden=\"true\" />\n              </Button>\n              <Button\n                type=\"button\"\n                variant={context?.mode === \"preview\" ? \"secondary\" : \"ghost\"}\n                size=\"icon-sm\"\n                aria-label=\"Preview mode\"\n                title=\"Preview mode\"\n                onClick={() => context?.setMode(\"preview\")}\n              >\n                <EyeIcon aria-hidden=\"true\" />\n              </Button>\n            </div>\n          ) : null}\n\n          {!hideFullscreen ? (\n            <Button\n              type=\"button\"\n              variant=\"ghost\"\n              size=\"icon-sm\"\n              className={hideModeSwitcher ? \"ms-auto\" : undefined}\n              aria-label={\n                context?.fullscreen ? \"Exit fullscreen\" : \"Enter fullscreen\"\n              }\n              title={\n                context?.fullscreen ? \"Exit fullscreen\" : \"Enter fullscreen\"\n              }\n              onClick={() => context?.toggleFullscreen()}\n            >\n              {context?.fullscreen ? (\n                <Minimize2Icon aria-hidden=\"true\" />\n              ) : (\n                <Maximize2Icon aria-hidden=\"true\" />\n              )}\n            </Button>\n          ) : null}\n        </>\n      )}\n    </div>\n  )\n}\n\ninterface MarkdownEditorPreviewProps extends MarkdownRendererProps {\n  emptyLabel?: string\n}\n\nconst MarkdownEditorPreview = React.forwardRef<\n  HTMLDivElement,\n  MarkdownEditorPreviewProps\n>(function MarkdownEditorPreview(\n  { value, className, emptyLabel = \"Nothing to preview\", ...props },\n  ref\n) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"markdown-editor-preview\"\n      className={cn(\"min-h-0 overflow-auto p-4\", className)}\n      tabIndex={0}\n      aria-label=\"Markdown preview\"\n    >\n      {value ? (\n        <MarkdownRenderer value={value} {...props} />\n      ) : (\n        <p className=\"text-sm text-muted-foreground\">{emptyLabel}</p>\n      )}\n    </div>\n  )\n})\n\ninterface MarkdownEditorStatusBarProps extends React.ComponentProps<\"div\"> {\n  characters?: number\n  words?: number\n  maxLength?: number\n  uploading?: boolean\n  error?: Error | null\n}\n\nfunction MarkdownEditorStatusBar({\n  className,\n  characters = 0,\n  words = 0,\n  maxLength,\n  uploading = false,\n  error,\n  children,\n  ...props\n}: MarkdownEditorStatusBarProps) {\n  return (\n    <div\n      data-slot=\"markdown-editor-status-bar\"\n      role=\"status\"\n      aria-live=\"polite\"\n      className={cn(\n        \"flex min-h-8 items-center gap-3 border-t bg-muted/30 px-3 text-xs text-muted-foreground\",\n        className\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          <span>{words.toLocaleString()} words</span>\n          <span>\n            {characters.toLocaleString()}\n            {typeof maxLength === \"number\"\n              ? ` / ${maxLength.toLocaleString()}`\n              : \"\"}{\" \"}\n            characters\n          </span>\n          {uploading ? (\n            <span className=\"ms-auto inline-flex items-center gap-1.5\">\n              <Loader2Icon className=\"size-3 animate-spin\" aria-hidden=\"true\" />\n              Uploading…\n            </span>\n          ) : null}\n          {error ? (\n            <span className=\"ms-auto text-destructive\" title={error.message}>\n              Upload failed\n            </span>\n          ) : null}\n        </>\n      )}\n    </div>\n  )\n}\n\ninterface MarkdownEditorProps extends Omit<\n  React.ComponentProps<\"div\">,\n  \"defaultValue\" | \"onChange\"\n> {\n  value?: string\n  defaultValue?: string\n  onChange?: (value: string) => void\n  mode?: MarkdownEditorMode\n  defaultMode?: MarkdownEditorMode\n  onModeChange?: (mode: MarkdownEditorMode) => void\n  readOnly?: boolean\n  disabled?: boolean\n  placeholder?: string\n  maxLength?: number\n  autofocus?: boolean\n  minHeight?: string | number\n  maxHeight?: string | number\n  uploadAdapter?: EditorAssetUploadAdapter\n  remarkPlugins?: PluggableList\n  rehypePlugins?: PluggableList\n  sanitizeSchema?: Schema\n  allowHtml?: boolean\n  toolbar?: boolean\n  statusBar?: boolean\n}\n\nconst MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(\n  function MarkdownEditor(\n    {\n      value,\n      defaultValue = \"\",\n      onChange,\n      mode,\n      defaultMode = \"write\",\n      onModeChange,\n      readOnly = false,\n      disabled = false,\n      placeholder = \"Write Markdown…\",\n      maxLength,\n      autofocus = false,\n      minHeight = 320,\n      maxHeight,\n      uploadAdapter,\n      remarkPlugins = emptyMarkdownPlugins,\n      rehypePlugins = emptyMarkdownPlugins,\n      sanitizeSchema,\n      allowHtml = false,\n      toolbar = true,\n      statusBar = true,\n      className,\n      style,\n      onKeyDownCapture,\n      onPasteCapture,\n      onDropCapture,\n      ...props\n    },\n    forwardedRef\n  ) {\n    const controller = useMarkdownEditor({\n      value,\n      defaultValue,\n      onChange,\n      mode,\n      defaultMode,\n      onModeChange,\n      maxLength,\n    })\n    const {\n      value: markdownValue,\n      setValue: setMarkdownValue,\n      mode: editorMode,\n      setMode: setEditorMode,\n      fullscreen,\n      setFullscreen,\n      toggleFullscreen,\n      runCommand: runMarkdownCommand,\n      characters,\n      words,\n    } = controller\n    const editorRef = React.useRef<CodeEditorHandle>(null)\n    const previewRef = React.useRef<HTMLDivElement>(null)\n    const [editorHandle, setEditorHandle] =\n      React.useState<CodeEditorHandle | null>(null)\n    const [uploading, setUploading] = React.useState(0)\n    const [uploadError, setUploadError] = React.useState<Error | null>(null)\n    const uploadsRef = React.useRef(new Set<AbortController>())\n    const deferredValue = React.useDeferredValue(markdownValue)\n\n    const handleValueChange = React.useCallback(\n      (nextValue: string) => {\n        const limited =\n          typeof maxLength === \"number\"\n            ? nextValue.slice(0, Math.max(0, maxLength))\n            : nextValue\n        setMarkdownValue(limited)\n\n        if (limited !== nextValue) {\n          queueMicrotask(() => {\n            if (editorRef.current?.getValue() !== limited) {\n              editorRef.current?.setValue(limited)\n            }\n          })\n        }\n      },\n      [maxLength, setMarkdownValue]\n    )\n\n    const runCommand = React.useCallback(\n      (command: MarkdownCommand) => {\n        runMarkdownCommand(command, editorRef.current)\n      },\n      [runMarkdownCommand]\n    )\n\n    const handleFiles = React.useCallback(\n      async (files: readonly File[]) => {\n        if (!uploadAdapter || disabled || readOnly || files.length === 0) return\n        setUploadError(null)\n\n        for (const file of files) {\n          const abortController = new AbortController()\n          uploadsRef.current.add(abortController)\n          setUploading((count) => count + 1)\n\n          try {\n            const asset = await uploadAdapter.upload(file, {\n              signal: abortController.signal,\n              onProgress: () => undefined,\n            })\n            if (abortController.signal.aborted) continue\n            const url = safeUploadedMarkdownUrl(asset.url)\n            if (!url)\n              throw new Error(\"The upload adapter returned an unsafe URL.\")\n            const isImage = (asset.mimeType ?? file.type).startsWith(\"image/\")\n            const label = asset.alt ?? asset.name ?? file.name\n            const markdown = isImage\n              ? `![${label}](${url})`\n              : `[${asset.name ?? file.name}](${url})`\n            editorRef.current?.replaceSelection(markdown)\n          } catch (reason) {\n            if (!abortController.signal.aborted) {\n              setUploadError(\n                reason instanceof Error ? reason : new Error(\"Upload failed.\")\n              )\n            }\n          } finally {\n            uploadsRef.current.delete(abortController)\n            setUploading((count) => Math.max(0, count - 1))\n          }\n        }\n      },\n      [disabled, readOnly, uploadAdapter]\n    )\n\n    React.useEffect(() => {\n      const uploads = uploadsRef.current\n      return () => {\n        uploads.forEach((uploadController) => uploadController.abort())\n        uploads.clear()\n      }\n    }, [])\n\n    React.useEffect(() => {\n      if (!fullscreen) return\n      const previousOverflow = document.body.style.overflow\n      document.body.style.overflow = \"hidden\"\n      const onKeyDown = (event: KeyboardEvent) => {\n        if (event.key === \"Escape\") setFullscreen(false)\n      }\n      document.addEventListener(\"keydown\", onKeyDown)\n      return () => {\n        document.body.style.overflow = previousOverflow\n        document.removeEventListener(\"keydown\", onKeyDown)\n      }\n    }, [fullscreen, setFullscreen])\n\n    React.useEffect(() => {\n      if (editorMode !== \"split\" || !editorHandle || !previewRef.current) return\n      const source = editorHandle.getScrollElement()\n      const preview = previewRef.current\n      if (!source) return\n      let syncing = false\n      let frame = 0\n\n      const syncScroll = (origin: HTMLElement, target: HTMLElement) => {\n        if (syncing) return\n        syncing = true\n        const available = origin.scrollHeight - origin.clientHeight\n        const ratio = available > 0 ? origin.scrollTop / available : 0\n        target.scrollTop =\n          ratio * Math.max(0, target.scrollHeight - target.clientHeight)\n        cancelAnimationFrame(frame)\n        frame = requestAnimationFrame(() => {\n          syncing = false\n        })\n      }\n\n      const fromSource = () => syncScroll(source, preview)\n      const fromPreview = () => syncScroll(preview, source)\n      source.addEventListener(\"scroll\", fromSource, { passive: true })\n      preview.addEventListener(\"scroll\", fromPreview, { passive: true })\n      return () => {\n        cancelAnimationFrame(frame)\n        source.removeEventListener(\"scroll\", fromSource)\n        preview.removeEventListener(\"scroll\", fromPreview)\n      }\n    }, [editorHandle, editorMode])\n\n    const context = React.useMemo<MarkdownEditorContextValue>(\n      () => ({\n        editor: editorHandle,\n        mode: editorMode,\n        setMode: setEditorMode,\n        runCommand,\n        fullscreen,\n        toggleFullscreen,\n        disabled,\n        readOnly,\n        uploading: uploading > 0,\n      }),\n      [\n        disabled,\n        editorHandle,\n        editorMode,\n        fullscreen,\n        readOnly,\n        runCommand,\n        setEditorMode,\n        toggleFullscreen,\n        uploading,\n      ]\n    )\n\n    const handleKeyboardShortcut = (\n      event: React.KeyboardEvent<HTMLDivElement>\n    ) => {\n      onKeyDownCapture?.(event)\n      if (\n        event.defaultPrevented ||\n        readOnly ||\n        disabled ||\n        !(event.metaKey || event.ctrlKey)\n      ) {\n        return\n      }\n\n      const shortcuts: Partial<Record<string, MarkdownCommand>> = {\n        b: \"bold\",\n        i: \"italic\",\n        k: \"link\",\n      }\n      const command = shortcuts[event.key.toLowerCase()]\n      if (command) {\n        event.preventDefault()\n        runCommand(command)\n      }\n    }\n\n    const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {\n      onPasteCapture?.(event)\n      if (event.defaultPrevented || !uploadAdapter) return\n      const files = Array.from(event.clipboardData.files)\n      if (files.length > 0) {\n        event.preventDefault()\n        void handleFiles(files)\n      }\n    }\n\n    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {\n      onDropCapture?.(event)\n      if (event.defaultPrevented || !uploadAdapter) return\n      const files = Array.from(event.dataTransfer.files)\n      if (files.length > 0) {\n        event.preventDefault()\n        const view = editorRef.current?.getView()\n        const position = view?.posAtCoords({\n          x: event.clientX,\n          y: event.clientY,\n        })\n        if (view && typeof position === \"number\") {\n          view.dispatch({ selection: { anchor: position } })\n        }\n        void handleFiles(files)\n      }\n    }\n\n    return (\n      <MarkdownEditorContext.Provider value={context}>\n        <div\n          ref={forwardedRef}\n          data-slot=\"markdown-editor\"\n          data-mode={editorMode}\n          data-fullscreen={fullscreen ? \"\" : undefined}\n          data-disabled={disabled ? \"\" : undefined}\n          className={cn(\n            \"flex min-w-0 flex-col overflow-hidden rounded-lg border bg-background text-foreground shadow-xs focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 data-fullscreen:fixed data-fullscreen:inset-0 data-fullscreen:z-50 data-fullscreen:rounded-none data-disabled:opacity-50\",\n            className\n          )}\n          style={{ minHeight, maxHeight, ...style }}\n          onKeyDownCapture={handleKeyboardShortcut}\n          onPasteCapture={handlePaste}\n          onDropCapture={handleDrop}\n          {...props}\n        >\n          {toolbar ? <MarkdownEditorToolbar /> : null}\n          <div\n            data-slot=\"markdown-editor-body\"\n            className={cn(\n              \"grid min-h-0 flex-1\",\n              editorMode === \"split\" &&\n                \"grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0\"\n            )}\n          >\n            {editorMode !== \"preview\" ? (\n              <CodeEditor\n                ref={editorRef}\n                value={markdownValue}\n                onChange={handleValueChange}\n                onReady={(handle) => setEditorHandle(handle)}\n                language=\"markdown\"\n                readOnly={readOnly}\n                disabled={disabled}\n                lineNumbers={false}\n                foldGutter={false}\n                highlightActiveLine={false}\n                lineWrapping\n                autofocus={autofocus}\n                placeholder={placeholder}\n                minHeight=\"100%\"\n                maxHeight=\"100%\"\n                aria-label=\"Markdown source\"\n                className=\"min-h-0 rounded-none border-0 shadow-none focus-within:ring-0\"\n              />\n            ) : null}\n            {editorMode !== \"write\" ? (\n              <MarkdownEditorPreview\n                ref={previewRef}\n                value={deferredValue}\n                allowHtml={allowHtml}\n                sanitizeSchema={sanitizeSchema}\n                remarkPlugins={remarkPlugins}\n                rehypePlugins={rehypePlugins}\n              />\n            ) : null}\n          </div>\n          {statusBar ? (\n            <MarkdownEditorStatusBar\n              characters={characters}\n              words={words}\n              maxLength={maxLength}\n              uploading={uploading > 0}\n              error={uploadError}\n            />\n          ) : null}\n        </div>\n      </MarkdownEditorContext.Provider>\n    )\n  }\n)\n\nexport {\n  MarkdownEditor,\n  MarkdownEditorPreview,\n  MarkdownEditorStatusBar,\n  MarkdownEditorToolbar,\n  MarkdownRenderer,\n  useMarkdownEditor,\n}\nexport type {\n  EditorAssetUploadAdapter,\n  MarkdownEditorMode,\n  MarkdownEditorPreviewProps,\n  MarkdownEditorProps,\n  MarkdownEditorStatusBarProps,\n  MarkdownEditorToolbarProps,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-41d11bb6eca4cd3d1f3292ac9282311fb0674dc70dd96bb0000dd07d53bb1900",
+    "api": [
+      {
+        "name": "EditorAssetUploadAdapter",
+        "kind": "type",
+        "line": 41,
+        "signature": "export type { EditorAssetUploadAdapter } from \"@/lib/upload\"",
+        "source": "@/lib/upload"
+      },
+      {
+        "name": "MarkdownEditor",
+        "kind": "const",
+        "line": 319,
+        "signature": "const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(…)",
+        "propsType": "MarkdownEditorProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "mode",
+            "kind": "property",
+            "optional": true,
+            "type": "MarkdownEditorMode"
+          },
+          {
+            "name": "defaultMode",
+            "kind": "property",
+            "optional": true,
+            "type": "MarkdownEditorMode",
+            "default": "\"write\""
+          },
+          {
+            "name": "onModeChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(mode: MarkdownEditorMode) => void"
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Write Markdown…\""
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "minHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number",
+            "default": "320"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "remarkPlugins",
+            "kind": "property",
+            "optional": true,
+            "type": "PluggableList",
+            "default": "emptyMarkdownPlugins"
+          },
+          {
+            "name": "rehypePlugins",
+            "kind": "property",
+            "optional": true,
+            "type": "PluggableList",
+            "default": "emptyMarkdownPlugins"
+          },
+          {
+            "name": "sanitizeSchema",
+            "kind": "property",
+            "optional": true,
+            "type": "Schema"
+          },
+          {
+            "name": "allowHtml",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "toolbar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "statusBar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ],
+        "usage": "<MarkdownEditor />"
+      },
+      {
+        "name": "MarkdownEditorMode",
+        "kind": "type",
+        "line": 39,
+        "signature": "export type { MarkdownEditorMode } from \"@/hooks/use-markdown-editor\"",
+        "source": "@/hooks/use-markdown-editor"
+      },
+      {
+        "name": "MarkdownEditorPreview",
+        "kind": "const",
+        "line": 213,
+        "signature": "const MarkdownEditorPreview = React.forwardRef<HTMLDivElement, MarkdownEditorPreviewProps>(…)",
+        "propsType": "MarkdownEditorPreviewProps",
+        "props": [
+          {
+            "name": "emptyLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Nothing to preview\""
+          }
+        ],
+        "usage": "<MarkdownEditorPreview />"
+      },
+      {
+        "name": "MarkdownEditorPreviewProps",
+        "kind": "interface",
+        "line": 209,
+        "signature": "interface MarkdownEditorPreviewProps extends MarkdownRendererProps",
+        "members": [
+          {
+            "name": "emptyLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Nothing to preview\""
+          }
+        ]
+      },
+      {
+        "name": "MarkdownEditorProps",
+        "kind": "interface",
+        "line": 293,
+        "signature": "interface MarkdownEditorProps extends Omit< React.ComponentProps<\"div\">, \"defaultValue\" | \"onChange\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "mode",
+            "kind": "property",
+            "optional": true,
+            "type": "MarkdownEditorMode"
+          },
+          {
+            "name": "defaultMode",
+            "kind": "property",
+            "optional": true,
+            "type": "MarkdownEditorMode",
+            "default": "\"write\""
+          },
+          {
+            "name": "onModeChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(mode: MarkdownEditorMode) => void"
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Write Markdown…\""
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "minHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number",
+            "default": "320"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "remarkPlugins",
+            "kind": "property",
+            "optional": true,
+            "type": "PluggableList",
+            "default": "emptyMarkdownPlugins"
+          },
+          {
+            "name": "rehypePlugins",
+            "kind": "property",
+            "optional": true,
+            "type": "PluggableList",
+            "default": "emptyMarkdownPlugins"
+          },
+          {
+            "name": "sanitizeSchema",
+            "kind": "property",
+            "optional": true,
+            "type": "Schema"
+          },
+          {
+            "name": "allowHtml",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "toolbar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "statusBar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      },
+      {
+        "name": "MarkdownEditorStatusBar",
+        "kind": "function",
+        "line": 245,
+        "signature": "function MarkdownEditorStatusBar({ className, characters = 0, words = 0, maxLength, uploading = false, error, children, ...props }: MarkdownEditorStatusBarProps)",
+        "propsType": "MarkdownEditorStatusBarProps",
+        "props": [
+          {
+            "name": "characters",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "words",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "uploading",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "optional": true,
+            "type": "Error | null"
+          }
+        ],
+        "usage": "<MarkdownEditorStatusBar />"
+      },
+      {
+        "name": "MarkdownEditorStatusBarProps",
+        "kind": "interface",
+        "line": 237,
+        "signature": "interface MarkdownEditorStatusBarProps extends React.ComponentProps<\"div\">",
+        "members": [
+          {
+            "name": "characters",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "words",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "uploading",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "optional": true,
+            "type": "Error | null"
+          }
+        ]
+      },
+      {
+        "name": "MarkdownEditorToolbar",
+        "kind": "function",
+        "line": 106,
+        "signature": "function MarkdownEditorToolbar({ className, hideModeSwitcher = false, hideFullscreen = false, children, ...props }: MarkdownEditorToolbarProps)",
+        "propsType": "MarkdownEditorToolbarProps",
+        "props": [
+          {
+            "name": "hideModeSwitcher",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "hideFullscreen",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "usage": "<MarkdownEditorToolbar />"
+      },
+      {
+        "name": "MarkdownEditorToolbarProps",
+        "kind": "interface",
+        "line": 101,
+        "signature": "interface MarkdownEditorToolbarProps extends React.ComponentProps<\"div\">",
+        "members": [
+          {
+            "name": "hideModeSwitcher",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "hideFullscreen",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      },
+      {
+        "name": "MarkdownRenderer",
+        "kind": "const",
+        "line": 32,
+        "signature": "export { MarkdownRenderer } from \"@/components/ui/markdown-renderer\"",
+        "source": "@/components/ui/markdown-renderer",
+        "usage": "<MarkdownRenderer />"
+      },
+      {
+        "name": "useMarkdownEditor",
+        "kind": "function",
+        "line": 37,
+        "signature": "export { useMarkdownEditor } from \"@/hooks/use-markdown-editor\"",
+        "source": "@/hooks/use-markdown-editor",
+        "usage": "const result = useMarkdownEditor(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/markdown-editor",
+      "importStatement": "import { MarkdownEditor } from \"@/components/ui/markdown-editor\"",
+      "primaryExport": "MarkdownEditor",
+      "example": "<MarkdownEditor />"
+    },
+    "ssr": false
+  }
+}

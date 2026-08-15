@@ -1,0 +1,128 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "typography",
+  "type": "registry:ui",
+  "title": "Typography",
+  "description": "Open-code aq-ui accessible component family for Typography.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/typography.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst TypographyH1 = React.forwardRef<\n  React.ComponentRef<\"h1\">,\n  React.ComponentProps<\"h1\">\n>(function TypographyH1({ className, ...props }, ref) {\n  return (\n    <h1\n      ref={ref}\n      data-slot=\"typography-h1\"\n      className={cn(\n        \"scroll-m-20 text-4xl font-extrabold tracking-tight text-balance lg:text-5xl\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTypographyH1.displayName = \"TypographyH1\"\n\nconst TypographyH2 = React.forwardRef<\n  React.ComponentRef<\"h2\">,\n  React.ComponentProps<\"h2\">\n>(function TypographyH2({ className, ...props }, ref) {\n  return (\n    <h2\n      ref={ref}\n      data-slot=\"typography-h2\"\n      className={cn(\n        \"mt-10 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTypographyH2.displayName = \"TypographyH2\"\n\nconst TypographyH3 = React.forwardRef<\n  React.ComponentRef<\"h3\">,\n  React.ComponentProps<\"h3\">\n>(function TypographyH3({ className, ...props }, ref) {\n  return (\n    <h3\n      ref={ref}\n      data-slot=\"typography-h3\"\n      className={cn(\n        \"mt-8 scroll-m-20 text-2xl font-semibold tracking-tight\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTypographyH3.displayName = \"TypographyH3\"\n\nconst TypographyH4 = React.forwardRef<\n  React.ComponentRef<\"h4\">,\n  React.ComponentProps<\"h4\">\n>(function TypographyH4({ className, ...props }, ref) {\n  return (\n    <h4\n      ref={ref}\n      data-slot=\"typography-h4\"\n      className={cn(\n        \"mt-6 scroll-m-20 text-xl font-semibold tracking-tight\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTypographyH4.displayName = \"TypographyH4\"\n\nconst TypographyP = React.forwardRef<\n  React.ComponentRef<\"p\">,\n  React.ComponentProps<\"p\">\n>(function TypographyP({ className, ...props }, ref) {\n  return (\n    <p\n      ref={ref}\n      data-slot=\"typography-p\"\n      className={cn(\"leading-7 [&:not(:first-child)]:mt-6\", className)}\n      {...props}\n    />\n  )\n})\nTypographyP.displayName = \"TypographyP\"\n\nconst TypographyLead = React.forwardRef<\n  React.ComponentRef<\"p\">,\n  React.ComponentProps<\"p\">\n>(function TypographyLead({ className, ...props }, ref) {\n  return (\n    <p\n      ref={ref}\n      data-slot=\"typography-lead\"\n      className={cn(\"text-xl text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nTypographyLead.displayName = \"TypographyLead\"\n\nconst TypographyLarge = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function TypographyLarge({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"typography-large\"\n      className={cn(\"text-lg font-semibold\", className)}\n      {...props}\n    />\n  )\n})\nTypographyLarge.displayName = \"TypographyLarge\"\n\nconst TypographySmall = React.forwardRef<\n  React.ComponentRef<\"small\">,\n  React.ComponentProps<\"small\">\n>(function TypographySmall({ className, ...props }, ref) {\n  return (\n    <small\n      ref={ref}\n      data-slot=\"typography-small\"\n      className={cn(\"text-sm leading-none font-medium\", className)}\n      {...props}\n    />\n  )\n})\nTypographySmall.displayName = \"TypographySmall\"\n\nconst TypographyMuted = React.forwardRef<\n  React.ComponentRef<\"p\">,\n  React.ComponentProps<\"p\">\n>(function TypographyMuted({ className, ...props }, ref) {\n  return (\n    <p\n      ref={ref}\n      data-slot=\"typography-muted\"\n      className={cn(\"text-sm text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nTypographyMuted.displayName = \"TypographyMuted\"\n\nconst TypographyBlockquote = React.forwardRef<\n  React.ComponentRef<\"blockquote\">,\n  React.ComponentProps<\"blockquote\">\n>(function TypographyBlockquote({ className, ...props }, ref) {\n  return (\n    <blockquote\n      ref={ref}\n      data-slot=\"typography-blockquote\"\n      className={cn(\"mt-6 border-s-2 ps-6 italic\", className)}\n      {...props}\n    />\n  )\n})\nTypographyBlockquote.displayName = \"TypographyBlockquote\"\n\nconst TypographyInlineCode = React.forwardRef<\n  React.ComponentRef<\"code\">,\n  React.ComponentProps<\"code\">\n>(function TypographyInlineCode({ className, ...props }, ref) {\n  return (\n    <code\n      ref={ref}\n      data-slot=\"typography-inline-code\"\n      className={cn(\n        \"relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTypographyInlineCode.displayName = \"TypographyInlineCode\"\n\nconst TypographyList = React.forwardRef<\n  React.ComponentRef<\"ul\">,\n  React.ComponentProps<\"ul\">\n>(function TypographyList({ className, ...props }, ref) {\n  return (\n    <ul\n      ref={ref}\n      data-slot=\"typography-list\"\n      className={cn(\"my-6 ms-6 list-disc [&>li]:mt-2\", className)}\n      {...props}\n    />\n  )\n})\nTypographyList.displayName = \"TypographyList\"\n\nexport {\n  TypographyBlockquote,\n  TypographyH1,\n  TypographyH2,\n  TypographyH3,\n  TypographyH4,\n  TypographyInlineCode,\n  TypographyLarge,\n  TypographyLead,\n  TypographyList,\n  TypographyMuted,\n  TypographyP,\n  TypographySmall,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-a5ed5aa8eeb65d66bfa0abcc7091cbc8b9727d243bcfa2696816e9c065df7e6d",
+    "api": [
+      {
+        "name": "TypographyBlockquote",
+        "kind": "const",
+        "line": 152,
+        "signature": "const TypographyBlockquote = React.forwardRef<React.ComponentRef<\"blockquote\">, React.ComponentProps<\"blockquote\">>(…)",
+        "propsType": "React.ComponentProps<\"blockquote\">",
+        "usage": "<TypographyBlockquote />"
+      },
+      {
+        "name": "TypographyH1",
+        "kind": "const",
+        "line": 5,
+        "signature": "const TypographyH1 = React.forwardRef<React.ComponentRef<\"h1\">, React.ComponentProps<\"h1\">>(…)",
+        "propsType": "React.ComponentProps<\"h1\">",
+        "usage": "<TypographyH1 />"
+      },
+      {
+        "name": "TypographyH2",
+        "kind": "const",
+        "line": 23,
+        "signature": "const TypographyH2 = React.forwardRef<React.ComponentRef<\"h2\">, React.ComponentProps<\"h2\">>(…)",
+        "propsType": "React.ComponentProps<\"h2\">",
+        "usage": "<TypographyH2 />"
+      },
+      {
+        "name": "TypographyH3",
+        "kind": "const",
+        "line": 41,
+        "signature": "const TypographyH3 = React.forwardRef<React.ComponentRef<\"h3\">, React.ComponentProps<\"h3\">>(…)",
+        "propsType": "React.ComponentProps<\"h3\">",
+        "usage": "<TypographyH3 />"
+      },
+      {
+        "name": "TypographyH4",
+        "kind": "const",
+        "line": 59,
+        "signature": "const TypographyH4 = React.forwardRef<React.ComponentRef<\"h4\">, React.ComponentProps<\"h4\">>(…)",
+        "propsType": "React.ComponentProps<\"h4\">",
+        "usage": "<TypographyH4 />"
+      },
+      {
+        "name": "TypographyInlineCode",
+        "kind": "const",
+        "line": 167,
+        "signature": "const TypographyInlineCode = React.forwardRef<React.ComponentRef<\"code\">, React.ComponentProps<\"code\">>(…)",
+        "propsType": "React.ComponentProps<\"code\">",
+        "usage": "<TypographyInlineCode />"
+      },
+      {
+        "name": "TypographyLarge",
+        "kind": "const",
+        "line": 107,
+        "signature": "const TypographyLarge = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<TypographyLarge />"
+      },
+      {
+        "name": "TypographyLead",
+        "kind": "const",
+        "line": 92,
+        "signature": "const TypographyLead = React.forwardRef<React.ComponentRef<\"p\">, React.ComponentProps<\"p\">>(…)",
+        "propsType": "React.ComponentProps<\"p\">",
+        "usage": "<TypographyLead />"
+      },
+      {
+        "name": "TypographyList",
+        "kind": "const",
+        "line": 185,
+        "signature": "const TypographyList = React.forwardRef<React.ComponentRef<\"ul\">, React.ComponentProps<\"ul\">>(…)",
+        "propsType": "React.ComponentProps<\"ul\">",
+        "usage": "<TypographyList />"
+      },
+      {
+        "name": "TypographyMuted",
+        "kind": "const",
+        "line": 137,
+        "signature": "const TypographyMuted = React.forwardRef<React.ComponentRef<\"p\">, React.ComponentProps<\"p\">>(…)",
+        "propsType": "React.ComponentProps<\"p\">",
+        "usage": "<TypographyMuted />"
+      },
+      {
+        "name": "TypographyP",
+        "kind": "const",
+        "line": 77,
+        "signature": "const TypographyP = React.forwardRef<React.ComponentRef<\"p\">, React.ComponentProps<\"p\">>(…)",
+        "propsType": "React.ComponentProps<\"p\">",
+        "usage": "<TypographyP />"
+      },
+      {
+        "name": "TypographySmall",
+        "kind": "const",
+        "line": 122,
+        "signature": "const TypographySmall = React.forwardRef<React.ComponentRef<\"small\">, React.ComponentProps<\"small\">>(…)",
+        "propsType": "React.ComponentProps<\"small\">",
+        "usage": "<TypographySmall />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/typography",
+      "importStatement": "import { TypographyBlockquote } from \"@/components/ui/typography\"",
+      "primaryExport": "TypographyBlockquote",
+      "example": "<TypographyBlockquote />"
+    },
+    "ssr": true
+  }
+}

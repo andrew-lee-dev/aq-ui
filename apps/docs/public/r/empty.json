@@ -1,0 +1,82 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "empty",
+  "type": "registry:ui",
+  "title": "Empty",
+  "description": "Open-code aq-ui accessible component family for Empty.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/empty.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Empty = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function Empty({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"empty\"\n      className={cn(\n        \"flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-xl border-dashed p-6 text-center text-balance\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nEmpty.displayName = \"Empty\"\n\nconst EmptyHeader = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function EmptyHeader({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"empty-header\"\n      className={cn(\"flex max-w-sm flex-col items-center gap-2\", className)}\n      {...props}\n    />\n  )\n})\nEmptyHeader.displayName = \"EmptyHeader\"\n\nconst emptyMediaVariants = cva(\n  \"mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-transparent\",\n        icon: \"flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  }\n)\n\nconst EmptyMedia = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & VariantProps<typeof emptyMediaVariants>\n>(function EmptyMedia({ className, variant = \"default\", ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"empty-icon\"\n      data-variant={variant}\n      className={cn(emptyMediaVariants({ variant, className }))}\n      {...props}\n    />\n  )\n})\nEmptyMedia.displayName = \"EmptyMedia\"\n\nconst EmptyTitle = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function EmptyTitle({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"empty-title\"\n      className={cn(\n        \"font-heading text-sm font-medium tracking-tight\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nEmptyTitle.displayName = \"EmptyTitle\"\n\nconst EmptyDescription = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"p\">\n>(function EmptyDescription({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"empty-description\"\n      className={cn(\n        \"text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nEmptyDescription.displayName = \"EmptyDescription\"\n\nconst EmptyContent = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function EmptyContent({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"empty-content\"\n      className={cn(\n        \"flex w-full max-w-sm min-w-0 flex-col items-center gap-2.5 text-sm text-balance\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nEmptyContent.displayName = \"EmptyContent\"\n\nexport {\n  Empty,\n  EmptyHeader,\n  EmptyTitle,\n  EmptyDescription,\n  EmptyContent,\n  EmptyMedia,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-26725938216019d8062595bd215193337b1c2f5870191ba16a3e7217df5a8f78",
+    "api": [
+      {
+        "name": "Empty",
+        "kind": "const",
+        "line": 6,
+        "signature": "const Empty = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<Empty />"
+      },
+      {
+        "name": "EmptyContent",
+        "kind": "const",
+        "line": 106,
+        "signature": "const EmptyContent = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<EmptyContent />"
+      },
+      {
+        "name": "EmptyDescription",
+        "kind": "const",
+        "line": 88,
+        "signature": "const EmptyDescription = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"p\">>(…)",
+        "propsType": "React.ComponentProps<\"p\">",
+        "usage": "<EmptyDescription />"
+      },
+      {
+        "name": "EmptyHeader",
+        "kind": "const",
+        "line": 24,
+        "signature": "const EmptyHeader = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<EmptyHeader />"
+      },
+      {
+        "name": "EmptyMedia",
+        "kind": "const",
+        "line": 54,
+        "signature": "const EmptyMedia = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & VariantProps<typeof emptyMediaVariants>>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & VariantProps<typeof emptyMediaVariants>",
+        "usage": "<EmptyMedia />"
+      },
+      {
+        "name": "EmptyTitle",
+        "kind": "const",
+        "line": 70,
+        "signature": "const EmptyTitle = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<EmptyTitle />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/empty",
+      "importStatement": "import { Empty } from \"@/components/ui/empty\"",
+      "primaryExport": "Empty",
+      "example": "<Empty />"
+    },
+    "ssr": true
+  }
+}

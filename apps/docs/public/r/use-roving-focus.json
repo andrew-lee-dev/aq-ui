@@ -1,0 +1,163 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-roving-focus",
+  "type": "registry:hook",
+  "title": "Use Roving Focus",
+  "description": "Open-code aq-ui React hook for Use Roving Focus.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-controllable-state"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-roving-focus.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\n\nexport interface UseRovingFocusOptions {\n  itemCount: number\n  activeIndex?: number\n  defaultActiveIndex?: number\n  onActiveIndexChange?: (index: number) => void\n  orientation?: \"horizontal\" | \"vertical\" | \"both\"\n  direction?: \"ltr\" | \"rtl\"\n  loop?: boolean\n  disabledIndices?: Iterable<number>\n}\n\nexport interface RovingFocusItemProps<T extends HTMLElement> {\n  ref: (element: T | null) => void\n  tabIndex: 0 | -1\n  onFocus: () => void\n  onKeyDown: React.KeyboardEventHandler<T>\n}\n\nexport interface RovingFocusControls<T extends HTMLElement> {\n  activeIndex: number\n  setActiveIndex: (index: number) => void\n  focusIndex: (index: number) => void\n  getItemProps: (index: number) => RovingFocusItemProps<T>\n}\n\nexport function useRovingFocus<T extends HTMLElement>({\n  itemCount,\n  activeIndex,\n  defaultActiveIndex = 0,\n  onActiveIndexChange,\n  orientation = \"both\",\n  direction = \"ltr\",\n  loop = true,\n  disabledIndices = [],\n}: UseRovingFocusOptions): RovingFocusControls<T> {\n  const [currentIndex, setCurrentIndex] = useControllableState({\n    value: activeIndex,\n    defaultValue: defaultActiveIndex,\n    onChange: onActiveIndexChange,\n  })\n  const itemRefs = React.useRef<Array<T | null>>([])\n  const disabled = React.useMemo(\n    () => new Set(disabledIndices),\n    [disabledIndices]\n  )\n\n  const findEnabled = React.useCallback(\n    (start: number, delta: number) => {\n      if (itemCount <= 0) return -1\n      let index = start\n      for (let attempts = 0; attempts < itemCount; attempts += 1) {\n        index += delta\n        if (loop) index = (index + itemCount) % itemCount\n        if (!loop && (index < 0 || index >= itemCount)) return start\n        if (!disabled.has(index)) return index\n      }\n      return start\n    },\n    [disabled, itemCount, loop]\n  )\n\n  const focusIndex = React.useCallback(\n    (index: number) => {\n      if (index < 0 || index >= itemCount || disabled.has(index)) return\n      setCurrentIndex(index)\n      itemRefs.current[index]?.focus()\n    },\n    [disabled, itemCount, setCurrentIndex]\n  )\n\n  const getItemProps = React.useCallback(\n    (index: number): RovingFocusItemProps<T> => ({\n      ref(element) {\n        itemRefs.current[index] = element\n      },\n      tabIndex: index === currentIndex && !disabled.has(index) ? 0 : -1,\n      onFocus() {\n        if (!disabled.has(index)) setCurrentIndex(index)\n      },\n      onKeyDown(event) {\n        let next: number | undefined\n        const horizontalPrevious =\n          direction === \"rtl\" ? \"ArrowRight\" : \"ArrowLeft\"\n        const horizontalNext = direction === \"rtl\" ? \"ArrowLeft\" : \"ArrowRight\"\n\n        if (orientation !== \"vertical\" && event.key === horizontalPrevious) {\n          next = findEnabled(index, -1)\n        } else if (orientation !== \"vertical\" && event.key === horizontalNext) {\n          next = findEnabled(index, 1)\n        } else if (orientation !== \"horizontal\" && event.key === \"ArrowUp\") {\n          next = findEnabled(index, -1)\n        } else if (orientation !== \"horizontal\" && event.key === \"ArrowDown\") {\n          next = findEnabled(index, 1)\n        } else if (event.key === \"Home\") {\n          next = findEnabled(-1, 1)\n        } else if (event.key === \"End\") {\n          next = findEnabled(itemCount, -1)\n        }\n\n        if (next !== undefined && next >= 0) {\n          event.preventDefault()\n          focusIndex(next)\n        }\n      },\n    }),\n    [\n      currentIndex,\n      direction,\n      disabled,\n      findEnabled,\n      focusIndex,\n      itemCount,\n      orientation,\n      setCurrentIndex,\n    ]\n  )\n\n  return {\n    activeIndex: currentIndex,\n    setActiveIndex: setCurrentIndex,\n    focusIndex,\n    getItemProps,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-11e86a1dd2cdf9b8edbfb79fa65a69a0e32fd7801f53d0cf10cabd8134f0335e",
+    "api": [
+      {
+        "name": "RovingFocusControls",
+        "kind": "interface",
+        "line": 25,
+        "signature": "interface RovingFocusControls<T extends HTMLElement>",
+        "members": [
+          {
+            "name": "activeIndex",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "setActiveIndex",
+            "kind": "property",
+            "type": "(index: number) => void"
+          },
+          {
+            "name": "focusIndex",
+            "kind": "property",
+            "type": "(index: number) => void"
+          },
+          {
+            "name": "getItemProps",
+            "kind": "property",
+            "type": "(index: number) => RovingFocusItemProps<T>"
+          }
+        ]
+      },
+      {
+        "name": "RovingFocusItemProps",
+        "kind": "interface",
+        "line": 18,
+        "signature": "interface RovingFocusItemProps<T extends HTMLElement>",
+        "members": [
+          {
+            "name": "ref",
+            "kind": "property",
+            "type": "(element: T | null) => void"
+          },
+          {
+            "name": "tabIndex",
+            "kind": "property",
+            "type": "0 | -1"
+          },
+          {
+            "name": "onFocus",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "onKeyDown",
+            "kind": "property",
+            "type": "React.KeyboardEventHandler<T>"
+          }
+        ]
+      },
+      {
+        "name": "useRovingFocus",
+        "kind": "function",
+        "line": 32,
+        "signature": "function useRovingFocus<T extends HTMLElement>({ itemCount, activeIndex, defaultActiveIndex = 0, onActiveIndexChange, orientation = \"both\", direction = \"ltr\", loop = true, disabledIndices = [], }: UseRovingFocusOptions): RovingFocusControls<T>",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UseRovingFocusOptions"
+          }
+        ],
+        "returns": "RovingFocusControls<T>",
+        "usage": "const result = useRovingFocus(/* arguments */)"
+      },
+      {
+        "name": "UseRovingFocusOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseRovingFocusOptions",
+        "members": [
+          {
+            "name": "itemCount",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "activeIndex",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "defaultActiveIndex",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "onActiveIndexChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(index: number) => void"
+          },
+          {
+            "name": "orientation",
+            "kind": "property",
+            "optional": true,
+            "type": "\"horizontal\" | \"vertical\" | \"both\"",
+            "default": "\"both\""
+          },
+          {
+            "name": "direction",
+            "kind": "property",
+            "optional": true,
+            "type": "\"ltr\" | \"rtl\"",
+            "default": "\"ltr\""
+          },
+          {
+            "name": "loop",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "disabledIndices",
+            "kind": "property",
+            "optional": true,
+            "type": "Iterable<number>",
+            "default": "[]"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-roving-focus",
+      "importStatement": "import { useRovingFocus } from \"@/hooks/use-roving-focus\"",
+      "primaryExport": "useRovingFocus",
+      "example": "const result = useRovingFocus(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

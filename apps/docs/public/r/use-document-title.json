@@ -1,0 +1,67 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-document-title",
+  "type": "registry:hook",
+  "title": "Use Document Title",
+  "description": "Open-code aq-ui React hook for Use Document Title.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-document-title.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport interface UseDocumentTitleOptions {\n  restoreOnUnmount?: boolean\n}\n\nexport function useDocumentTitle(\n  title: string,\n  { restoreOnUnmount = true }: UseDocumentTitleOptions = {}\n): void {\n  const originalTitleRef = React.useRef<string | null>(null)\n\n  React.useEffect(() => {\n    if (typeof document === \"undefined\") return\n    if (originalTitleRef.current === null) {\n      originalTitleRef.current = document.title\n    }\n    document.title = title\n\n    return () => {\n      if (restoreOnUnmount && originalTitleRef.current !== null) {\n        document.title = originalTitleRef.current\n      }\n    }\n  }, [restoreOnUnmount, title])\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-55b954306f0cda633b52fbea6154980036f5718ebddc83d5bc94820c5927884c",
+    "api": [
+      {
+        "name": "useDocumentTitle",
+        "kind": "function",
+        "line": 9,
+        "signature": "function useDocumentTitle(title: string, { restoreOnUnmount = true }: UseDocumentTitleOptions = {}): void",
+        "parameters": [
+          {
+            "name": "title",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseDocumentTitleOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "void",
+        "usage": "const result = useDocumentTitle(/* arguments */)"
+      },
+      {
+        "name": "UseDocumentTitleOptions",
+        "kind": "interface",
+        "line": 5,
+        "signature": "interface UseDocumentTitleOptions",
+        "members": [
+          {
+            "name": "restoreOnUnmount",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-document-title",
+      "importStatement": "import { useDocumentTitle } from \"@/hooks/use-document-title\"",
+      "primaryExport": "useDocumentTitle",
+      "example": "const result = useDocumentTitle(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

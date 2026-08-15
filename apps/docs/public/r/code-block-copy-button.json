@@ -1,0 +1,104 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-block-copy-button",
+  "type": "registry:ui",
+  "title": "Code Block Copy Button",
+  "description": "Open-code aq-ui accessible component family for Code Block Copy Button.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/code-block-copy-button.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { CheckIcon, CopyIcon } from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { cn } from \"@/lib/utils\"\n\ninterface CodeBlockCopyButtonProps extends Omit<\n  React.ComponentProps<typeof Button>,\n  \"onClick\"\n> {\n  value: string\n  copiedLabel?: string\n  copyLabel?: string\n  onCopyError?: (error: Error) => void\n}\n\nasync function copyText(value: string) {\n  if (navigator.clipboard?.writeText) {\n    await navigator.clipboard.writeText(value)\n    return\n  }\n\n  const textarea = document.createElement(\"textarea\")\n  textarea.value = value\n  textarea.setAttribute(\"readonly\", \"\")\n  textarea.style.position = \"fixed\"\n  textarea.style.opacity = \"0\"\n  document.body.appendChild(textarea)\n  textarea.select()\n\n  const copied = document.execCommand(\"copy\")\n  textarea.remove()\n  if (!copied) throw new Error(\"The browser did not allow copying.\")\n}\n\nconst CodeBlockCopyButton = React.forwardRef<\n  React.ComponentRef<typeof Button>,\n  CodeBlockCopyButtonProps\n>(function CodeBlockCopyButton(\n  {\n    value,\n    copiedLabel = \"Copied\",\n    copyLabel = \"Copy code\",\n    onCopyError,\n    className,\n    ...props\n  },\n  ref\n) {\n  const [copied, setCopied] = React.useState(false)\n  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n\n  React.useEffect(() => {\n    return () => {\n      if (timeoutRef.current) clearTimeout(timeoutRef.current)\n    }\n  }, [])\n\n  const handleCopy = async () => {\n    try {\n      await copyText(value)\n      setCopied(true)\n      if (timeoutRef.current) clearTimeout(timeoutRef.current)\n      timeoutRef.current = setTimeout(() => setCopied(false), 2000)\n    } catch (reason) {\n      onCopyError?.(\n        reason instanceof Error ? reason : new Error(\"Failed to copy code.\")\n      )\n    }\n  }\n\n  return (\n    <Button\n      ref={ref}\n      type=\"button\"\n      variant=\"ghost\"\n      size=\"icon-sm\"\n      data-slot=\"code-block-copy-button\"\n      className={cn(\"shrink-0\", className)}\n      aria-label={copied ? copiedLabel : copyLabel}\n      title={copied ? copiedLabel : copyLabel}\n      onClick={handleCopy}\n      {...props}\n    >\n      {copied ? (\n        <CheckIcon aria-hidden=\"true\" />\n      ) : (\n        <CopyIcon aria-hidden=\"true\" />\n      )}\n    </Button>\n  )\n})\nCodeBlockCopyButton.displayName = \"CodeBlockCopyButton\"\n\nexport { CodeBlockCopyButton }\nexport type { CodeBlockCopyButtonProps }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-175a3baf232268b2492036032e1c8db45be7aeb4dd0b9eb53d9d0f37ecc81469",
+    "api": [
+      {
+        "name": "CodeBlockCopyButton",
+        "kind": "const",
+        "line": 38,
+        "signature": "const CodeBlockCopyButton = React.forwardRef<React.ComponentRef<typeof Button>, CodeBlockCopyButtonProps>(…)",
+        "propsType": "CodeBlockCopyButtonProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "copiedLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Copied\""
+          },
+          {
+            "name": "copyLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Copy code\""
+          },
+          {
+            "name": "onCopyError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ],
+        "usage": "<CodeBlockCopyButton />"
+      },
+      {
+        "name": "CodeBlockCopyButtonProps",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface CodeBlockCopyButtonProps extends Omit< React.ComponentProps<typeof Button>, \"onClick\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "copiedLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Copied\""
+          },
+          {
+            "name": "copyLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Copy code\""
+          },
+          {
+            "name": "onCopyError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/code-block-copy-button",
+      "importStatement": "import { CodeBlockCopyButton } from \"@/components/ui/code-block-copy-button\"",
+      "primaryExport": "CodeBlockCopyButton",
+      "example": "<CodeBlockCopyButton />"
+    },
+    "internal": true,
+    "ssr": false
+  }
+}

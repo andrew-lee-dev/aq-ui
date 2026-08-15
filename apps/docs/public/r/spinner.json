@@ -1,0 +1,42 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "spinner",
+  "type": "registry:ui",
+  "title": "Spinner",
+  "description": "Open-code aq-ui accessible component family for Spinner.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/spinner.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\nimport { Loader2Icon } from \"lucide-react\"\n\nconst Spinner = React.forwardRef<\n  React.ComponentRef<typeof Loader2Icon>,\n  React.ComponentProps<\"svg\">\n>(function Spinner({ className, ...props }, ref) {\n  return (\n    <Loader2Icon\n      ref={ref}\n      data-slot=\"spinner\"\n      role=\"status\"\n      aria-label=\"Loading\"\n      className={cn(\"size-4 animate-spin\", className)}\n      {...props}\n    />\n  )\n})\nSpinner.displayName = \"Spinner\"\n\nexport { Spinner }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-e406a97e98078fd7dc9441de2c19411c5c0022adf2871e03a5e56b5e1693d629",
+    "api": [
+      {
+        "name": "Spinner",
+        "kind": "const",
+        "line": 5,
+        "signature": "const Spinner = React.forwardRef<React.ComponentRef<typeof Loader2Icon>, React.ComponentProps<\"svg\">>(…)",
+        "propsType": "React.ComponentProps<\"svg\">",
+        "usage": "<Spinner />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/spinner",
+      "importStatement": "import { Spinner } from \"@/components/ui/spinner\"",
+      "primaryExport": "Spinner",
+      "example": "<Spinner />"
+    },
+    "ssr": true
+  }
+}

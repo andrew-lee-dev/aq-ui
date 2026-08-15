@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-sql",
+  "type": "registry:lib",
+  "title": "Code Language Sql",
+  "description": "Open-code aq-ui shared library for Code Language Sql.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-sql@^6.10.0"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-sql.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"sql\", async () => {\n  const { sql } = await import(\"@codemirror/lang-sql\")\n  return sql()\n})\n\nconst codeLanguageSql = \"sql\" as const\n\nexport { codeLanguageSql }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-52aa339163b577c0ebcaff2ab377d61315011c67353fa5ff4d5a7ceea69d682c",
+    "api": [
+      {
+        "name": "codeLanguageSql",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageSql = \"sql\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-sql",
+      "importStatement": "import { codeLanguageSql } from \"@/lib/code-language-sql\"",
+      "primaryExport": "codeLanguageSql"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

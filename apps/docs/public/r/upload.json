@@ -1,0 +1,98 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "upload",
+  "type": "registry:lib",
+  "title": "Upload",
+  "description": "Open-code aq-ui shared library for Upload.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "lib/upload.ts",
+      "type": "registry:lib",
+      "content": "export interface UploadedAsset {\n  url: string\n  name?: string\n  mimeType?: string\n  size?: number\n  alt?: string\n}\n\nexport interface EditorAssetUploadContext {\n  signal: AbortSignal\n  onProgress: (percentage: number) => void\n}\n\nexport interface EditorAssetUploadAdapter {\n  upload: (\n    file: File,\n    context: EditorAssetUploadContext\n  ) => Promise<UploadedAsset>\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-635650a4e92b5179322302072f6654eae1bccab7455282a8b29f79b346ca2752",
+    "api": [
+      {
+        "name": "EditorAssetUploadAdapter",
+        "kind": "interface",
+        "line": 14,
+        "signature": "interface EditorAssetUploadAdapter",
+        "members": [
+          {
+            "name": "upload",
+            "kind": "property",
+            "type": "( file: File, context: EditorAssetUploadContext ) => Promise<UploadedAsset>"
+          }
+        ]
+      },
+      {
+        "name": "EditorAssetUploadContext",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface EditorAssetUploadContext",
+        "members": [
+          {
+            "name": "signal",
+            "kind": "property",
+            "type": "AbortSignal"
+          },
+          {
+            "name": "onProgress",
+            "kind": "property",
+            "type": "(percentage: number) => void"
+          }
+        ]
+      },
+      {
+        "name": "UploadedAsset",
+        "kind": "interface",
+        "line": 1,
+        "signature": "interface UploadedAsset",
+        "members": [
+          {
+            "name": "url",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "mimeType",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "alt",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/upload",
+      "importStatement": "import type { EditorAssetUploadAdapter } from \"@/lib/upload\"",
+      "primaryExport": "EditorAssetUploadAdapter",
+      "example": "type Example = EditorAssetUploadAdapter"
+    },
+    "ssr": true
+  }
+}

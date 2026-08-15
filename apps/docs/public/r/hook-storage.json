@@ -1,0 +1,106 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hook-storage",
+  "type": "registry:hook",
+  "title": "Storage",
+  "description": "Open-code aq-ui React hook for _storage.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/_storage.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\nconst STORAGE_EVENT = \"aq-ui:storage\"\n\nexport interface StorageOptions<T> {\n  serializer?: (value: T) => string\n  deserializer?: (value: string) => T\n  validate?: (value: unknown) => value is T\n  initializeWithValue?: boolean\n}\n\nexport type StorageSetter<T> = (value: T | ((current: T) => T)) => void\n\nfunction defaultSerialize<T>(value: T) {\n  return JSON.stringify(value)\n}\n\nfunction defaultDeserialize<T>(value: string) {\n  return JSON.parse(value) as T\n}\n\nexport function useStorage<T>(\n  storageType: \"localStorage\" | \"sessionStorage\",\n  key: string,\n  initialValue: T | (() => T),\n  {\n    serializer = defaultSerialize,\n    deserializer = defaultDeserialize,\n    validate,\n    initializeWithValue = true,\n  }: StorageOptions<T> = {}\n): [T, StorageSetter<T>, () => void] {\n  const [value, setValue] = React.useState<T>(initialValue)\n  const initialValueRef = useLatest(initialValue)\n  const resolveInitial = React.useCallback(\n    () =>\n      typeof initialValueRef.current === \"function\"\n        ? (initialValueRef.current as () => T)()\n        : initialValueRef.current,\n    [initialValueRef]\n  )\n  const optionsRef = useLatest({ serializer, deserializer, validate })\n  const valueRef = useLatest(value)\n\n  const read = React.useCallback((): T => {\n    if (typeof window === \"undefined\") return resolveInitial()\n    try {\n      const raw = window[storageType].getItem(key)\n      if (raw === null) return resolveInitial()\n      const parsed = optionsRef.current.deserializer(raw)\n      return optionsRef.current.validate && !optionsRef.current.validate(parsed)\n        ? resolveInitial()\n        : parsed\n    } catch {\n      return resolveInitial()\n    }\n  }, [key, optionsRef, resolveInitial, storageType])\n\n  const write = React.useCallback<StorageSetter<T>>(\n    (nextValue) => {\n      const next =\n        typeof nextValue === \"function\"\n          ? (nextValue as (current: T) => T)(valueRef.current)\n          : nextValue\n      valueRef.current = next\n      setValue(next)\n      if (typeof window === \"undefined\") return\n      try {\n        window[storageType].setItem(key, optionsRef.current.serializer(next))\n        window.dispatchEvent(\n          new CustomEvent(STORAGE_EVENT, {\n            detail: { key, storageType },\n          })\n        )\n      } catch {\n        // State still updates when storage is unavailable or quota is exceeded.\n      }\n    },\n    [key, optionsRef, storageType, valueRef]\n  )\n\n  const remove = React.useCallback(() => {\n    const next = resolveInitial()\n    valueRef.current = next\n    setValue(next)\n    if (typeof window === \"undefined\") return\n    try {\n      window[storageType].removeItem(key)\n      window.dispatchEvent(\n        new CustomEvent(STORAGE_EVENT, {\n          detail: { key, storageType },\n        })\n      )\n    } catch {\n      // Removing an unavailable storage item is a no-op.\n    }\n  }, [key, resolveInitial, storageType, valueRef])\n\n  React.useEffect(() => {\n    let active = true\n    if (initializeWithValue) {\n      queueMicrotask(() => {\n        if (active) setValue(read())\n      })\n    }\n\n    const sync = (event: Event) => {\n      if (event instanceof StorageEvent) {\n        if (event.key !== key || event.storageArea !== window[storageType]) {\n          return\n        }\n      } else if (event instanceof CustomEvent) {\n        const detail = event.detail as {\n          key?: string\n          storageType?: string\n        }\n        if (detail.key !== key || detail.storageType !== storageType) return\n      }\n      const next = read()\n      valueRef.current = next\n      setValue(next)\n    }\n\n    window.addEventListener(\"storage\", sync)\n    window.addEventListener(STORAGE_EVENT, sync)\n    return () => {\n      active = false\n      window.removeEventListener(\"storage\", sync)\n      window.removeEventListener(STORAGE_EVENT, sync)\n    }\n  }, [initializeWithValue, key, read, storageType, valueRef])\n\n  return [value, write, remove]\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-7dad2ca72300443b9ee7726a90744f4fbbc0a21a7459ca1f0888dc5fe013477b",
+    "api": [
+      {
+        "name": "StorageOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface StorageOptions<T>",
+        "members": [
+          {
+            "name": "serializer",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: T) => string",
+            "default": "defaultSerialize"
+          },
+          {
+            "name": "deserializer",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => T",
+            "default": "defaultDeserialize"
+          },
+          {
+            "name": "validate",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: unknown) => value is T"
+          },
+          {
+            "name": "initializeWithValue",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      },
+      {
+        "name": "StorageSetter",
+        "kind": "type",
+        "line": 16,
+        "signature": "type StorageSetter<T> = (value: T | ((current: T) => T)) => void"
+      },
+      {
+        "name": "useStorage",
+        "kind": "function",
+        "line": 26,
+        "signature": "function useStorage<T>(storageType: \"localStorage\" | \"sessionStorage\", key: string, initialValue: T | (() => T), { serializer = defaultSerialize, deserializer = defaultDeserialize, validate, initializeWithValue = true, }: StorageOptions<T> = {}): [T, StorageSetter<T>, () => void]",
+        "parameters": [
+          {
+            "name": "storageType",
+            "kind": "parameter",
+            "type": "\"localStorage\" | \"sessionStorage\""
+          },
+          {
+            "name": "key",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "initialValue",
+            "kind": "parameter",
+            "type": "T | (() => T)"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "StorageOptions<T>",
+            "default": "{}"
+          }
+        ],
+        "returns": "[T, StorageSetter<T>, () => void]",
+        "usage": "const result = useStorage(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/_storage",
+      "importStatement": "import { useStorage } from \"@/hooks/_storage\"",
+      "primaryExport": "useStorage",
+      "example": "const result = useStorage(/* arguments */)"
+    },
+    "internal": true,
+    "ssr": false
+  }
+}

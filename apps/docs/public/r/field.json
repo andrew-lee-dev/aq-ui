@@ -1,0 +1,141 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "field",
+  "type": "registry:ui",
+  "title": "Field",
+  "description": "Open-code aq-ui accessible component family for Field.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "label",
+    "separator",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/field.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useMemo } from \"react\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\nimport { Label } from \"@/components/ui/label\"\nimport { Separator } from \"@/components/ui/separator\"\n\nconst FieldSet = React.forwardRef<\n  React.ComponentRef<\"fieldset\">,\n  React.ComponentProps<\"fieldset\">\n>(function FieldSet({ className, ...props }, ref) {\n  return (\n    <fieldset\n      ref={ref}\n      data-slot=\"field-set\"\n      className={cn(\n        \"flex flex-col gap-4 has-[>[data-slot=checkbox-group]]:gap-3 has-[>[data-slot=radio-group]]:gap-3\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldSet.displayName = \"FieldSet\"\n\nconst FieldLegend = React.forwardRef<\n  React.ComponentRef<\"legend\">,\n  React.ComponentProps<\"legend\"> & { variant?: \"legend\" | \"label\" }\n>(function FieldLegend({ className, variant = \"legend\", ...props }, ref) {\n  return (\n    <legend\n      ref={ref}\n      data-slot=\"field-legend\"\n      data-variant={variant}\n      className={cn(\n        \"mb-1.5 font-medium data-[variant=label]:text-sm data-[variant=legend]:text-base\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldLegend.displayName = \"FieldLegend\"\n\nconst FieldGroup = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function FieldGroup({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"field-group\"\n      className={cn(\n        \"group/field-group @container/field-group flex w-full flex-col gap-5 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldGroup.displayName = \"FieldGroup\"\n\nconst fieldVariants = cva(\n  \"group/field flex w-full gap-2 data-[invalid=true]:text-destructive\",\n  {\n    variants: {\n      orientation: {\n        vertical: \"flex-col *:w-full [&>.sr-only]:w-auto\",\n        horizontal:\n          \"flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px\",\n        responsive:\n          \"flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px\",\n      },\n    },\n    defaultVariants: {\n      orientation: \"vertical\",\n    },\n  }\n)\n\nconst Field = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & VariantProps<typeof fieldVariants>\n>(function Field({ className, orientation = \"vertical\", ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      role=\"group\"\n      data-slot=\"field\"\n      data-orientation={orientation}\n      className={cn(fieldVariants({ orientation }), className)}\n      {...props}\n    />\n  )\n})\nField.displayName = \"Field\"\n\nconst FieldContent = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function FieldContent({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"field-content\"\n      className={cn(\n        \"group/field-content flex flex-1 flex-col gap-0.5 leading-snug\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldContent.displayName = \"FieldContent\"\n\nconst FieldLabel = React.forwardRef<\n  React.ComponentRef<typeof Label>,\n  React.ComponentProps<typeof Label>\n>(function FieldLabel({ className, ...props }, ref) {\n  return (\n    <Label\n      ref={ref}\n      data-slot=\"field-label\"\n      className={cn(\n        \"group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-data-checked:border-primary/30 has-data-checked:bg-primary/5 has-[>[data-slot=field]]:rounded-lg has-[>[data-slot=field]]:border *:data-[slot=field]:p-2.5 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10\",\n        \"has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldLabel.displayName = \"FieldLabel\"\n\nconst FieldTitle = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function FieldTitle({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"field-label\"\n      className={cn(\n        \"flex w-fit items-center gap-2 text-sm font-medium group-data-[disabled=true]/field:opacity-50\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldTitle.displayName = \"FieldTitle\"\n\nconst FieldDescription = React.forwardRef<\n  React.ComponentRef<\"p\">,\n  React.ComponentProps<\"p\">\n>(function FieldDescription({ className, ...props }, ref) {\n  return (\n    <p\n      ref={ref}\n      data-slot=\"field-description\"\n      className={cn(\n        \"text-start text-sm leading-normal font-normal text-muted-foreground group-has-data-horizontal/field:text-balance [[data-variant=legend]+&]:-mt-1.5\",\n        \"last:mt-0 nth-last-2:-mt-1\",\n        \"[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nFieldDescription.displayName = \"FieldDescription\"\n\nconst FieldSeparator = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & {\n    children?: React.ReactNode\n  }\n>(function FieldSeparator({ children, className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"field-separator\"\n      data-content={!!children}\n      className={cn(\n        \"relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2\",\n        className\n      )}\n      {...props}\n    >\n      <Separator className=\"absolute inset-0 top-1/2\" />\n      {children && (\n        <span\n          className=\"relative mx-auto block w-fit bg-background px-2 text-muted-foreground\"\n          data-slot=\"field-separator-content\"\n        >\n          {children}\n        </span>\n      )}\n    </div>\n  )\n})\nFieldSeparator.displayName = \"FieldSeparator\"\n\nconst FieldError = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & {\n    errors?: Array<{ message?: string } | undefined>\n  }\n>(function FieldError({ className, children, errors, ...props }, ref) {\n  const content = useMemo(() => {\n    if (children) {\n      return children\n    }\n\n    if (!errors?.length) {\n      return null\n    }\n\n    const uniqueErrors = [\n      ...new Map(errors.map((error) => [error?.message, error])).values(),\n    ]\n\n    if (uniqueErrors?.length == 1) {\n      return uniqueErrors[0]?.message\n    }\n\n    return (\n      <ul className=\"ms-4 flex list-disc flex-col gap-1\">\n        {uniqueErrors.map(\n          (error, index) =>\n            error?.message && <li key={index}>{error.message}</li>\n        )}\n      </ul>\n    )\n  }, [children, errors])\n\n  if (!content) {\n    return null\n  }\n\n  return (\n    <div\n      ref={ref}\n      role=\"alert\"\n      data-slot=\"field-error\"\n      className={cn(\"text-sm font-normal text-destructive\", className)}\n      {...props}\n    >\n      {content}\n    </div>\n  )\n})\nFieldError.displayName = \"FieldError\"\n\nexport {\n  Field,\n  FieldLabel,\n  FieldDescription,\n  FieldError,\n  FieldGroup,\n  FieldLegend,\n  FieldSeparator,\n  FieldSet,\n  FieldContent,\n  FieldTitle,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ce21ca2e421910d9ff0f02a54b21614233bf42435ee6fbe5f4ccfb5ae51b9968",
+    "api": [
+      {
+        "name": "Field",
+        "kind": "const",
+        "line": 85,
+        "signature": "const Field = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & VariantProps<typeof fieldVariants>>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & VariantProps<typeof fieldVariants>",
+        "usage": "<Field />"
+      },
+      {
+        "name": "FieldContent",
+        "kind": "const",
+        "line": 102,
+        "signature": "const FieldContent = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<FieldContent />"
+      },
+      {
+        "name": "FieldDescription",
+        "kind": "const",
+        "line": 157,
+        "signature": "const FieldDescription = React.forwardRef<React.ComponentRef<\"p\">, React.ComponentProps<\"p\">>(…)",
+        "propsType": "React.ComponentProps<\"p\">",
+        "usage": "<FieldDescription />"
+      },
+      {
+        "name": "FieldError",
+        "kind": "const",
+        "line": 208,
+        "signature": "const FieldError = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { errors?: Array<{ message?: string } | undefined> }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { errors?: Array<{ message?: string } | undefined> }",
+        "props": [
+          {
+            "name": "errors",
+            "kind": "property",
+            "optional": true,
+            "type": "Array<{ message?: string } | undefined>"
+          }
+        ],
+        "usage": "<FieldError />"
+      },
+      {
+        "name": "FieldGroup",
+        "kind": "const",
+        "line": 49,
+        "signature": "const FieldGroup = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<FieldGroup />"
+      },
+      {
+        "name": "FieldLabel",
+        "kind": "const",
+        "line": 120,
+        "signature": "const FieldLabel = React.forwardRef<React.ComponentRef<typeof Label>, React.ComponentProps<typeof Label>>(…)",
+        "propsType": "React.ComponentProps<typeof Label>",
+        "usage": "<FieldLabel />"
+      },
+      {
+        "name": "FieldLegend",
+        "kind": "const",
+        "line": 30,
+        "signature": "const FieldLegend = React.forwardRef<React.ComponentRef<\"legend\">, React.ComponentProps<\"legend\"> & { variant?: \"legend\" | \"label\" }>(…)",
+        "propsType": "React.ComponentProps<\"legend\"> & { variant?: \"legend\" | \"label\" }",
+        "props": [
+          {
+            "name": "variant",
+            "kind": "property",
+            "optional": true,
+            "type": "\"legend\" | \"label\"",
+            "default": "\"legend\""
+          }
+        ],
+        "usage": "<FieldLegend />"
+      },
+      {
+        "name": "FieldSeparator",
+        "kind": "const",
+        "line": 177,
+        "signature": "const FieldSeparator = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { children?: React.ReactNode }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { children?: React.ReactNode }",
+        "props": [
+          {
+            "name": "children",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode"
+          }
+        ],
+        "usage": "<FieldSeparator />"
+      },
+      {
+        "name": "FieldSet",
+        "kind": "const",
+        "line": 12,
+        "signature": "const FieldSet = React.forwardRef<React.ComponentRef<\"fieldset\">, React.ComponentProps<\"fieldset\">>(…)",
+        "propsType": "React.ComponentProps<\"fieldset\">",
+        "usage": "<FieldSet />"
+      },
+      {
+        "name": "FieldTitle",
+        "kind": "const",
+        "line": 139,
+        "signature": "const FieldTitle = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<FieldTitle />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/field",
+      "importStatement": "import { Field } from \"@/components/ui/field\"",
+      "primaryExport": "Field",
+      "example": "<Field />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-intersection-observer",
+  "type": "registry:hook",
+  "title": "Use Intersection Observer",
+  "description": "Open-code aq-ui React hook for Use Intersection Observer.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-observer-pools",
+    "hook-target",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-intersection-observer.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { subscribeIntersectionObserver } from \"@/hooks/_observer-pools\"\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseIntersectionObserverOptions extends IntersectionObserverInit {\n  enabled?: boolean\n  freezeOnceVisible?: boolean\n  onChange?: (entry: IntersectionObserverEntry) => void\n}\n\nexport interface IntersectionObserverResult {\n  entry: IntersectionObserverEntry | null\n  isIntersecting: boolean\n  supported: boolean\n}\n\nexport function useIntersectionObserver<T extends Element>(\n  target: Target<T>,\n  {\n    root,\n    rootMargin,\n    threshold,\n    enabled = true,\n    freezeOnceVisible = false,\n    onChange,\n  }: UseIntersectionObserverOptions = {}\n): IntersectionObserverResult {\n  const [entry, setEntry] = React.useState<IntersectionObserverEntry | null>(\n    null\n  )\n  const frozenRef = React.useRef(false)\n  const onChangeStable = useStableCallback(onChange)\n\n  React.useEffect(() => {\n    if (!enabled || frozenRef.current) return\n    const element = resolveTarget(target)\n    if (!element) return\n    const unsubscribe = subscribeIntersectionObserver(\n      element,\n      { root, rootMargin, threshold },\n      (nextEntry) => {\n        setEntry(nextEntry)\n        onChangeStable(nextEntry)\n        if (freezeOnceVisible && nextEntry.isIntersecting) {\n          frozenRef.current = true\n          unsubscribe?.()\n        }\n      }\n    )\n    return unsubscribe ?? undefined\n  }, [\n    enabled,\n    freezeOnceVisible,\n    onChangeStable,\n    root,\n    rootMargin,\n    target,\n    threshold,\n  ])\n\n  return {\n    entry,\n    isIntersecting: entry?.isIntersecting ?? false,\n    supported:\n      typeof window !== \"undefined\" &&\n      typeof IntersectionObserver !== \"undefined\",\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-024326cb5b1c23f9f30e3d5ceb2c596975ea38cbd5f6cd460a96687f4d0d94fe",
+    "api": [
+      {
+        "name": "IntersectionObserverResult",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface IntersectionObserverResult",
+        "members": [
+          {
+            "name": "entry",
+            "kind": "property",
+            "type": "IntersectionObserverEntry | null"
+          },
+          {
+            "name": "isIntersecting",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "useIntersectionObserver",
+        "kind": "function",
+        "line": 21,
+        "signature": "function useIntersectionObserver<T extends Element>(target: Target<T>, { root, rootMargin, threshold, enabled = true, freezeOnceVisible = false, onChange, }: UseIntersectionObserverOptions = {}): IntersectionObserverResult",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseIntersectionObserverOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "IntersectionObserverResult",
+        "usage": "const result = useIntersectionObserver(/* arguments */)"
+      },
+      {
+        "name": "UseIntersectionObserverOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface UseIntersectionObserverOptions extends IntersectionObserverInit",
+        "members": [
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "freezeOnceVisible",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(entry: IntersectionObserverEntry) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-intersection-observer",
+      "importStatement": "import { useIntersectionObserver } from \"@/hooks/use-intersection-observer\"",
+      "primaryExport": "useIntersectionObserver",
+      "example": "const result = useIntersectionObserver(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-typeahead",
+  "type": "registry:hook",
+  "title": "Use Typeahead",
+  "description": "Open-code aq-ui React hook for Use Typeahead.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-typeahead.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseTypeaheadOptions<T> {\n  items: T[]\n  activeIndex: number\n  onActiveIndexChange: (index: number) => void\n  getTextValue?: (item: T) => string\n  timeout?: number\n  loop?: boolean\n  disabledIndices?: Iterable<number>\n}\n\nexport interface TypeaheadControls {\n  search: (character: string) => number\n  onKeyDown: (event: React.KeyboardEvent) => void\n  reset: () => void\n}\n\nexport function useTypeahead<T>({\n  items,\n  activeIndex,\n  onActiveIndexChange,\n  getTextValue = (item) => String(item),\n  timeout = 500,\n  loop = true,\n  disabledIndices = [],\n}: UseTypeaheadOptions<T>): TypeaheadControls {\n  const bufferRef = React.useRef(\"\")\n  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const getTextStable = useStableCallback(getTextValue)\n  const onChangeStable = useStableCallback(onActiveIndexChange)\n  const disabled = React.useMemo(\n    () => new Set(disabledIndices),\n    [disabledIndices]\n  )\n\n  const reset = React.useCallback(() => {\n    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n    timeoutRef.current = null\n    bufferRef.current = \"\"\n  }, [])\n\n  const search = React.useCallback(\n    (character: string) => {\n      if (!character) return -1\n      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n      const lower = character.toLocaleLowerCase()\n      bufferRef.current =\n        bufferRef.current === lower ? lower : bufferRef.current + lower\n      timeoutRef.current = setTimeout(reset, timeout)\n\n      const indices = items.map((_, index) => index)\n      const ordered = loop\n        ? [\n            ...indices.slice(activeIndex + 1),\n            ...indices.slice(0, activeIndex + 1),\n          ]\n        : indices.slice(activeIndex + 1)\n      let match = ordered.find(\n        (index) =>\n          !disabled.has(index) &&\n          getTextStable(items[index] as T)\n            ?.trim()\n            .toLocaleLowerCase()\n            .startsWith(bufferRef.current)\n      )\n\n      if (match === undefined && bufferRef.current.length > 1) {\n        bufferRef.current = lower\n        match = ordered.find(\n          (index) =>\n            !disabled.has(index) &&\n            getTextStable(items[index] as T)\n              ?.trim()\n              .toLocaleLowerCase()\n              .startsWith(lower)\n        )\n      }\n\n      if (match !== undefined) {\n        onChangeStable(match)\n        return match\n      }\n      return -1\n    },\n    [\n      activeIndex,\n      disabled,\n      getTextStable,\n      items,\n      loop,\n      onChangeStable,\n      reset,\n      timeout,\n    ]\n  )\n\n  const onKeyDown = React.useCallback(\n    (event: React.KeyboardEvent) => {\n      if (\n        event.key.length !== 1 ||\n        event.ctrlKey ||\n        event.metaKey ||\n        event.altKey\n      ) {\n        return\n      }\n      if (search(event.key) >= 0) event.preventDefault()\n    },\n    [search]\n  )\n\n  React.useEffect(() => reset, [reset])\n\n  return { search, onKeyDown, reset }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-2215ad9df4cd3d044ff77d6f1be0d0cfe32c1e25158e0d7feb94f464f05f62cc",
+    "api": [
+      {
+        "name": "TypeaheadControls",
+        "kind": "interface",
+        "line": 17,
+        "signature": "interface TypeaheadControls",
+        "members": [
+          {
+            "name": "search",
+            "kind": "property",
+            "type": "(character: string) => number"
+          },
+          {
+            "name": "onKeyDown",
+            "kind": "property",
+            "type": "(event: React.KeyboardEvent) => void"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "useTypeahead",
+        "kind": "function",
+        "line": 23,
+        "signature": "function useTypeahead<T>({ items, activeIndex, onActiveIndexChange, getTextValue = (item) => String(item), timeout = 500, loop = true, disabledIndices = [], }: UseTypeaheadOptions<T>): TypeaheadControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UseTypeaheadOptions<T>"
+          }
+        ],
+        "returns": "TypeaheadControls",
+        "usage": "const result = useTypeahead(/* arguments */)"
+      },
+      {
+        "name": "UseTypeaheadOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseTypeaheadOptions<T>",
+        "members": [
+          {
+            "name": "items",
+            "kind": "property",
+            "type": "T[]"
+          },
+          {
+            "name": "activeIndex",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "onActiveIndexChange",
+            "kind": "property",
+            "type": "(index: number) => void"
+          },
+          {
+            "name": "getTextValue",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: T) => string",
+            "default": "(item) => String(item)"
+          },
+          {
+            "name": "timeout",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "500"
+          },
+          {
+            "name": "loop",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "disabledIndices",
+            "kind": "property",
+            "optional": true,
+            "type": "Iterable<number>",
+            "default": "[]"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-typeahead",
+      "importStatement": "import { useTypeahead } from \"@/hooks/use-typeahead\"",
+      "primaryExport": "useTypeahead",
+      "example": "const result = useTypeahead(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

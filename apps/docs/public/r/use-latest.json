@@ -1,0 +1,47 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-latest",
+  "type": "registry:hook",
+  "title": "Use Latest",
+  "description": "Open-code aq-ui React hook for Use Latest.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-isomorphic-layout-effect"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-latest.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\n\nexport function useLatest<T>(value: T): React.MutableRefObject<T> {\n  const ref = React.useRef(value)\n  useIsomorphicLayoutEffect(() => {\n    ref.current = value\n  }, [value])\n  return ref\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-0eb7cba9c174f70e2541f2105bb3187737f9745c7c6e1c25f7a3e9003a77aefb",
+    "api": [
+      {
+        "name": "useLatest",
+        "kind": "function",
+        "line": 7,
+        "signature": "function useLatest<T>(value: T): React.MutableRefObject<T>",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "T"
+          }
+        ],
+        "returns": "React.MutableRefObject<T>",
+        "usage": "const result = useLatest(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-latest",
+      "importStatement": "import { useLatest } from \"@/hooks/use-latest\"",
+      "primaryExport": "useLatest",
+      "example": "const result = useLatest(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

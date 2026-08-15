@@ -1,0 +1,43 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "checkbox",
+  "type": "registry:ui",
+  "title": "Checkbox",
+  "description": "Open-code aq-ui accessible component family for Checkbox.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/checkbox.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Checkbox as CheckboxPrimitive } from \"@base-ui/react/checkbox\"\n\nimport { cn } from \"@/lib/utils\"\nimport { CheckIcon } from \"lucide-react\"\n\nconst Checkbox = React.forwardRef<\n  React.ComponentRef<typeof CheckboxPrimitive.Root>,\n  CheckboxPrimitive.Root.Props\n>(function Checkbox({ className, ...props }, ref) {\n  return (\n    <CheckboxPrimitive.Root\n      ref={ref}\n      data-slot=\"checkbox\"\n      className={cn(\n        \"peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary\",\n        className\n      )}\n      {...props}\n    >\n      <CheckboxPrimitive.Indicator\n        data-slot=\"checkbox-indicator\"\n        className=\"grid place-content-center text-current transition-none [&>svg]:size-3.5\"\n      >\n        <CheckIcon />\n      </CheckboxPrimitive.Indicator>\n    </CheckboxPrimitive.Root>\n  )\n})\nCheckbox.displayName = \"Checkbox\"\n\nexport { Checkbox }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-1460a323f091e843f378cc0dc758623000be607a7608d1688348b6a82b6813ad",
+    "api": [
+      {
+        "name": "Checkbox",
+        "kind": "const",
+        "line": 10,
+        "signature": "const Checkbox = React.forwardRef<React.ComponentRef<typeof CheckboxPrimitive.Root>, CheckboxPrimitive.Root.Props>(…)",
+        "propsType": "CheckboxPrimitive.Root.Props",
+        "usage": "<Checkbox />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/checkbox",
+      "importStatement": "import { Checkbox } from \"@/components/ui/checkbox\"",
+      "primaryExport": "Checkbox",
+      "example": "<Checkbox />"
+    },
+    "ssr": false
+  }
+}

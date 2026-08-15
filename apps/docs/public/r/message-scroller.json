@@ -1,0 +1,271 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "message-scroller",
+  "type": "registry:ui",
+  "title": "Message Scroller",
+  "description": "Open-code aq-ui accessible component family for Message Scroller.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "use-merged-refs",
+    "use-message-scroller",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/message-scroller.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { useRender } from \"@base-ui/react/use-render\"\nimport { ArrowDownIcon } from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { useMergedRefs } from \"@/hooks/use-merged-refs\"\nimport {\n  MessageScrollerProvider,\n  type MessageScrollerProviderProps,\n  type MessageScrollerButtonDirection,\n  useMessageScroller,\n  useMessageScrollerInternal,\n  useMessageScrollerScrollable,\n  useMessageScrollerVisibility,\n} from \"@/hooks/use-message-scroller\"\nimport { cn } from \"@/lib/utils\"\n\nexport type { MessageScrollerProviderProps }\n\nexport type MessageScrollerProps = React.ComponentPropsWithoutRef<\"div\">\n\nexport interface MessageScrollerViewportProps extends React.ComponentPropsWithoutRef<\"div\"> {\n  preserveScrollOnPrepend?: boolean\n}\n\nexport interface MessageScrollerContentProps extends React.ComponentPropsWithoutRef<\"div\"> {\n  spacerClassName?: string\n}\n\nexport interface MessageScrollerItemProps extends React.ComponentPropsWithoutRef<\"div\"> {\n  messageId?: string\n  scrollAnchor?: boolean\n}\n\ninterface MessageScrollerButtonState extends Record<string, unknown> {\n  active: boolean\n  direction: MessageScrollerButtonDirection\n}\n\nexport type MessageScrollerButtonProps = useRender.ComponentProps<\n  \"button\",\n  MessageScrollerButtonState\n> & {\n  behavior?: ScrollBehavior\n  direction?: MessageScrollerButtonDirection\n  variant?: React.ComponentProps<typeof Button>[\"variant\"]\n  size?: React.ComponentProps<typeof Button>[\"size\"]\n}\n\nconst USER_SCROLL_KEYS = new Set([\n  \"ArrowDown\",\n  \"ArrowUp\",\n  \"End\",\n  \"Home\",\n  \"PageDown\",\n  \"PageUp\",\n  \" \",\n])\n\nconst MessageScroller = React.forwardRef<HTMLDivElement, MessageScrollerProps>(\n  ({ className, ...props }, forwardedRef) => {\n    const { setRoot } = useMessageScrollerInternal(\"MessageScroller\")\n    const ref = useMergedRefs(forwardedRef, setRoot)\n\n    return (\n      <div\n        ref={ref}\n        data-slot=\"message-scroller\"\n        className={cn(\n          \"group/message-scroller relative flex size-full min-h-0 flex-col overflow-hidden\",\n          className\n        )}\n        {...props}\n      />\n    )\n  }\n)\nMessageScroller.displayName = \"MessageScroller\"\n\nconst MessageScrollerViewport = React.forwardRef<\n  HTMLDivElement,\n  MessageScrollerViewportProps\n>(\n  (\n    {\n      \"aria-label\": ariaLabel = \"Messages\",\n      children,\n      className,\n      onKeyDown,\n      onScroll,\n      onTouchMove,\n      onWheel,\n      preserveScrollOnPrepend = true,\n      role = \"region\",\n      tabIndex = 0,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const { preserveScrollOnPrependRef, setViewport, sync, userScrollIntent } =\n      useMessageScrollerInternal(\"MessageScrollerViewport\")\n    preserveScrollOnPrependRef.current = preserveScrollOnPrepend\n    const ref = useMergedRefs(forwardedRef, setViewport)\n\n    return (\n      <div\n        ref={ref}\n        data-slot=\"message-scroller-viewport\"\n        aria-label={ariaLabel}\n        role={role}\n        tabIndex={tabIndex}\n        className={cn(\n          \"size-full min-h-0 min-w-0 scroll-fade-b scrollbar-thin scrollbar-gutter-stable overflow-y-auto overscroll-contain contain-content data-autoscrolling:scrollbar-thumb-transparent data-autoscrolling:scrollbar-track-transparent\",\n          className\n        )}\n        onKeyDown={(event) => {\n          if (USER_SCROLL_KEYS.has(event.key)) userScrollIntent()\n          onKeyDown?.(event)\n        }}\n        onScroll={(event) => {\n          sync(true)\n          onScroll?.(event)\n        }}\n        onTouchMove={(event) => {\n          userScrollIntent()\n          onTouchMove?.(event)\n        }}\n        onWheel={(event) => {\n          userScrollIntent()\n          onWheel?.(event)\n        }}\n        {...props}\n      >\n        {children}\n      </div>\n    )\n  }\n)\nMessageScrollerViewport.displayName = \"MessageScrollerViewport\"\n\nconst MessageScrollerContent = React.forwardRef<\n  HTMLDivElement,\n  MessageScrollerContentProps\n>(\n  (\n    {\n      \"aria-relevant\": ariaRelevant = \"additions\",\n      children,\n      className,\n      role = \"log\",\n      spacerClassName,\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const { setContent } = useMessageScrollerInternal(\"MessageScrollerContent\")\n    const ref = useMergedRefs(forwardedRef, setContent)\n\n    return (\n      <div\n        ref={ref}\n        data-slot=\"message-scroller-content\"\n        aria-relevant={ariaRelevant}\n        role={role}\n        className={cn(\"flex h-max min-h-full flex-col gap-6\", className)}\n        {...props}\n      >\n        {children}\n        <div\n          aria-hidden=\"true\"\n          data-message-scroller-spacer=\"\"\n          className={spacerClassName}\n          hidden\n        />\n      </div>\n    )\n  }\n)\nMessageScrollerContent.displayName = \"MessageScrollerContent\"\n\nconst MessageScrollerItem = React.forwardRef<\n  HTMLDivElement,\n  MessageScrollerItemProps\n>(({ className, messageId, scrollAnchor = false, ...props }, forwardedRef) => (\n  <div\n    ref={forwardedRef}\n    data-slot=\"message-scroller-item\"\n    data-message-id={messageId}\n    data-scroll-anchor={scrollAnchor ? \"true\" : \"false\"}\n    className={cn(\n      \"min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]\",\n      className\n    )}\n    {...props}\n  />\n))\nMessageScrollerItem.displayName = \"MessageScrollerItem\"\n\nconst MessageScrollerButton = React.forwardRef<\n  HTMLButtonElement,\n  MessageScrollerButtonProps\n>(\n  (\n    {\n      behavior = \"smooth\",\n      children,\n      className,\n      direction = \"end\",\n      onClick,\n      render,\n      size = \"icon-sm\",\n      tabIndex,\n      type = \"button\",\n      variant = \"secondary\",\n      ...props\n    },\n    forwardedRef\n  ) => {\n    const { scrollToEnd, scrollToStart } = useMessageScroller()\n    const scrollable = useMessageScrollerScrollable()\n    const active = direction === \"start\" ? scrollable.start : scrollable.end\n    const state = React.useMemo(\n      () => ({ active, direction }),\n      [active, direction]\n    )\n\n    return useRender<MessageScrollerButtonState, HTMLButtonElement>({\n      defaultTagName: \"button\",\n      ref: forwardedRef,\n      render: render ?? <Button variant={variant} size={size} />,\n      state,\n      props: {\n        ...props,\n        \"aria-hidden\": active ? undefined : true,\n        \"data-active\": active ? \"true\" : \"false\",\n        \"data-slot\": \"message-scroller-button\",\n        \"data-direction\": direction,\n        \"data-variant\": variant,\n        \"data-size\": size,\n        className: cn(\n          \"absolute inset-s-1/2 -translate-x-1/2 border-border bg-background text-foreground transition-[translate,scale,opacity] duration-200 hover:bg-muted hover:text-foreground data-[active=false]:pointer-events-none data-[active=false]:scale-95 data-[active=false]:opacity-0 data-[active=false]:duration-400 data-[active=false]:ease-[cubic-bezier(0.7,0,0.84,0)] data-[active=true]:translate-y-0 data-[active=true]:scale-100 data-[active=true]:opacity-100 data-[active=true]:ease-[cubic-bezier(0.23,1,0.32,1)] data-[direction=end]:bottom-4 data-[direction=end]:data-[active=false]:translate-y-full data-[direction=start]:top-4 data-[direction=start]:data-[active=false]:-translate-y-full rtl:translate-x-1/2 data-[direction=start]:[&_svg]:rotate-180\",\n          className\n        ),\n        inert: active ? undefined : true,\n        tabIndex: active ? tabIndex : -1,\n        type,\n        children: children ?? (\n          <>\n            <ArrowDownIcon />\n            <span className=\"sr-only\">\n              {direction === \"end\" ? \"Scroll to end\" : \"Scroll to start\"}\n            </span>\n          </>\n        ),\n        onClick: (event: React.MouseEvent<HTMLButtonElement>) => {\n          if (!active) return\n          onClick?.(event)\n          if (event.defaultPrevented) return\n          event.currentTarget.blur()\n          if (direction === \"start\") scrollToStart({ behavior })\n          else scrollToEnd({ behavior })\n        },\n      },\n    })\n  }\n)\nMessageScrollerButton.displayName = \"MessageScrollerButton\"\n\nexport {\n  MessageScrollerProvider,\n  MessageScroller,\n  MessageScrollerViewport,\n  MessageScrollerContent,\n  MessageScrollerItem,\n  MessageScrollerButton,\n  useMessageScroller,\n  useMessageScrollerScrollable,\n  useMessageScrollerVisibility,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-6e4c8d8b41f8a29fdd63c2d171440c8693a834a714dc457475edfa576b8da444",
+    "api": [
+      {
+        "name": "MessageScroller",
+        "kind": "const",
+        "line": 62,
+        "signature": "const MessageScroller = React.forwardRef<HTMLDivElement, MessageScrollerProps>(…)",
+        "propsType": "MessageScrollerProps",
+        "usage": "<MessageScroller />"
+      },
+      {
+        "name": "MessageScrollerButton",
+        "kind": "const",
+        "line": 201,
+        "signature": "const MessageScrollerButton = React.forwardRef<HTMLButtonElement, MessageScrollerButtonProps>(…)",
+        "propsType": "MessageScrollerButtonProps",
+        "props": [
+          {
+            "name": "behavior",
+            "kind": "property",
+            "optional": true,
+            "type": "ScrollBehavior",
+            "default": "\"smooth\""
+          },
+          {
+            "name": "direction",
+            "kind": "property",
+            "optional": true,
+            "type": "MessageScrollerButtonDirection",
+            "default": "\"end\""
+          },
+          {
+            "name": "variant",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ComponentProps<typeof Button>[\"variant\"]",
+            "default": "\"secondary\""
+          },
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ComponentProps<typeof Button>[\"size\"]",
+            "default": "\"icon-sm\""
+          }
+        ],
+        "usage": "<MessageScrollerButton />"
+      },
+      {
+        "name": "MessageScrollerButtonProps",
+        "kind": "type",
+        "line": 42,
+        "signature": "type MessageScrollerButtonProps = useRender.ComponentProps<\"button\", MessageScrollerButtonState> & { … }",
+        "members": [
+          {
+            "name": "behavior",
+            "kind": "property",
+            "optional": true,
+            "type": "ScrollBehavior",
+            "default": "\"smooth\""
+          },
+          {
+            "name": "direction",
+            "kind": "property",
+            "optional": true,
+            "type": "MessageScrollerButtonDirection",
+            "default": "\"end\""
+          },
+          {
+            "name": "variant",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ComponentProps<typeof Button>[\"variant\"]",
+            "default": "\"secondary\""
+          },
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ComponentProps<typeof Button>[\"size\"]",
+            "default": "\"icon-sm\""
+          }
+        ]
+      },
+      {
+        "name": "MessageScrollerContent",
+        "kind": "const",
+        "line": 143,
+        "signature": "const MessageScrollerContent = React.forwardRef<HTMLDivElement, MessageScrollerContentProps>(…)",
+        "propsType": "MessageScrollerContentProps",
+        "props": [
+          {
+            "name": "spacerClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ],
+        "usage": "<MessageScrollerContent />"
+      },
+      {
+        "name": "MessageScrollerContentProps",
+        "kind": "interface",
+        "line": 28,
+        "signature": "interface MessageScrollerContentProps extends React.ComponentPropsWithoutRef<\"div\">",
+        "members": [
+          {
+            "name": "spacerClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "MessageScrollerItem",
+        "kind": "const",
+        "line": 183,
+        "signature": "const MessageScrollerItem = React.forwardRef<HTMLDivElement, MessageScrollerItemProps>(…)",
+        "propsType": "MessageScrollerItemProps",
+        "props": [
+          {
+            "name": "messageId",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "scrollAnchor",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "usage": "<MessageScrollerItem />"
+      },
+      {
+        "name": "MessageScrollerItemProps",
+        "kind": "interface",
+        "line": 32,
+        "signature": "interface MessageScrollerItemProps extends React.ComponentPropsWithoutRef<\"div\">",
+        "members": [
+          {
+            "name": "messageId",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "scrollAnchor",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      },
+      {
+        "name": "MessageScrollerProps",
+        "kind": "type",
+        "line": 22,
+        "signature": "type MessageScrollerProps = React.ComponentPropsWithoutRef<\"div\">"
+      },
+      {
+        "name": "MessageScrollerProvider",
+        "kind": "const",
+        "line": 10,
+        "signature": "export { MessageScrollerProvider } from \"@/hooks/use-message-scroller\"",
+        "source": "@/hooks/use-message-scroller",
+        "usage": "<MessageScrollerProvider />"
+      },
+      {
+        "name": "MessageScrollerProviderProps",
+        "kind": "type",
+        "line": 11,
+        "signature": "export type { MessageScrollerProviderProps } from \"@/hooks/use-message-scroller\"",
+        "source": "@/hooks/use-message-scroller"
+      },
+      {
+        "name": "MessageScrollerViewport",
+        "kind": "const",
+        "line": 82,
+        "signature": "const MessageScrollerViewport = React.forwardRef<HTMLDivElement, MessageScrollerViewportProps>(…)",
+        "propsType": "MessageScrollerViewportProps",
+        "props": [
+          {
+            "name": "preserveScrollOnPrepend",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ],
+        "usage": "<MessageScrollerViewport />"
+      },
+      {
+        "name": "MessageScrollerViewportProps",
+        "kind": "interface",
+        "line": 24,
+        "signature": "interface MessageScrollerViewportProps extends React.ComponentPropsWithoutRef<\"div\">",
+        "members": [
+          {
+            "name": "preserveScrollOnPrepend",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      },
+      {
+        "name": "useMessageScroller",
+        "kind": "function",
+        "line": 13,
+        "signature": "export { useMessageScroller } from \"@/hooks/use-message-scroller\"",
+        "source": "@/hooks/use-message-scroller",
+        "usage": "const result = useMessageScroller(/* arguments */)"
+      },
+      {
+        "name": "useMessageScrollerScrollable",
+        "kind": "function",
+        "line": 15,
+        "signature": "export { useMessageScrollerScrollable } from \"@/hooks/use-message-scroller\"",
+        "source": "@/hooks/use-message-scroller",
+        "usage": "const result = useMessageScrollerScrollable(/* arguments */)"
+      },
+      {
+        "name": "useMessageScrollerVisibility",
+        "kind": "function",
+        "line": 16,
+        "signature": "export { useMessageScrollerVisibility } from \"@/hooks/use-message-scroller\"",
+        "source": "@/hooks/use-message-scroller",
+        "usage": "const result = useMessageScrollerVisibility(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/message-scroller",
+      "importStatement": "import { MessageScroller } from \"@/components/ui/message-scroller\"",
+      "primaryExport": "MessageScroller",
+      "example": "<MessageScroller />"
+    },
+    "ssr": false
+  }
+}

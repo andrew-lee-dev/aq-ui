@@ -1,0 +1,3 @@
+{
+  "extends": "@aq-ui/typescript-config/base.json"
+}

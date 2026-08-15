@@ -1,0 +1,56 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "collapsible",
+  "type": "registry:ui",
+  "title": "Collapsible",
+  "description": "Open-code aq-ui accessible component family for Collapsible.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "components/ui/collapsible.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Collapsible as CollapsiblePrimitive } from \"@base-ui/react/collapsible\"\n\nconst Collapsible = React.forwardRef<\n  React.ComponentRef<typeof CollapsiblePrimitive.Root>,\n  CollapsiblePrimitive.Root.Props\n>(function Collapsible({ ...props }, ref) {\n  return (\n    <CollapsiblePrimitive.Root ref={ref} data-slot=\"collapsible\" {...props} />\n  )\n})\nCollapsible.displayName = \"Collapsible\"\n\nconst CollapsibleTrigger = React.forwardRef<\n  React.ComponentRef<typeof CollapsiblePrimitive.Trigger>,\n  CollapsiblePrimitive.Trigger.Props\n>(function CollapsibleTrigger({ ...props }, ref) {\n  return (\n    <CollapsiblePrimitive.Trigger\n      ref={ref}\n      data-slot=\"collapsible-trigger\"\n      {...props}\n    />\n  )\n})\nCollapsibleTrigger.displayName = \"CollapsibleTrigger\"\n\nconst CollapsibleContent = React.forwardRef<\n  React.ComponentRef<typeof CollapsiblePrimitive.Panel>,\n  CollapsiblePrimitive.Panel.Props\n>(function CollapsibleContent({ ...props }, ref) {\n  return (\n    <CollapsiblePrimitive.Panel\n      ref={ref}\n      data-slot=\"collapsible-content\"\n      {...props}\n    />\n  )\n})\nCollapsibleContent.displayName = \"CollapsibleContent\"\n\nexport { Collapsible, CollapsibleTrigger, CollapsibleContent }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-f21478922be2b5d7fd3c6bc43b3b67be90b618dcdaa97416b872c5b0d860155c",
+    "api": [
+      {
+        "name": "Collapsible",
+        "kind": "const",
+        "line": 7,
+        "signature": "const Collapsible = React.forwardRef<React.ComponentRef<typeof CollapsiblePrimitive.Root>, CollapsiblePrimitive.Root.Props>(…)",
+        "propsType": "CollapsiblePrimitive.Root.Props",
+        "usage": "<Collapsible />"
+      },
+      {
+        "name": "CollapsibleContent",
+        "kind": "const",
+        "line": 31,
+        "signature": "const CollapsibleContent = React.forwardRef<React.ComponentRef<typeof CollapsiblePrimitive.Panel>, CollapsiblePrimitive.Panel.Props>(…)",
+        "propsType": "CollapsiblePrimitive.Panel.Props",
+        "usage": "<CollapsibleContent />"
+      },
+      {
+        "name": "CollapsibleTrigger",
+        "kind": "const",
+        "line": 17,
+        "signature": "const CollapsibleTrigger = React.forwardRef<React.ComponentRef<typeof CollapsiblePrimitive.Trigger>, CollapsiblePrimitive.Trigger.Props>(…)",
+        "propsType": "CollapsiblePrimitive.Trigger.Props",
+        "usage": "<CollapsibleTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/collapsible",
+      "importStatement": "import { Collapsible } from \"@/components/ui/collapsible\"",
+      "primaryExport": "Collapsible",
+      "example": "<Collapsible />"
+    },
+    "ssr": false
+  }
+}

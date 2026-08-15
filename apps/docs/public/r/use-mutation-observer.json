@@ -1,0 +1,100 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-mutation-observer",
+  "type": "registry:hook",
+  "title": "Use Mutation Observer",
+  "description": "Open-code aq-ui React hook for Use Mutation Observer.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-observer-pools",
+    "hook-target",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-mutation-observer.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport {\n  getMutationObserverOptionsKey,\n  subscribeMutationObserver,\n} from \"@/hooks/_observer-pools\"\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseMutationObserverOptions {\n  enabled?: boolean\n  onMutate?: (records: MutationRecord[]) => void\n}\n\nexport interface MutationObserverResult {\n  records: MutationRecord[]\n  supported: boolean\n}\n\nexport function useMutationObserver<T extends Node>(\n  target: Target<T>,\n  observerOptions: MutationObserverInit,\n  { enabled = true, onMutate }: UseMutationObserverOptions = {}\n): MutationObserverResult {\n  const [records, setRecords] = React.useState<MutationRecord[]>([])\n  const onMutateStable = useStableCallback(onMutate)\n  const optionsKey = getMutationObserverOptionsKey(observerOptions)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const node = resolveTarget(target)\n    if (!node) return\n    const unsubscribe = subscribeMutationObserver(\n      node,\n      observerOptions,\n      (nextRecords) => {\n        setRecords(nextRecords)\n        onMutateStable(nextRecords)\n      }\n    )\n    return unsubscribe ?? undefined\n    // Serialized observer options intentionally control re-subscription.\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [enabled, onMutateStable, optionsKey, target])\n\n  return {\n    records,\n    supported:\n      typeof window !== \"undefined\" && typeof MutationObserver !== \"undefined\",\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-e3e79aab1043831e15b4755d5dbc9c85f3bab736578efdcac3045b25b9901e2a",
+    "api": [
+      {
+        "name": "MutationObserverResult",
+        "kind": "interface",
+        "line": 17,
+        "signature": "interface MutationObserverResult",
+        "members": [
+          {
+            "name": "records",
+            "kind": "property",
+            "type": "MutationRecord[]"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "useMutationObserver",
+        "kind": "function",
+        "line": 22,
+        "signature": "function useMutationObserver<T extends Node>(target: Target<T>, observerOptions: MutationObserverInit, { enabled = true, onMutate }: UseMutationObserverOptions = {}): MutationObserverResult",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "observerOptions",
+            "kind": "parameter",
+            "type": "MutationObserverInit"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseMutationObserverOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "MutationObserverResult",
+        "usage": "const result = useMutationObserver(/* arguments */)"
+      },
+      {
+        "name": "UseMutationObserverOptions",
+        "kind": "interface",
+        "line": 12,
+        "signature": "interface UseMutationObserverOptions",
+        "members": [
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "onMutate",
+            "kind": "property",
+            "optional": true,
+            "type": "(records: MutationRecord[]) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-mutation-observer",
+      "importStatement": "import { useMutationObserver } from \"@/hooks/use-mutation-observer\"",
+      "primaryExport": "useMutationObserver",
+      "example": "const result = useMutationObserver(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

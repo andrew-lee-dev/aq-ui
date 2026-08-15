@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-debounced-value",
+  "type": "registry:hook",
+  "title": "Use Debounced Value",
+  "description": "Open-code aq-ui React hook for Use Debounced Value.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-debounced-value.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport function useDebouncedValue<T>(value: T, delay = 250): T {\n  const [debounced, setDebounced] = React.useState(value)\n\n  React.useEffect(() => {\n    const timeout = window.setTimeout(() => setDebounced(value), delay)\n    return () => window.clearTimeout(timeout)\n  }, [delay, value])\n\n  return debounced\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-3fb802a1337b1b95a1aaf3b59976b9668b722724a19a7a22e935d4209d9a38fd",
+    "api": [
+      {
+        "name": "useDebouncedValue",
+        "kind": "function",
+        "line": 5,
+        "signature": "function useDebouncedValue<T>(value: T, delay = 250): T",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "T"
+          },
+          {
+            "name": "delay",
+            "kind": "parameter",
+            "optional": true,
+            "default": "250"
+          }
+        ],
+        "returns": "T",
+        "usage": "const result = useDebouncedValue(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-debounced-value",
+      "importStatement": "import { useDebouncedValue } from \"@/hooks/use-debounced-value\"",
+      "primaryExport": "useDebouncedValue",
+      "example": "const result = useDebouncedValue(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

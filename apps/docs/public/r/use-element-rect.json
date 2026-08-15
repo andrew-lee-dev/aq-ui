@@ -1,0 +1,48 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-element-rect",
+  "type": "registry:hook",
+  "title": "Use Element Rect",
+  "description": "Open-code aq-ui React hook for Use Element Rect.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-isomorphic-layout-effect"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-element-rect.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\n\nexport function useElementRect<T extends Element>(\n  target: Target<T>\n): DOMRectReadOnly | null {\n  const [rect, setRect] = React.useState<DOMRectReadOnly | null>(null)\n\n  useIsomorphicLayoutEffect(() => {\n    const element = resolveTarget(target)\n    if (!element) return\n    let frame = 0\n\n    const measure = () => {\n      cancelAnimationFrame(frame)\n      frame = requestAnimationFrame(() => {\n        const next = element.getBoundingClientRect()\n        setRect((current) =>\n          current &&\n          current.x === next.x &&\n          current.y === next.y &&\n          current.width === next.width &&\n          current.height === next.height\n            ? current\n            : next\n        )\n      })\n    }\n\n    const observer =\n      typeof ResizeObserver === \"undefined\" ? null : new ResizeObserver(measure)\n    observer?.observe(element)\n    window.addEventListener(\"resize\", measure, { passive: true })\n    document.addEventListener(\"scroll\", measure, {\n      capture: true,\n      passive: true,\n    })\n    measure()\n\n    return () => {\n      cancelAnimationFrame(frame)\n      observer?.disconnect()\n      window.removeEventListener(\"resize\", measure)\n      document.removeEventListener(\"scroll\", measure, true)\n    }\n  }, [target])\n\n  return rect\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-61007c3f825deaaaa8a3516c6964a7051ce5ad1c3de42bfb1dad33a9e38e22e9",
+    "api": [
+      {
+        "name": "useElementRect",
+        "kind": "function",
+        "line": 8,
+        "signature": "function useElementRect<T extends Element>(target: Target<T>): DOMRectReadOnly | null",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          }
+        ],
+        "returns": "DOMRectReadOnly | null",
+        "usage": "const result = useElementRect(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-element-rect",
+      "importStatement": "import { useElementRect } from \"@/hooks/use-element-rect\"",
+      "primaryExport": "useElementRect",
+      "example": "const result = useElementRect(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

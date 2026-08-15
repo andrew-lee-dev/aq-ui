@@ -1,0 +1,104 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-disclosure",
+  "type": "registry:hook",
+  "title": "Use Disclosure",
+  "description": "Open-code aq-ui React hook for Use Disclosure.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-controllable-state"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-disclosure.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\n\nexport interface UseDisclosureOptions {\n  open?: boolean\n  defaultOpen?: boolean\n  onOpenChange?: (open: boolean) => void\n}\n\nexport interface DisclosureControls {\n  open: () => void\n  close: () => void\n  toggle: () => void\n  setOpen: (open: boolean) => void\n}\n\nexport function useDisclosure({\n  open,\n  defaultOpen = false,\n  onOpenChange,\n}: UseDisclosureOptions = {}): [boolean, DisclosureControls] {\n  const [isOpen, setOpen] = useControllableState({\n    value: open,\n    defaultValue: defaultOpen,\n    onChange: onOpenChange,\n  })\n\n  const controls = React.useMemo<DisclosureControls>(\n    () => ({\n      open: () => setOpen(true),\n      close: () => setOpen(false),\n      toggle: () => setOpen((current) => !current),\n      setOpen,\n    }),\n    [setOpen]\n  )\n\n  return [isOpen, controls]\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-2191d42fdcd4a62428b3a87d9d5f726c5dc9e8c319d371f8eeaac917d944a3da",
+    "api": [
+      {
+        "name": "DisclosureControls",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface DisclosureControls",
+        "members": [
+          {
+            "name": "open",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "close",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "toggle",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "setOpen",
+            "kind": "property",
+            "type": "(open: boolean) => void"
+          }
+        ]
+      },
+      {
+        "name": "useDisclosure",
+        "kind": "function",
+        "line": 20,
+        "signature": "function useDisclosure({ open, defaultOpen = false, onOpenChange, }: UseDisclosureOptions = {}): [boolean, DisclosureControls]",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseDisclosureOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "[boolean, DisclosureControls]",
+        "usage": "const result = useDisclosure(/* arguments */)"
+      },
+      {
+        "name": "UseDisclosureOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseDisclosureOptions",
+        "members": [
+          {
+            "name": "open",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "defaultOpen",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onOpenChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(open: boolean) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-disclosure",
+      "importStatement": "import { useDisclosure } from \"@/hooks/use-disclosure\"",
+      "primaryExport": "useDisclosure",
+      "example": "const result = useDisclosure(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

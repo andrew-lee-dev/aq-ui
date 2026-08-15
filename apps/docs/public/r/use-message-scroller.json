@@ -1,0 +1,197 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-message-scroller",
+  "type": "registry:hook",
+  "title": "Use Message Scroller",
+  "description": "Open-code aq-ui React hook for Use Message Scroller.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-isomorphic-layout-effect"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-message-scroller.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\n\n/* eslint-disable react-hooks/immutability -- Scrolling is an intentional DOM side effect; observer callbacks then publish its measured state. */\n\nexport type MessageScrollerDefaultScrollPosition =\n  \"start\" | \"end\" | \"last-anchor\"\n\nexport type MessageScrollerButtonDirection = \"start\" | \"end\"\nexport type MessageScrollerScrollAlign = \"start\" | \"center\" | \"end\" | \"nearest\"\n\nexport interface MessageScrollerScrollOptions {\n  align?: MessageScrollerScrollAlign\n  behavior?: ScrollBehavior\n  scrollMargin?: number\n}\n\nexport interface MessageScrollerScrollable {\n  start: boolean\n  end: boolean\n}\n\nexport interface MessageScrollerVisibilityState {\n  currentAnchorId: string | null\n  visibleMessageIds: string[]\n}\n\nexport interface MessageScrollerProviderProps {\n  children?: React.ReactNode\n  autoScroll?: boolean\n  defaultScrollPosition?: MessageScrollerDefaultScrollPosition\n  scrollEdgeThreshold?: number\n  scrollPreviousItemPeek?: number\n  scrollMargin?: number\n}\n\ninterface MessageScrollerContextValue {\n  autoscrolling: boolean\n  content: HTMLDivElement | null\n  preserveScrollOnPrependRef: React.MutableRefObject<boolean>\n  root: HTMLDivElement | null\n  scrollable: MessageScrollerScrollable\n  scrollToEnd: (options?: MessageScrollerScrollOptions) => boolean\n  scrollToMessage: (\n    messageId: string,\n    options?: MessageScrollerScrollOptions\n  ) => boolean\n  scrollToStart: (options?: MessageScrollerScrollOptions) => boolean\n  setContent: (node: HTMLDivElement | null) => void\n  setRoot: (node: HTMLDivElement | null) => void\n  setViewport: (node: HTMLDivElement | null) => void\n  sync: (userInitiated?: boolean) => void\n  userScrollIntent: () => void\n  viewport: HTMLDivElement | null\n  visibility: MessageScrollerVisibilityState\n}\n\nconst EMPTY_SCROLLABLE: MessageScrollerScrollable = {\n  start: false,\n  end: false,\n}\nconst EMPTY_VISIBILITY: MessageScrollerVisibilityState = {\n  currentAnchorId: null,\n  visibleMessageIds: [],\n}\nconst EDGE_EPSILON = 0.5\n\nconst MessageScrollerContext =\n  React.createContext<MessageScrollerContextValue | null>(null)\n\nfunction useMessageScrollerContext(component: string) {\n  const context = React.useContext(MessageScrollerContext)\n  if (!context) {\n    throw new Error(`${component} must be used within MessageScrollerProvider.`)\n  }\n  return context\n}\n\nfunction messageElements(content: HTMLElement | null) {\n  if (!content) return []\n  return Array.from(content.children).filter(\n    (element): element is HTMLElement =>\n      element instanceof HTMLElement &&\n      element.dataset.messageScrollerSpacer == null\n  )\n}\n\nfunction maxScrollTop(viewport: HTMLElement) {\n  return Math.max(0, viewport.scrollHeight - viewport.clientHeight)\n}\n\nfunction getElementScrollTop(element: HTMLElement, viewport: HTMLElement) {\n  const elementRect = element.getBoundingClientRect()\n  const viewportRect = viewport.getBoundingClientRect()\n  return elementRect.top - viewportRect.top + viewport.scrollTop\n}\n\nfunction shallowEqualScrollable(\n  previous: MessageScrollerScrollable,\n  next: MessageScrollerScrollable\n) {\n  return previous.start === next.start && previous.end === next.end\n}\n\nfunction shallowEqualVisibility(\n  previous: MessageScrollerVisibilityState,\n  next: MessageScrollerVisibilityState\n) {\n  return (\n    previous.currentAnchorId === next.currentAnchorId &&\n    previous.visibleMessageIds.length === next.visibleMessageIds.length &&\n    previous.visibleMessageIds.every(\n      (messageId, index) => messageId === next.visibleMessageIds[index]\n    )\n  )\n}\n\n/**\n * Owns the scroll state shared by all message-scroller parts.\n *\n * The implementation intentionally uses React and browser observers directly so\n * it works with both React 18.3 and React 19 and remains inert during SSR.\n */\nexport function MessageScrollerProvider({\n  autoScroll = false,\n  children,\n  defaultScrollPosition = \"end\",\n  scrollEdgeThreshold = 8,\n  scrollPreviousItemPeek = 64,\n  scrollMargin = 0,\n}: MessageScrollerProviderProps) {\n  const [root, setRoot] = React.useState<HTMLDivElement | null>(null)\n  const [viewport, setViewport] = React.useState<HTMLDivElement | null>(null)\n  const [content, setContent] = React.useState<HTMLDivElement | null>(null)\n  const [scrollable, setScrollable] =\n    React.useState<MessageScrollerScrollable>(EMPTY_SCROLLABLE)\n  const [visibility, setVisibility] =\n    React.useState<MessageScrollerVisibilityState>(EMPTY_VISIBILITY)\n  const [autoscrolling, setAutoscrolling] = React.useState(false)\n  const preserveScrollOnPrependRef = React.useRef(true)\n  const defaultPositionAppliedRef = React.useRef(false)\n  const followingEndRef = React.useRef(autoScroll)\n  const previousMetricsRef = React.useRef({\n    firstElement: null as Element | null,\n    scrollHeight: 0,\n  })\n  const pendingScrollRef = React.useRef<{\n    messageId: string\n    options: MessageScrollerScrollOptions\n  } | null>(null)\n  const animationFrameRef = React.useRef<number | null>(null)\n  const autoscrollTimerRef = React.useRef<number | null>(null)\n\n  React.useEffect(() => {\n    if (!autoScroll) {\n      followingEndRef.current = false\n      return\n    }\n    if (viewport) {\n      followingEndRef.current =\n        maxScrollTop(viewport) - viewport.scrollTop <= scrollEdgeThreshold\n    }\n  }, [autoScroll, scrollEdgeThreshold, viewport])\n\n  React.useEffect(() => {\n    defaultPositionAppliedRef.current = false\n  }, [defaultScrollPosition])\n\n  const commitState = React.useCallback(\n    (userInitiated = false) => {\n      if (!viewport) return\n\n      const remaining = maxScrollTop(viewport) - viewport.scrollTop\n      const nextScrollable = {\n        start: viewport.scrollTop > scrollEdgeThreshold,\n        end: remaining > scrollEdgeThreshold,\n      }\n\n      setScrollable((previous) =>\n        shallowEqualScrollable(previous, nextScrollable)\n          ? previous\n          : nextScrollable\n      )\n\n      if (userInitiated && autoScroll) {\n        followingEndRef.current = remaining <= scrollEdgeThreshold\n      }\n\n      if (!content) {\n        setVisibility((previous) =>\n          shallowEqualVisibility(previous, EMPTY_VISIBILITY)\n            ? previous\n            : EMPTY_VISIBILITY\n        )\n        return\n      }\n\n      const viewportRect = viewport.getBoundingClientRect()\n      const anchorLine =\n        viewportRect.top + scrollMargin + scrollPreviousItemPeek\n      const visibleMessageIds: string[] = []\n      let currentAnchorId: string | null = null\n\n      for (const element of messageElements(content)) {\n        const messageId = element.dataset.messageId\n        if (!messageId) continue\n        const rect = element.getBoundingClientRect()\n        if (rect.bottom > anchorLine && rect.top < viewportRect.bottom) {\n          visibleMessageIds.push(messageId)\n        }\n        if (\n          element.dataset.scrollAnchor === \"true\" &&\n          rect.top <= anchorLine + EDGE_EPSILON\n        ) {\n          currentAnchorId = messageId\n        }\n      }\n\n      const nextVisibility = { currentAnchorId, visibleMessageIds }\n      setVisibility((previous) =>\n        shallowEqualVisibility(previous, nextVisibility)\n          ? previous\n          : nextVisibility\n      )\n    },\n    [\n      autoScroll,\n      content,\n      scrollEdgeThreshold,\n      scrollMargin,\n      scrollPreviousItemPeek,\n      viewport,\n    ]\n  )\n\n  const sync = React.useCallback(\n    (userInitiated = false) => {\n      if (typeof window === \"undefined\") return\n      if (animationFrameRef.current !== null) {\n        window.cancelAnimationFrame(animationFrameRef.current)\n      }\n      animationFrameRef.current = window.requestAnimationFrame(() => {\n        animationFrameRef.current = null\n        commitState(userInitiated)\n      })\n    },\n    [commitState]\n  )\n\n  const markAutoscrolling = React.useCallback(() => {\n    if (typeof window === \"undefined\") return\n    setAutoscrolling(true)\n    if (autoscrollTimerRef.current !== null) {\n      window.clearTimeout(autoscrollTimerRef.current)\n    }\n    autoscrollTimerRef.current = window.setTimeout(() => {\n      autoscrollTimerRef.current = null\n      setAutoscrolling(false)\n    }, 180)\n  }, [])\n\n  const scrollToTop = React.useCallback(\n    (top: number, behavior: ScrollBehavior) => {\n      if (!viewport) return false\n      const boundedTop = Math.max(0, Math.min(top, maxScrollTop(viewport)))\n      markAutoscrolling()\n      if (typeof viewport.scrollTo === \"function\") {\n        viewport.scrollTo({ top: boundedTop, behavior })\n      } else {\n        viewport.scrollTop = boundedTop\n      }\n      sync()\n      return true\n    },\n    [markAutoscrolling, sync, viewport]\n  )\n\n  const scrollToStart = React.useCallback(\n    (options: MessageScrollerScrollOptions = {}) => {\n      followingEndRef.current = false\n      return scrollToTop(0, options.behavior ?? \"auto\")\n    },\n    [scrollToTop]\n  )\n\n  const scrollToEnd = React.useCallback(\n    (options: MessageScrollerScrollOptions = {}) => {\n      if (!viewport) return false\n      followingEndRef.current = autoScroll\n      return scrollToTop(maxScrollTop(viewport), options.behavior ?? \"auto\")\n    },\n    [autoScroll, scrollToTop, viewport]\n  )\n\n  const scrollToMessage = React.useCallback(\n    (messageId: string, options: MessageScrollerScrollOptions = {}) => {\n      if (!content || !viewport) {\n        pendingScrollRef.current = { messageId, options }\n        return true\n      }\n      const elements = messageElements(content)\n      const element = elements.find(\n        (candidate) => candidate.dataset.messageId === messageId\n      )\n      if (!element) {\n        if (elements.length === 0) {\n          pendingScrollRef.current = { messageId, options }\n          return true\n        }\n        return false\n      }\n\n      const align = options.align ?? \"start\"\n      const margin = options.scrollMargin ?? scrollMargin\n      const elementTop = getElementScrollTop(element, viewport)\n      const elementHeight = element.getBoundingClientRect().height\n      let target = elementTop - margin\n\n      if (align === \"center\") {\n        target = elementTop - (viewport.clientHeight - elementHeight) / 2\n      } else if (align === \"end\") {\n        target = elementTop - viewport.clientHeight + elementHeight + margin\n      } else if (align === \"nearest\") {\n        const visibleStart = viewport.scrollTop + margin\n        const visibleEnd = viewport.scrollTop + viewport.clientHeight - margin\n        const elementEnd = elementTop + elementHeight\n        if (elementTop >= visibleStart && elementEnd <= visibleEnd) {\n          return true\n        }\n        target =\n          elementTop < visibleStart\n            ? elementTop - margin\n            : elementEnd - viewport.clientHeight + margin\n      }\n\n      followingEndRef.current = false\n      pendingScrollRef.current = null\n      return scrollToTop(target, options.behavior ?? \"auto\")\n    },\n    [content, scrollMargin, scrollToTop, viewport]\n  )\n\n  const applyDefaultPosition = React.useCallback(() => {\n    if (\n      defaultPositionAppliedRef.current ||\n      !content ||\n      !viewport ||\n      messageElements(content).length === 0\n    ) {\n      return\n    }\n\n    if (defaultScrollPosition === \"start\") {\n      scrollToStart()\n    } else if (defaultScrollPosition === \"last-anchor\") {\n      const anchors = messageElements(content).filter(\n        (element) => element.dataset.scrollAnchor === \"true\"\n      )\n      const lastAnchor = anchors.at(-1)\n      if (lastAnchor?.dataset.messageId) {\n        scrollToMessage(lastAnchor.dataset.messageId)\n      } else {\n        scrollToEnd()\n      }\n    } else {\n      scrollToEnd()\n    }\n    defaultPositionAppliedRef.current = true\n  }, [\n    content,\n    defaultScrollPosition,\n    scrollToEnd,\n    scrollToMessage,\n    scrollToStart,\n    viewport,\n  ])\n\n  const handleContentChange = React.useCallback(() => {\n    if (!content || !viewport) return\n    const elements = messageElements(content)\n    const pendingScroll = pendingScrollRef.current\n    if (\n      pendingScroll &&\n      scrollToMessage(pendingScroll.messageId, pendingScroll.options)\n    ) {\n      previousMetricsRef.current = {\n        firstElement: elements[0] ?? null,\n        scrollHeight: viewport.scrollHeight,\n      }\n      return\n    }\n    const previous = previousMetricsRef.current\n    const firstElement = elements[0] ?? null\n    const wasPrepended =\n      preserveScrollOnPrependRef.current &&\n      previous.firstElement !== null &&\n      firstElement !== previous.firstElement &&\n      elements.includes(previous.firstElement as HTMLElement)\n\n    if (wasPrepended) {\n      viewport.scrollTop += Math.max(\n        0,\n        viewport.scrollHeight - previous.scrollHeight\n      )\n    } else if (autoScroll && followingEndRef.current) {\n      scrollToEnd()\n    }\n\n    previousMetricsRef.current = {\n      firstElement,\n      scrollHeight: viewport.scrollHeight,\n    }\n    applyDefaultPosition()\n    sync()\n  }, [\n    applyDefaultPosition,\n    autoScroll,\n    content,\n    scrollToEnd,\n    scrollToMessage,\n    sync,\n    viewport,\n  ])\n\n  useIsomorphicLayoutEffect(() => {\n    if (!content || !viewport) return\n\n    previousMetricsRef.current = {\n      firstElement: messageElements(content)[0] ?? null,\n      scrollHeight: viewport.scrollHeight,\n    }\n    const pendingScroll = pendingScrollRef.current\n    if (pendingScroll) {\n      scrollToMessage(pendingScroll.messageId, pendingScroll.options)\n    }\n    applyDefaultPosition()\n    commitState()\n\n    const mutationObserver =\n      typeof MutationObserver === \"undefined\"\n        ? null\n        : new MutationObserver(handleContentChange)\n    mutationObserver?.observe(content, { childList: true })\n\n    const resizeObserver =\n      typeof ResizeObserver === \"undefined\"\n        ? null\n        : new ResizeObserver(handleContentChange)\n    resizeObserver?.observe(content)\n    resizeObserver?.observe(viewport)\n\n    return () => {\n      mutationObserver?.disconnect()\n      resizeObserver?.disconnect()\n    }\n  }, [\n    applyDefaultPosition,\n    commitState,\n    content,\n    handleContentChange,\n    scrollToMessage,\n    viewport,\n  ])\n\n  React.useEffect(\n    () => () => {\n      if (animationFrameRef.current !== null) {\n        window.cancelAnimationFrame(animationFrameRef.current)\n      }\n      if (autoscrollTimerRef.current !== null) {\n        window.clearTimeout(autoscrollTimerRef.current)\n      }\n    },\n    []\n  )\n\n  const userScrollIntent = React.useCallback(() => {\n    if (!viewport || !autoScroll) return\n    const remaining = maxScrollTop(viewport) - viewport.scrollTop\n    followingEndRef.current = remaining <= scrollEdgeThreshold\n  }, [autoScroll, scrollEdgeThreshold, viewport])\n\n  React.useEffect(() => {\n    for (const node of [root, viewport]) {\n      if (!node) continue\n      const directions = [\n        scrollable.start ? \"start\" : null,\n        scrollable.end ? \"end\" : null,\n      ]\n        .filter(Boolean)\n        .join(\" \")\n      if (directions) node.setAttribute(\"data-scrollable\", directions)\n      else node.removeAttribute(\"data-scrollable\")\n      node.toggleAttribute(\"data-autoscrolling\", autoscrolling)\n    }\n  }, [autoscrolling, root, scrollable, viewport])\n\n  const value = React.useMemo<MessageScrollerContextValue>(\n    () => ({\n      autoscrolling,\n      content,\n      preserveScrollOnPrependRef,\n      root,\n      scrollable,\n      scrollToEnd,\n      scrollToMessage,\n      scrollToStart,\n      setContent,\n      setRoot,\n      setViewport,\n      sync,\n      userScrollIntent,\n      viewport,\n      visibility,\n    }),\n    [\n      autoscrolling,\n      content,\n      root,\n      scrollable,\n      scrollToEnd,\n      scrollToMessage,\n      scrollToStart,\n      sync,\n      userScrollIntent,\n      viewport,\n      visibility,\n    ]\n  )\n\n  return React.createElement(\n    MessageScrollerContext.Provider,\n    { value },\n    children\n  )\n}\n\nexport function useMessageScroller() {\n  const { scrollToEnd, scrollToMessage, scrollToStart } =\n    useMessageScrollerContext(\"useMessageScroller\")\n  return React.useMemo(\n    () => ({ scrollToEnd, scrollToMessage, scrollToStart }),\n    [scrollToEnd, scrollToMessage, scrollToStart]\n  )\n}\n\nexport function useMessageScrollerScrollable() {\n  return useMessageScrollerContext(\"useMessageScrollerScrollable\").scrollable\n}\n\nexport function useMessageScrollerVisibility() {\n  return useMessageScrollerContext(\"useMessageScrollerVisibility\").visibility\n}\n\n/** @internal Shared by the component parts; not required by consumers. */\nexport function useMessageScrollerInternal(component: string) {\n  return useMessageScrollerContext(component)\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-9416de03f2a94b40d78e43ef4ecb51b2b2cc57ac6f1a87c82951d8e7b8890070",
+    "api": [
+      {
+        "name": "MessageScrollerButtonDirection",
+        "kind": "type",
+        "line": 12,
+        "signature": "type MessageScrollerButtonDirection = \"start\" | \"end\""
+      },
+      {
+        "name": "MessageScrollerDefaultScrollPosition",
+        "kind": "type",
+        "line": 9,
+        "signature": "type MessageScrollerDefaultScrollPosition = \"start\" | \"end\" | \"last-anchor\""
+      },
+      {
+        "name": "MessageScrollerProvider",
+        "kind": "function",
+        "line": 127,
+        "signature": "function MessageScrollerProvider({ autoScroll = false, children, defaultScrollPosition = \"end\", scrollEdgeThreshold = 8, scrollPreviousItemPeek = 64, scrollMargin = 0, }: MessageScrollerProviderProps)",
+        "description": "Owns the scroll state shared by all message-scroller parts. The implementation intentionally uses React and browser observers directly so it works with both React 18.3 and React 19 and remains inert during SSR.",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "MessageScrollerProviderProps"
+          }
+        ],
+        "usage": "MessageScrollerProvider(/* arguments */)"
+      },
+      {
+        "name": "MessageScrollerProviderProps",
+        "kind": "interface",
+        "line": 31,
+        "signature": "interface MessageScrollerProviderProps",
+        "members": [
+          {
+            "name": "children",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode"
+          },
+          {
+            "name": "autoScroll",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "defaultScrollPosition",
+            "kind": "property",
+            "optional": true,
+            "type": "MessageScrollerDefaultScrollPosition",
+            "default": "\"end\""
+          },
+          {
+            "name": "scrollEdgeThreshold",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "8"
+          },
+          {
+            "name": "scrollPreviousItemPeek",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "64"
+          },
+          {
+            "name": "scrollMargin",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          }
+        ]
+      },
+      {
+        "name": "MessageScrollerScrollable",
+        "kind": "interface",
+        "line": 21,
+        "signature": "interface MessageScrollerScrollable",
+        "members": [
+          {
+            "name": "start",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "end",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "MessageScrollerScrollAlign",
+        "kind": "type",
+        "line": 13,
+        "signature": "type MessageScrollerScrollAlign = \"start\" | \"center\" | \"end\" | \"nearest\""
+      },
+      {
+        "name": "MessageScrollerScrollOptions",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface MessageScrollerScrollOptions",
+        "members": [
+          {
+            "name": "align",
+            "kind": "property",
+            "optional": true,
+            "type": "MessageScrollerScrollAlign"
+          },
+          {
+            "name": "behavior",
+            "kind": "property",
+            "optional": true,
+            "type": "ScrollBehavior"
+          },
+          {
+            "name": "scrollMargin",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "MessageScrollerVisibilityState",
+        "kind": "interface",
+        "line": 26,
+        "signature": "interface MessageScrollerVisibilityState",
+        "members": [
+          {
+            "name": "currentAnchorId",
+            "kind": "property",
+            "type": "string | null"
+          },
+          {
+            "name": "visibleMessageIds",
+            "kind": "property",
+            "type": "string[]"
+          }
+        ]
+      },
+      {
+        "name": "useMessageScroller",
+        "kind": "function",
+        "line": 541,
+        "signature": "function useMessageScroller()",
+        "usage": "const result = useMessageScroller(/* arguments */)"
+      },
+      {
+        "name": "useMessageScrollerScrollable",
+        "kind": "function",
+        "line": 550,
+        "signature": "function useMessageScrollerScrollable()",
+        "usage": "const result = useMessageScrollerScrollable(/* arguments */)"
+      },
+      {
+        "name": "useMessageScrollerVisibility",
+        "kind": "function",
+        "line": 554,
+        "signature": "function useMessageScrollerVisibility()",
+        "usage": "const result = useMessageScrollerVisibility(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-message-scroller",
+      "importStatement": "import { useMessageScroller } from \"@/hooks/use-message-scroller\"",
+      "primaryExport": "useMessageScroller",
+      "example": "const result = useMessageScroller(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

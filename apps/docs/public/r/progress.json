@@ -1,0 +1,74 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "progress",
+  "type": "registry:ui",
+  "title": "Progress",
+  "description": "Open-code aq-ui accessible component family for Progress.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/progress.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Progress as ProgressPrimitive } from \"@base-ui/react/progress\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Progress = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Root>,\n  ProgressPrimitive.Root.Props\n>(function Progress({ className, children, value, ...props }, ref) {\n  return (\n    <ProgressPrimitive.Root\n      ref={ref}\n      value={value}\n      data-slot=\"progress\"\n      className={cn(\"flex flex-wrap gap-3\", className)}\n      {...props}\n    >\n      {children}\n      <ProgressTrack>\n        <ProgressIndicator />\n      </ProgressTrack>\n    </ProgressPrimitive.Root>\n  )\n})\nProgress.displayName = \"Progress\"\n\nconst ProgressTrack = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Track>,\n  ProgressPrimitive.Track.Props\n>(function ProgressTrack({ className, ...props }, ref) {\n  return (\n    <ProgressPrimitive.Track\n      ref={ref}\n      className={cn(\n        \"relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted\",\n        className\n      )}\n      data-slot=\"progress-track\"\n      {...props}\n    />\n  )\n})\nProgressTrack.displayName = \"ProgressTrack\"\n\nconst ProgressIndicator = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Indicator>,\n  ProgressPrimitive.Indicator.Props\n>(function ProgressIndicator({ className, ...props }, ref) {\n  return (\n    <ProgressPrimitive.Indicator\n      ref={ref}\n      data-slot=\"progress-indicator\"\n      className={cn(\"h-full bg-primary transition-all\", className)}\n      {...props}\n    />\n  )\n})\nProgressIndicator.displayName = \"ProgressIndicator\"\n\nconst ProgressLabel = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Label>,\n  ProgressPrimitive.Label.Props\n>(function ProgressLabel({ className, ...props }, ref) {\n  return (\n    <ProgressPrimitive.Label\n      ref={ref}\n      className={cn(\"text-sm font-medium\", className)}\n      data-slot=\"progress-label\"\n      {...props}\n    />\n  )\n})\nProgressLabel.displayName = \"ProgressLabel\"\n\nconst ProgressValue = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Value>,\n  ProgressPrimitive.Value.Props\n>(function ProgressValue({ className, ...props }, ref) {\n  return (\n    <ProgressPrimitive.Value\n      ref={ref}\n      className={cn(\n        \"ms-auto text-sm text-muted-foreground tabular-nums\",\n        className\n      )}\n      data-slot=\"progress-value\"\n      {...props}\n    />\n  )\n})\nProgressValue.displayName = \"ProgressValue\"\n\nexport {\n  Progress,\n  ProgressTrack,\n  ProgressIndicator,\n  ProgressLabel,\n  ProgressValue,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-479c11de833e485e94711b0db4446a6426812fc16a3589b56beb0b3806e49bf6",
+    "api": [
+      {
+        "name": "Progress",
+        "kind": "const",
+        "line": 9,
+        "signature": "const Progress = React.forwardRef<React.ComponentRef<typeof ProgressPrimitive.Root>, ProgressPrimitive.Root.Props>(…)",
+        "propsType": "ProgressPrimitive.Root.Props",
+        "usage": "<Progress />"
+      },
+      {
+        "name": "ProgressIndicator",
+        "kind": "const",
+        "line": 48,
+        "signature": "const ProgressIndicator = React.forwardRef<React.ComponentRef<typeof ProgressPrimitive.Indicator>, ProgressPrimitive.Indicator.Props>(…)",
+        "propsType": "ProgressPrimitive.Indicator.Props",
+        "usage": "<ProgressIndicator />"
+      },
+      {
+        "name": "ProgressLabel",
+        "kind": "const",
+        "line": 63,
+        "signature": "const ProgressLabel = React.forwardRef<React.ComponentRef<typeof ProgressPrimitive.Label>, ProgressPrimitive.Label.Props>(…)",
+        "propsType": "ProgressPrimitive.Label.Props",
+        "usage": "<ProgressLabel />"
+      },
+      {
+        "name": "ProgressTrack",
+        "kind": "const",
+        "line": 30,
+        "signature": "const ProgressTrack = React.forwardRef<React.ComponentRef<typeof ProgressPrimitive.Track>, ProgressPrimitive.Track.Props>(…)",
+        "propsType": "ProgressPrimitive.Track.Props",
+        "usage": "<ProgressTrack />"
+      },
+      {
+        "name": "ProgressValue",
+        "kind": "const",
+        "line": 78,
+        "signature": "const ProgressValue = React.forwardRef<React.ComponentRef<typeof ProgressPrimitive.Value>, ProgressPrimitive.Value.Props>(…)",
+        "propsType": "ProgressPrimitive.Value.Props",
+        "usage": "<ProgressValue />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/progress",
+      "importStatement": "import { Progress } from \"@/components/ui/progress\"",
+      "primaryExport": "Progress",
+      "example": "<Progress />"
+    },
+    "ssr": false
+  }
+}

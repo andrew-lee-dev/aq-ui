@@ -1,0 +1,203 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-block",
+  "type": "registry:ui",
+  "title": "Code Block",
+  "description": "SSR-safe syntax-highlighted code with line numbers, diffs, emphasis, filenames, and copy support.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "code-block-copy-button",
+    "code-highlighter",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/code-block.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { CodeBlockCopyButton } from \"@/components/ui/code-block-copy-button\"\nimport {\n  highlightCodeLines,\n  normalizeHighlightLanguage,\n  type CodeBlockLanguage,\n} from \"@/lib/code-highlighter\"\nimport { cn } from \"@/lib/utils\"\n\ntype CodeBlockDiff = \"none\" | \"added\" | \"removed\" | \"mixed\"\n\ninterface CodeBlockProps extends Omit<\n  React.ComponentProps<\"figure\">,\n  \"children\"\n> {\n  code: string\n  language?: CodeBlockLanguage\n  filename?: string\n  lineNumbers?: boolean\n  wrapLines?: boolean\n  highlightedLines?: readonly number[]\n  diff?: CodeBlockDiff\n  copyButton?: boolean\n  maxHeight?: string | number\n  onCopyError?: (error: Error) => void\n}\n\nfunction CodeBlock({\n  code,\n  language = \"plaintext\",\n  filename,\n  lineNumbers = false,\n  wrapLines = false,\n  highlightedLines: emphasizedLines = [],\n  diff = \"none\",\n  copyButton = true,\n  maxHeight,\n  onCopyError,\n  className,\n  style,\n  ...props\n}: CodeBlockProps) {\n  const lines = highlightCodeLines(code, language)\n  const emphasized = new Set(emphasizedLines)\n\n  return (\n    <figure\n      data-slot=\"code-block\"\n      data-language={language}\n      data-diff={diff}\n      className={cn(\n        \"group/code-block relative my-4 flex flex-col overflow-hidden rounded-lg border bg-muted/35 text-sm text-foreground shadow-xs\",\n        className\n      )}\n      style={{ maxHeight, ...style }}\n      {...props}\n    >\n      {filename || copyButton ? (\n        <figcaption\n          data-slot=\"code-block-header\"\n          className=\"sticky top-0 z-10 flex min-h-9 items-center border-b bg-muted/85 px-3 text-xs text-muted-foreground backdrop-blur\"\n        >\n          <span className=\"min-w-0 flex-1 truncate font-medium\">\n            {filename ?? language}\n          </span>\n          {copyButton ? (\n            <CodeBlockCopyButton value={code} onCopyError={onCopyError} />\n          ) : null}\n        </figcaption>\n      ) : null}\n      <pre\n        data-slot=\"code-block-pre\"\n        className={cn(\n          \"m-0 overflow-auto py-3 text-[0.8125rem] leading-6 [tab-size:2]\",\n          maxHeight !== undefined && \"min-h-0 flex-1\",\n          wrapLines ? \"break-words whitespace-pre-wrap\" : \"whitespace-pre\"\n        )}\n      >\n        <code\n          className={cn(\n            \"block min-w-max font-mono\",\n            wrapLines && \"min-w-0\",\n            \"[&_.hljs-attr]:text-chart-1 [&_.hljs-attribute]:text-chart-1 [&_.hljs-built_in]:text-chart-3 [&_.hljs-comment]:text-muted-foreground [&_.hljs-function]:text-chart-2 [&_.hljs-keyword]:text-primary [&_.hljs-literal]:text-chart-3 [&_.hljs-number]:text-chart-4 [&_.hljs-operator]:text-foreground [&_.hljs-property]:text-chart-1 [&_.hljs-punctuation]:text-muted-foreground [&_.hljs-string]:text-chart-2 [&_.hljs-symbol]:text-chart-4 [&_.hljs-title]:text-chart-1 [&_.hljs-type]:text-chart-3 [&_.hljs-variable]:text-chart-5\"\n          )}\n        >\n          <span className=\"sr-only select-none\">{code}</span>\n          {lines.map((tokens, index) => {\n            const lineNumber = index + 1\n            const source = tokens.map((token) => token.text).join(\"\")\n            const lineDiff =\n              diff === \"mixed\"\n                ? source.startsWith(\"+\")\n                  ? \"added\"\n                  : source.startsWith(\"-\")\n                    ? \"removed\"\n                    : \"none\"\n                : diff\n\n            return (\n              <span\n                key={lineNumber}\n                aria-hidden=\"true\"\n                data-slot=\"code-block-line\"\n                data-highlighted={emphasized.has(lineNumber) ? \"\" : undefined}\n                data-diff={lineDiff === \"none\" ? undefined : lineDiff}\n                className={cn(\n                  \"grid min-h-6 grid-cols-[auto_1fr] border-s-2 border-s-transparent px-3\",\n                  lineNumbers ? \"gap-4\" : \"grid-cols-1\",\n                  emphasized.has(lineNumber) &&\n                    \"border-s-primary bg-primary/10\",\n                  lineDiff === \"added\" &&\n                    \"border-s-emerald-500 bg-emerald-500/10\",\n                  lineDiff === \"removed\" &&\n                    \"border-s-destructive bg-destructive/10\"\n                )}\n              >\n                {lineNumbers ? (\n                  <span\n                    aria-hidden=\"true\"\n                    className=\"min-w-[2ch] text-end text-muted-foreground select-none\"\n                  >\n                    {lineNumber}\n                  </span>\n                ) : null}\n                <span className=\"min-w-0\">\n                  {tokens.length > 0\n                    ? tokens.map((token, tokenIndex) => (\n                        <span key={tokenIndex} className={token.className}>\n                          {token.text}\n                        </span>\n                      ))\n                    : \"\\u200b\"}\n                </span>\n              </span>\n            )\n          })}\n        </code>\n      </pre>\n    </figure>\n  )\n}\n\nexport { CodeBlock, normalizeHighlightLanguage }\nexport type { CodeBlockDiff, CodeBlockLanguage, CodeBlockProps }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-066eed0b620e63e1affa0f30ac6cae6b454b9d9e4ff58c098b0ddc11a71b6229",
+    "api": [
+      {
+        "name": "CodeBlock",
+        "kind": "function",
+        "line": 29,
+        "signature": "function CodeBlock({ code, language = \"plaintext\", filename, lineNumbers = false, wrapLines = false, highlightedLines: emphasizedLines = [], diff = \"none\", copyButton = true, maxHeight, onCopyError, className, style, ...props }: CodeBlockProps)",
+        "propsType": "CodeBlockProps",
+        "props": [
+          {
+            "name": "code",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeBlockLanguage",
+            "default": "\"plaintext\""
+          },
+          {
+            "name": "filename",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "lineNumbers",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "wrapLines",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "highlightedLines",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly number[]",
+            "default": "[]"
+          },
+          {
+            "name": "diff",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeBlockDiff",
+            "default": "\"none\""
+          },
+          {
+            "name": "copyButton",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number"
+          },
+          {
+            "name": "onCopyError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ],
+        "usage": "<CodeBlock />"
+      },
+      {
+        "name": "CodeBlockDiff",
+        "kind": "type",
+        "line": 11,
+        "signature": "type CodeBlockDiff = \"none\" | \"added\" | \"removed\" | \"mixed\""
+      },
+      {
+        "name": "CodeBlockLanguage",
+        "kind": "type",
+        "line": 7,
+        "signature": "export type { CodeBlockLanguage } from \"@/lib/code-highlighter\"",
+        "source": "@/lib/code-highlighter"
+      },
+      {
+        "name": "CodeBlockProps",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface CodeBlockProps extends Omit< React.ComponentProps<\"figure\">, \"children\" >",
+        "members": [
+          {
+            "name": "code",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeBlockLanguage",
+            "default": "\"plaintext\""
+          },
+          {
+            "name": "filename",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "lineNumbers",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "wrapLines",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "highlightedLines",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly number[]",
+            "default": "[]"
+          },
+          {
+            "name": "diff",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeBlockDiff",
+            "default": "\"none\""
+          },
+          {
+            "name": "copyButton",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "optional": true,
+            "type": "string | number"
+          },
+          {
+            "name": "onCopyError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ]
+      },
+      {
+        "name": "normalizeHighlightLanguage",
+        "kind": "function",
+        "line": 6,
+        "signature": "export { normalizeHighlightLanguage } from \"@/lib/code-highlighter\"",
+        "source": "@/lib/code-highlighter",
+        "usage": "normalizeHighlightLanguage(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/code-block",
+      "importStatement": "import { CodeBlock } from \"@/components/ui/code-block\"",
+      "primaryExport": "CodeBlock",
+      "example": "<CodeBlock />"
+    },
+    "ssr": true
+  }
+}

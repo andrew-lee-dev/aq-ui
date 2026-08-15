@@ -1,0 +1,102 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-resize-observer",
+  "type": "registry:hook",
+  "title": "Use Resize Observer",
+  "description": "Open-code aq-ui React hook for Use Resize Observer.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-observer-pools",
+    "hook-target",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-resize-observer.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { subscribeResizeObserver } from \"@/hooks/_observer-pools\"\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseResizeObserverOptions {\n  box?: ResizeObserverBoxOptions\n  enabled?: boolean\n  onResize?: (entry: ResizeObserverEntry) => void\n}\n\nexport interface ResizeObserverResult {\n  entry: ResizeObserverEntry | null\n  supported: boolean\n}\n\nexport function useResizeObserver<T extends Element>(\n  target: Target<T>,\n  {\n    box = \"content-box\",\n    enabled = true,\n    onResize,\n  }: UseResizeObserverOptions = {}\n): ResizeObserverResult {\n  const [entry, setEntry] = React.useState<ResizeObserverEntry | null>(null)\n  const onResizeStable = useStableCallback(onResize)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const element = resolveTarget(target)\n    if (!element) return\n    const unsubscribe = subscribeResizeObserver(element, box, (nextEntry) => {\n      setEntry(nextEntry)\n      onResizeStable(nextEntry)\n    })\n    return unsubscribe ?? undefined\n  }, [box, enabled, onResizeStable, target])\n\n  return {\n    entry,\n    supported:\n      typeof window !== \"undefined\" && typeof ResizeObserver !== \"undefined\",\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-d94579bd52bb73278fa939a006eb471d449b9dffc3d457c1836d2b2938eed0ff",
+    "api": [
+      {
+        "name": "ResizeObserverResult",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface ResizeObserverResult",
+        "members": [
+          {
+            "name": "entry",
+            "kind": "property",
+            "type": "ResizeObserverEntry | null"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "useResizeObserver",
+        "kind": "function",
+        "line": 20,
+        "signature": "function useResizeObserver<T extends Element>(target: Target<T>, { box = \"content-box\", enabled = true, onResize, }: UseResizeObserverOptions = {}): ResizeObserverResult",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseResizeObserverOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "ResizeObserverResult",
+        "usage": "const result = useResizeObserver(/* arguments */)"
+      },
+      {
+        "name": "UseResizeObserverOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface UseResizeObserverOptions",
+        "members": [
+          {
+            "name": "box",
+            "kind": "property",
+            "optional": true,
+            "type": "ResizeObserverBoxOptions",
+            "default": "\"content-box\""
+          },
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "onResize",
+            "kind": "property",
+            "optional": true,
+            "type": "(entry: ResizeObserverEntry) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-resize-observer",
+      "importStatement": "import { useResizeObserver } from \"@/hooks/use-resize-observer\"",
+      "primaryExport": "useResizeObserver",
+      "example": "const result = useResizeObserver(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

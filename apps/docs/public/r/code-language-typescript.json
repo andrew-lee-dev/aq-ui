@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-typescript",
+  "type": "registry:lib",
+  "title": "Code Language Typescript",
+  "description": "Open-code aq-ui shared library for Code Language Typescript.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-javascript@^6.2.5"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-typescript.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"typescript\", async () => {\n  const { javascript } = await import(\"@codemirror/lang-javascript\")\n  return javascript({ typescript: true })\n})\n\nconst codeLanguageTypeScript = \"typescript\" as const\n\nexport { codeLanguageTypeScript }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-f0c2c0a258fa3649039b8ce862c744e24d3dbe0667986069a5946cdaa2fa5f9d",
+    "api": [
+      {
+        "name": "codeLanguageTypeScript",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageTypeScript = \"typescript\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-typescript",
+      "importStatement": "import { codeLanguageTypeScript } from \"@/lib/code-language-typescript\"",
+      "primaryExport": "codeLanguageTypeScript"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

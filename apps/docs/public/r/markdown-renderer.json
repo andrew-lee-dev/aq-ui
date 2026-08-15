@@ -1,0 +1,113 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "markdown-renderer",
+  "type": "registry:ui",
+  "title": "Markdown Renderer",
+  "description": "Sanitized CommonMark and GFM renderer with safe protocols, prefixed headings, and highlighted code fences.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "hast-util-sanitize@^5.0.2",
+    "react-markdown@^10.1.0",
+    "rehype-raw@^7.0.0",
+    "rehype-sanitize@^6.0.0",
+    "remark-gfm@^4.0.1",
+    "unified@^11.0.5"
+  ],
+  "registryDependencies": [
+    "code-block",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/markdown-renderer.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport type { Schema } from \"hast-util-sanitize\"\nimport rehypeRaw from \"rehype-raw\"\nimport rehypeSanitize, { defaultSchema } from \"rehype-sanitize\"\nimport ReactMarkdown, {\n  defaultUrlTransform,\n  type Components,\n  type ExtraProps,\n  type UrlTransform,\n} from \"react-markdown\"\nimport remarkGfm from \"remark-gfm\"\nimport type { PluggableList } from \"unified\"\n\nimport {\n  CodeBlock,\n  type CodeBlockLanguage,\n} from \"@/components/ui/code-block\"\nimport { cn } from \"@/lib/utils\"\n\ninterface MarkdownRendererProps extends Omit<\n  React.ComponentProps<\"div\">,\n  \"children\"\n> {\n  value: string\n  components?: Components\n  allowHtml?: boolean\n  sanitizeSchema?: Schema\n  remarkPlugins?: PluggableList\n  rehypePlugins?: PluggableList\n}\n\nfunction textContent(value: React.ReactNode): string {\n  if (typeof value === \"string\" || typeof value === \"number\") {\n    return String(value)\n  }\n  if (Array.isArray(value)) return value.map(textContent).join(\"\")\n  if (React.isValidElement<{ children?: React.ReactNode }>(value)) {\n    return textContent(value.props.children)\n  }\n  return \"\"\n}\n\nfunction slugifyHeading(value: string) {\n  const normalized = value\n    .normalize(\"NFKD\")\n    .toLowerCase()\n    .replace(/[\\u0300-\\u036f]/gu, \"\")\n    .replace(/[^\\p{Letter}\\p{Number}]+/gu, \"-\")\n    .replace(/^-+|-+$/gu, \"\")\n  return normalized || \"section\"\n}\n\nfunction headingId(\n  children: React.ReactNode,\n  node?: { position?: { start: { line: number } } | undefined }\n) {\n  const line = node?.position?.start.line\n  return `aq-md-${slugifyHeading(textContent(children))}${line ? `-${line}` : \"\"}`\n}\n\nconst safeMarkdownUrl: UrlTransform = (url, key) => {\n  const transformed = defaultUrlTransform(url)\n  if (!transformed) return \"\"\n\n  // A second explicit check protects custom sanitizer schemas from enabling\n  // executable URL schemes.\n  if (/^[a-z][a-z\\d+.-]*:/iu.test(transformed)) {\n    const protocol = transformed\n      .slice(0, transformed.indexOf(\":\"))\n      .toLowerCase()\n    const allowed =\n      key === \"src\"\n        ? [\"http\", \"https\"]\n        : [\"http\", \"https\", \"mailto\", \"irc\", \"ircs\", \"xmpp\"]\n    if (!allowed.includes(protocol)) return \"\"\n  }\n\n  return transformed\n}\n\ntype MarkdownElementProps<Tag extends keyof React.JSX.IntrinsicElements> =\n  React.ComponentPropsWithoutRef<Tag> & ExtraProps\n\nconst markdownComponents: Components = {\n  h1: ({ children, node, className, ...props }: MarkdownElementProps<\"h1\">) => (\n    <h1\n      id={headingId(children, node)}\n      className={cn(\n        \"mt-8 scroll-m-20 text-3xl font-bold tracking-tight\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n    </h1>\n  ),\n  h2: ({ children, node, className, ...props }: MarkdownElementProps<\"h2\">) => (\n    <h2\n      id={headingId(children, node)}\n      className={cn(\n        \"mt-8 scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n    </h2>\n  ),\n  h3: ({ children, node, className, ...props }: MarkdownElementProps<\"h3\">) => (\n    <h3\n      id={headingId(children, node)}\n      className={cn(\n        \"mt-6 scroll-m-20 text-xl font-semibold tracking-tight\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n    </h3>\n  ),\n  h4: ({ children, node, className, ...props }: MarkdownElementProps<\"h4\">) => (\n    <h4\n      id={headingId(children, node)}\n      className={cn(\"mt-6 scroll-m-20 text-lg font-semibold\", className)}\n      {...props}\n    >\n      {children}\n    </h4>\n  ),\n  h5: ({ children, node, className, ...props }: MarkdownElementProps<\"h5\">) => (\n    <h5\n      id={headingId(children, node)}\n      className={cn(\"mt-5 scroll-m-20 font-semibold\", className)}\n      {...props}\n    >\n      {children}\n    </h5>\n  ),\n  h6: ({ children, node, className, ...props }: MarkdownElementProps<\"h6\">) => (\n    <h6\n      id={headingId(children, node)}\n      className={cn(\"mt-5 scroll-m-20 text-sm font-semibold\", className)}\n      {...props}\n    >\n      {children}\n    </h6>\n  ),\n  p: ({ className, node, ...props }: MarkdownElementProps<\"p\">) => (\n    <p\n      data-source-line={node?.position?.start.line}\n      className={cn(\"my-4 leading-7\", className)}\n      {...props}\n    />\n  ),\n  a: ({ href = \"\", className, node, ...props }: MarkdownElementProps<\"a\">) => {\n    const external = /^(?:https?:)?\\/\\//iu.test(href)\n    return (\n      <a\n        href={href}\n        data-source-line={node?.position?.start.line}\n        className={cn(\n          \"font-medium text-primary underline underline-offset-4\",\n          className\n        )}\n        rel={external ? \"noopener noreferrer\" : undefined}\n        target={external ? \"_blank\" : undefined}\n        {...props}\n      />\n    )\n  },\n  blockquote: ({\n    className,\n    node,\n    ...props\n  }: MarkdownElementProps<\"blockquote\">) => (\n    <blockquote\n      data-source-line={node?.position?.start.line}\n      className={cn(\n        \"my-6 border-s-4 ps-4 text-muted-foreground italic\",\n        className\n      )}\n      {...props}\n    />\n  ),\n  ul: ({ className, node, ...props }: MarkdownElementProps<\"ul\">) => (\n    <ul\n      data-source-line={node?.position?.start.line}\n      className={cn(\"my-4 ms-6 list-disc space-y-2\", className)}\n      {...props}\n    />\n  ),\n  ol: ({ className, node, ...props }: MarkdownElementProps<\"ol\">) => (\n    <ol\n      data-source-line={node?.position?.start.line}\n      className={cn(\"my-4 ms-6 list-decimal space-y-2\", className)}\n      {...props}\n    />\n  ),\n  li: ({ className, node, ...props }: MarkdownElementProps<\"li\">) => (\n    <li\n      data-source-line={node?.position?.start.line}\n      className={cn(\"ps-1\", className)}\n      {...props}\n    />\n  ),\n  table: ({ className, node, ...props }: MarkdownElementProps<\"table\">) => (\n    <div className=\"my-6 w-full overflow-x-auto\">\n      <table\n        data-source-line={node?.position?.start.line}\n        className={cn(\"w-full border-collapse text-sm\", className)}\n        {...props}\n      />\n    </div>\n  ),\n  th: ({ className, node, ...props }: MarkdownElementProps<\"th\">) => (\n    <th\n      data-source-line={node?.position?.start.line}\n      className={cn(\n        \"border bg-muted/50 px-3 py-2 text-start font-semibold\",\n        className\n      )}\n      {...props}\n    />\n  ),\n  td: ({ className, node, ...props }: MarkdownElementProps<\"td\">) => (\n    <td\n      data-source-line={node?.position?.start.line}\n      className={cn(\"border px-3 py-2 align-top\", className)}\n      {...props}\n    />\n  ),\n  hr: ({ className, node, ...props }: MarkdownElementProps<\"hr\">) => (\n    <hr\n      data-source-line={node?.position?.start.line}\n      className={cn(\"my-8 border-border\", className)}\n      {...props}\n    />\n  ),\n  img: ({\n    className,\n    alt = \"\",\n    node,\n    ...props\n  }: MarkdownElementProps<\"img\">) => (\n    <img\n      alt={alt}\n      data-source-line={node?.position?.start.line}\n      loading=\"lazy\"\n      className={cn(\"my-6 h-auto max-w-full rounded-lg border\", className)}\n      {...props}\n    />\n  ),\n  code: ({ className, node, ...props }: MarkdownElementProps<\"code\">) => (\n    <code\n      data-source-line={node?.position?.start.line}\n      className={cn(\n        \"rounded bg-muted px-1.5 py-0.5 font-mono text-[0.875em]\",\n        className\n      )}\n      {...props}\n    />\n  ),\n  pre: ({ children }: MarkdownElementProps<\"pre\">) => {\n    if (\n      !React.isValidElement<{ children?: React.ReactNode; className?: string }>(\n        children\n      )\n    ) {\n      return <pre>{children}</pre>\n    }\n    const raw = textContent(children.props.children).replace(/\\n$/u, \"\")\n    const match = /language-([\\w-]+)/u.exec(children.props.className ?? \"\")\n    return (\n      <CodeBlock\n        code={raw}\n        language={(match?.[1] ?? \"plaintext\") as CodeBlockLanguage}\n        copyButton\n      />\n    )\n  },\n  input: ({ className, node, ...props }: MarkdownElementProps<\"input\">) => (\n    <input\n      {...props}\n      data-source-line={node?.position?.start.line}\n      aria-label={\n        props[\"aria-label\"] ??\n        (props.type === \"checkbox\"\n          ? props.checked\n            ? \"Completed task\"\n            : \"Incomplete task\"\n          : undefined)\n      }\n      className={cn(\"me-2 size-4 accent-primary\", className)}\n      disabled={props.type === \"checkbox\" ? true : props.disabled}\n    />\n  ),\n}\n\nfunction MarkdownRendererComponent({\n  value,\n  components,\n  allowHtml = false,\n  sanitizeSchema = defaultSchema,\n  remarkPlugins = [],\n  rehypePlugins = [],\n  className,\n  ...props\n}: MarkdownRendererProps) {\n  const safeRehypePlugins: PluggableList = [\n    ...(allowHtml ? [rehypeRaw] : []),\n    ...rehypePlugins,\n    [rehypeSanitize, sanitizeSchema],\n  ]\n\n  return (\n    <div\n      data-slot=\"markdown-renderer\"\n      className={cn(\n        \"min-w-0 text-sm text-foreground [&>:first-child]:mt-0 [&>:last-child]:mb-0\",\n        className\n      )}\n      {...props}\n    >\n      <ReactMarkdown\n        remarkPlugins={[remarkGfm, ...remarkPlugins]}\n        rehypePlugins={safeRehypePlugins}\n        skipHtml={!allowHtml}\n        urlTransform={safeMarkdownUrl}\n        remarkRehypeOptions={{ clobberPrefix: \"aq-md-\" }}\n        components={{ ...markdownComponents, ...components }}\n      >\n        {value}\n      </ReactMarkdown>\n    </div>\n  )\n}\n\nconst MarkdownRenderer = React.memo(MarkdownRendererComponent)\nMarkdownRenderer.displayName = \"MarkdownRenderer\"\n\nexport { MarkdownRenderer, markdownComponents, safeMarkdownUrl }\nexport type { MarkdownRendererProps }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-3c533cea7da9cdc3d837969d59aef2e6e3437121bd5829e437ace5b3f1e2e5d7",
+    "api": [
+      {
+        "name": "markdownComponents",
+        "kind": "const",
+        "line": 84,
+        "signature": "const markdownComponents: Components"
+      },
+      {
+        "name": "MarkdownRenderer",
+        "kind": "const",
+        "line": 338,
+        "signature": "const MarkdownRenderer = React.memo(…)",
+        "usage": "<MarkdownRenderer />"
+      },
+      {
+        "name": "MarkdownRendererProps",
+        "kind": "interface",
+        "line": 20,
+        "signature": "interface MarkdownRendererProps extends Omit< React.ComponentProps<\"div\">, \"children\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "components",
+            "kind": "property",
+            "optional": true,
+            "type": "Components"
+          },
+          {
+            "name": "allowHtml",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "sanitizeSchema",
+            "kind": "property",
+            "optional": true,
+            "type": "Schema"
+          },
+          {
+            "name": "remarkPlugins",
+            "kind": "property",
+            "optional": true,
+            "type": "PluggableList"
+          },
+          {
+            "name": "rehypePlugins",
+            "kind": "property",
+            "optional": true,
+            "type": "PluggableList"
+          }
+        ]
+      },
+      {
+        "name": "safeMarkdownUrl",
+        "kind": "function",
+        "line": 61,
+        "signature": "const safeMarkdownUrl: UrlTransform",
+        "parameters": [
+          {
+            "name": "url",
+            "kind": "parameter"
+          },
+          {
+            "name": "key",
+            "kind": "parameter"
+          }
+        ],
+        "usage": "safeMarkdownUrl(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/markdown-renderer",
+      "importStatement": "import { MarkdownRenderer } from \"@/components/ui/markdown-renderer\"",
+      "primaryExport": "MarkdownRenderer",
+      "example": "<MarkdownRenderer />"
+    },
+    "ssr": true
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "dialog",
+  "type": "registry:ui",
+  "title": "Dialog",
+  "description": "Open-code aq-ui accessible component family for Dialog.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/dialog.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Dialog as DialogPrimitive } from \"@base-ui/react/dialog\"\n\nimport { cn } from \"@/lib/utils\"\nimport { Button } from \"@/components/ui/button\"\nimport { XIcon } from \"lucide-react\"\n\nfunction Dialog({ ...props }: DialogPrimitive.Root.Props) {\n  return <DialogPrimitive.Root data-slot=\"dialog\" {...props} />\n}\n\nconst DialogTrigger = React.forwardRef<\n  HTMLButtonElement,\n  DialogPrimitive.Trigger.Props\n>(function DialogTrigger({ ...props }, ref) {\n  return (\n    <DialogPrimitive.Trigger ref={ref} data-slot=\"dialog-trigger\" {...props} />\n  )\n})\nDialogTrigger.displayName = \"DialogTrigger\"\n\nfunction DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {\n  return <DialogPrimitive.Portal data-slot=\"dialog-portal\" {...props} />\n}\n\nconst DialogClose = React.forwardRef<\n  React.ComponentRef<typeof DialogPrimitive.Close>,\n  DialogPrimitive.Close.Props\n>(function DialogClose({ ...props }, ref) {\n  return <DialogPrimitive.Close ref={ref} data-slot=\"dialog-close\" {...props} />\n})\nDialogClose.displayName = \"DialogClose\"\n\nconst DialogOverlay = React.forwardRef<\n  React.ComponentRef<typeof DialogPrimitive.Backdrop>,\n  DialogPrimitive.Backdrop.Props\n>(function DialogOverlay({ className, ...props }, ref) {\n  return (\n    <DialogPrimitive.Backdrop\n      ref={ref}\n      data-slot=\"dialog-overlay\"\n      className={cn(\n        \"fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nDialogOverlay.displayName = \"DialogOverlay\"\n\nconst DialogContent = React.forwardRef<\n  React.ComponentRef<typeof DialogPrimitive.Popup>,\n  DialogPrimitive.Popup.Props & {\n    showCloseButton?: boolean\n  }\n>(function DialogContent(\n  { className, children, showCloseButton = true, ...props },\n  ref\n) {\n  return (\n    <DialogPortal>\n      <DialogOverlay />\n      <DialogPrimitive.Popup\n        ref={ref}\n        data-slot=\"dialog-content\"\n        className={cn(\n          \"fixed start-1/2 top-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm rtl:translate-x-1/2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95\",\n          className\n        )}\n        {...props}\n      >\n        {children}\n        {showCloseButton && (\n          <DialogPrimitive.Close\n            data-slot=\"dialog-close\"\n            render={\n              <Button\n                variant=\"ghost\"\n                className=\"absolute end-2 top-2\"\n                size=\"icon-sm\"\n              />\n            }\n          >\n            <XIcon />\n            <span className=\"sr-only\">Close</span>\n          </DialogPrimitive.Close>\n        )}\n      </DialogPrimitive.Popup>\n    </DialogPortal>\n  )\n})\nDialogContent.displayName = \"DialogContent\"\n\nconst DialogHeader = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function DialogHeader({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"dialog-header\"\n      className={cn(\"flex flex-col gap-2\", className)}\n      {...props}\n    />\n  )\n})\nDialogHeader.displayName = \"DialogHeader\"\n\nconst DialogFooter = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & {\n    showCloseButton?: boolean\n  }\n>(function DialogFooter(\n  { className, showCloseButton = false, children, ...props },\n  ref\n) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"dialog-footer\"\n      className={cn(\n        \"-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n      {showCloseButton && (\n        <DialogPrimitive.Close render={<Button variant=\"outline\" />}>\n          Close\n        </DialogPrimitive.Close>\n      )}\n    </div>\n  )\n})\nDialogFooter.displayName = \"DialogFooter\"\n\nconst DialogTitle = React.forwardRef<\n  React.ComponentRef<typeof DialogPrimitive.Title>,\n  DialogPrimitive.Title.Props\n>(function DialogTitle({ className, ...props }, ref) {\n  return (\n    <DialogPrimitive.Title\n      ref={ref}\n      data-slot=\"dialog-title\"\n      className={cn(\n        \"font-heading text-base leading-none font-medium\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nDialogTitle.displayName = \"DialogTitle\"\n\nconst DialogDescription = React.forwardRef<\n  React.ComponentRef<typeof DialogPrimitive.Description>,\n  DialogPrimitive.Description.Props\n>(function DialogDescription({ className, ...props }, ref) {\n  return (\n    <DialogPrimitive.Description\n      ref={ref}\n      data-slot=\"dialog-description\"\n      className={cn(\n        \"text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nDialogDescription.displayName = \"DialogDescription\"\n\nexport {\n  Dialog,\n  DialogClose,\n  DialogContent,\n  DialogDescription,\n  DialogFooter,\n  DialogHeader,\n  DialogOverlay,\n  DialogPortal,\n  DialogTitle,\n  DialogTrigger,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-0a175f4f830f194962006b7d806e907c679102315380694e23dadd2133140268",
+    "api": [
+      {
+        "name": "Dialog",
+        "kind": "function",
+        "line": 10,
+        "signature": "function Dialog({ ...props }: DialogPrimitive.Root.Props)",
+        "propsType": "DialogPrimitive.Root.Props",
+        "usage": "<Dialog />"
+      },
+      {
+        "name": "DialogClose",
+        "kind": "const",
+        "line": 28,
+        "signature": "const DialogClose = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Close>, DialogPrimitive.Close.Props>(…)",
+        "propsType": "DialogPrimitive.Close.Props",
+        "usage": "<DialogClose />"
+      },
+      {
+        "name": "DialogContent",
+        "kind": "const",
+        "line": 54,
+        "signature": "const DialogContent = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Popup>, DialogPrimitive.Popup.Props & { showCloseButton?: boolean }>(…)",
+        "propsType": "DialogPrimitive.Popup.Props & { showCloseButton?: boolean }",
+        "props": [
+          {
+            "name": "showCloseButton",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ],
+        "usage": "<DialogContent />"
+      },
+      {
+        "name": "DialogDescription",
+        "kind": "const",
+        "line": 160,
+        "signature": "const DialogDescription = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Description>, DialogPrimitive.Description.Props>(…)",
+        "propsType": "DialogPrimitive.Description.Props",
+        "usage": "<DialogDescription />"
+      },
+      {
+        "name": "DialogFooter",
+        "kind": "const",
+        "line": 112,
+        "signature": "const DialogFooter = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { showCloseButton?: boolean }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { showCloseButton?: boolean }",
+        "props": [
+          {
+            "name": "showCloseButton",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "usage": "<DialogFooter />"
+      },
+      {
+        "name": "DialogHeader",
+        "kind": "const",
+        "line": 97,
+        "signature": "const DialogHeader = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<DialogHeader />"
+      },
+      {
+        "name": "DialogOverlay",
+        "kind": "const",
+        "line": 36,
+        "signature": "const DialogOverlay = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Backdrop>, DialogPrimitive.Backdrop.Props>(…)",
+        "propsType": "DialogPrimitive.Backdrop.Props",
+        "usage": "<DialogOverlay />"
+      },
+      {
+        "name": "DialogPortal",
+        "kind": "function",
+        "line": 24,
+        "signature": "function DialogPortal({ ...props }: DialogPrimitive.Portal.Props)",
+        "propsType": "DialogPrimitive.Portal.Props",
+        "usage": "<DialogPortal />"
+      },
+      {
+        "name": "DialogTitle",
+        "kind": "const",
+        "line": 142,
+        "signature": "const DialogTitle = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Title>, DialogPrimitive.Title.Props>(…)",
+        "propsType": "DialogPrimitive.Title.Props",
+        "usage": "<DialogTitle />"
+      },
+      {
+        "name": "DialogTrigger",
+        "kind": "const",
+        "line": 14,
+        "signature": "const DialogTrigger = React.forwardRef<HTMLButtonElement, DialogPrimitive.Trigger.Props>(…)",
+        "propsType": "DialogPrimitive.Trigger.Props",
+        "usage": "<DialogTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/dialog",
+      "importStatement": "import { Dialog } from \"@/components/ui/dialog\"",
+      "primaryExport": "Dialog",
+      "example": "<Dialog />"
+    },
+    "ssr": false
+  }
+}

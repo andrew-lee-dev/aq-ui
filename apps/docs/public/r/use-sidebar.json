@@ -1,0 +1,186 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-sidebar",
+  "type": "registry:hook",
+  "title": "Use Sidebar",
+  "description": "Open-code aq-ui React hook for Use Sidebar.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-breakpoint",
+    "use-controllable-state",
+    "use-hotkeys"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-sidebar.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport {\n  useControllableState,\n  type ControllableStateUpdater,\n} from \"@/hooks/use-controllable-state\"\nimport { useHotkeys } from \"@/hooks/use-hotkeys\"\nimport { useBreakpoint } from \"@/hooks/use-breakpoint\"\n\nexport type SidebarState = \"expanded\" | \"collapsed\"\n\nexport interface UseSidebarOptions {\n  open?: boolean\n  defaultOpen?: boolean\n  onOpenChange?: (open: boolean) => void\n  openMobile?: boolean\n  defaultOpenMobile?: boolean\n  onOpenMobileChange?: (open: boolean) => void\n  mobileBreakpoint?: number\n  shortcut?: string | false\n  persist?: boolean\n  cookieName?: string\n  cookieMaxAge?: number\n}\n\nexport interface SidebarControls {\n  state: SidebarState\n  open: boolean\n  setOpen: (open: ControllableStateUpdater<boolean>) => void\n  openMobile: boolean\n  setOpenMobile: (open: ControllableStateUpdater<boolean>) => void\n  isMobile: boolean\n  toggleSidebar: () => void\n  closeSidebar: () => void\n}\n\nexport function useSidebar({\n  open,\n  defaultOpen = true,\n  onOpenChange,\n  openMobile,\n  defaultOpenMobile = false,\n  onOpenMobileChange,\n  mobileBreakpoint = 768,\n  shortcut = \"mod+b\",\n  persist = true,\n  cookieName = \"sidebar_state\",\n  cookieMaxAge = 60 * 60 * 24 * 7,\n}: UseSidebarOptions = {}): SidebarControls {\n  const isMobile = useBreakpoint(mobileBreakpoint, { direction: \"down\" })\n  const [desktopOpen, setDesktopOpen] = useControllableState({\n    value: open,\n    defaultValue: defaultOpen,\n    onChange: onOpenChange,\n  })\n  const [mobileOpen, setMobileOpen] = useControllableState({\n    value: openMobile,\n    defaultValue: defaultOpenMobile,\n    onChange: onOpenMobileChange,\n  })\n\n  const setOpen = React.useCallback(\n    (next: ControllableStateUpdater<boolean>) => {\n      setDesktopOpen((current) => {\n        const resolved = typeof next === \"function\" ? next(current) : next\n        if (persist && typeof document !== \"undefined\") {\n          document.cookie =\n            encodeURIComponent(cookieName) +\n            \"=\" +\n            String(resolved) +\n            \"; path=/; max-age=\" +\n            Math.max(0, Math.floor(cookieMaxAge)) +\n            \"; SameSite=Lax\"\n        }\n        return resolved\n      })\n    },\n    [cookieMaxAge, cookieName, persist, setDesktopOpen]\n  )\n\n  const toggleSidebar = React.useCallback(() => {\n    if (isMobile) {\n      setMobileOpen((current) => !current)\n    } else {\n      setOpen((current) => !current)\n    }\n  }, [isMobile, setMobileOpen, setOpen])\n\n  const closeSidebar = React.useCallback(() => {\n    if (isMobile) setMobileOpen(false)\n    else setOpen(false)\n  }, [isMobile, setMobileOpen, setOpen])\n\n  useHotkeys(shortcut || \"\", toggleSidebar, {\n    enabled: Boolean(shortcut),\n    preventDefault: true,\n  })\n\n  return {\n    state: desktopOpen ? \"expanded\" : \"collapsed\",\n    open: desktopOpen,\n    setOpen,\n    openMobile: mobileOpen,\n    setOpenMobile: setMobileOpen,\n    isMobile,\n    toggleSidebar,\n    closeSidebar,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-41bd3146009a1a78d7abd390dd2df264968847a703865338c801551398d70e96",
+    "api": [
+      {
+        "name": "SidebarControls",
+        "kind": "interface",
+        "line": 28,
+        "signature": "interface SidebarControls",
+        "members": [
+          {
+            "name": "state",
+            "kind": "property",
+            "type": "SidebarState"
+          },
+          {
+            "name": "open",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "setOpen",
+            "kind": "property",
+            "type": "(open: ControllableStateUpdater<boolean>) => void"
+          },
+          {
+            "name": "openMobile",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "setOpenMobile",
+            "kind": "property",
+            "type": "(open: ControllableStateUpdater<boolean>) => void"
+          },
+          {
+            "name": "isMobile",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "toggleSidebar",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "closeSidebar",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "SidebarState",
+        "kind": "type",
+        "line": 12,
+        "signature": "type SidebarState = \"expanded\" | \"collapsed\""
+      },
+      {
+        "name": "useSidebar",
+        "kind": "function",
+        "line": 39,
+        "signature": "function useSidebar({ open, defaultOpen = true, onOpenChange, openMobile, defaultOpenMobile = false, onOpenMobileChange, mobileBreakpoint = 768, shortcut = \"mod+b\", persist = true, cookieName = \"sidebar_state\", cookieMaxAge = 60 * 60 * 24 * 7, }: UseSidebarOp…): SidebarControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseSidebarOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "SidebarControls",
+        "usage": "const result = useSidebar(/* arguments */)"
+      },
+      {
+        "name": "UseSidebarOptions",
+        "kind": "interface",
+        "line": 14,
+        "signature": "interface UseSidebarOptions",
+        "members": [
+          {
+            "name": "open",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "defaultOpen",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "onOpenChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(open: boolean) => void"
+          },
+          {
+            "name": "openMobile",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "defaultOpenMobile",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onOpenMobileChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(open: boolean) => void"
+          },
+          {
+            "name": "mobileBreakpoint",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "768"
+          },
+          {
+            "name": "shortcut",
+            "kind": "property",
+            "optional": true,
+            "type": "string | false",
+            "default": "\"mod+b\""
+          },
+          {
+            "name": "persist",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "cookieName",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"sidebar_state\""
+          },
+          {
+            "name": "cookieMaxAge",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "60 * 60 * 24 * 7"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-sidebar",
+      "importStatement": "import { useSidebar } from \"@/hooks/use-sidebar\"",
+      "primaryExport": "useSidebar",
+      "example": "const result = useSidebar(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

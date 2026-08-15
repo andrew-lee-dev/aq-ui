@@ -1,0 +1,73 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tabs",
+  "type": "registry:ui",
+  "title": "Tabs",
+  "description": "Open-code aq-ui accessible component family for Tabs.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/tabs.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Tabs as TabsPrimitive } from \"@base-ui/react/tabs\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Tabs = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.Root>,\n  TabsPrimitive.Root.Props\n>(function Tabs({ className, orientation = \"horizontal\", ...props }, ref) {\n  return (\n    <TabsPrimitive.Root\n      ref={ref}\n      data-slot=\"tabs\"\n      data-orientation={orientation}\n      className={cn(\n        \"group/tabs flex gap-2 data-horizontal:flex-col\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTabs.displayName = \"Tabs\"\n\nconst tabsListVariants = cva(\n  \"group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-horizontal/tabs:h-8 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-muted\",\n        line: \"gap-1 bg-transparent\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  }\n)\n\nconst TabsList = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.List>,\n  TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>\n>(function TabsList({ className, variant = \"default\", ...props }, ref) {\n  return (\n    <TabsPrimitive.List\n      ref={ref}\n      data-slot=\"tabs-list\"\n      data-variant={variant}\n      className={cn(tabsListVariants({ variant }), className)}\n      {...props}\n    />\n  )\n})\nTabsList.displayName = \"TabsList\"\n\nconst TabsTrigger = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.Tab>,\n  TabsPrimitive.Tab.Props\n>(function TabsTrigger({ className, ...props }, ref) {\n  return (\n    <TabsPrimitive.Tab\n      ref={ref}\n      data-slot=\"tabs-trigger\"\n      className={cn(\n        \"relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pe-1 has-data-[icon=inline-start]:ps-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground group-data-[variant=default]/tabs-list:data-active:shadow-sm group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4\",\n        \"group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent\",\n        \"data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground\",\n        \"after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-end-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTabsTrigger.displayName = \"TabsTrigger\"\n\nconst TabsContent = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.Panel>,\n  TabsPrimitive.Panel.Props\n>(function TabsContent({ className, ...props }, ref) {\n  return (\n    <TabsPrimitive.Panel\n      ref={ref}\n      data-slot=\"tabs-content\"\n      className={cn(\"flex-1 text-sm outline-none\", className)}\n      {...props}\n    />\n  )\n})\nTabsContent.displayName = \"TabsContent\"\n\nexport { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-72cb02c1aff83a4afa23165099735cc3c9a715c8804e770588915bcaf30c6294",
+    "api": [
+      {
+        "name": "Tabs",
+        "kind": "const",
+        "line": 10,
+        "signature": "const Tabs = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Root>, TabsPrimitive.Root.Props>(…)",
+        "propsType": "TabsPrimitive.Root.Props",
+        "usage": "<Tabs />"
+      },
+      {
+        "name": "TabsContent",
+        "kind": "const",
+        "line": 81,
+        "signature": "const TabsContent = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Panel>, TabsPrimitive.Panel.Props>(…)",
+        "propsType": "TabsPrimitive.Panel.Props",
+        "usage": "<TabsContent />"
+      },
+      {
+        "name": "TabsList",
+        "kind": "const",
+        "line": 44,
+        "signature": "const TabsList = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.List>, TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>>(…)",
+        "propsType": "TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>",
+        "usage": "<TabsList />"
+      },
+      {
+        "name": "tabsListVariants",
+        "kind": "const",
+        "line": 29,
+        "signature": "const tabsListVariants = cva(…)"
+      },
+      {
+        "name": "TabsTrigger",
+        "kind": "const",
+        "line": 60,
+        "signature": "const TabsTrigger = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Tab>, TabsPrimitive.Tab.Props>(…)",
+        "propsType": "TabsPrimitive.Tab.Props",
+        "usage": "<TabsTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/tabs",
+      "importStatement": "import { Tabs } from \"@/components/ui/tabs\"",
+      "primaryExport": "Tabs",
+      "example": "<Tabs />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "aq-ui-workspace",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "storybook:build": "pnpm --filter @aq-ui/docs build-storybook",
+    "registry:build": "pnpm --filter @aq-ui/registry registry:build",
+    "registry:check": "pnpm --filter @aq-ui/registry registry:check",
+    "schema:check": "node scripts/validate-shadcn-schema.mjs",
+    "audit:prod": "pnpm audit --prod",
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm --filter aq-ui generate:theme && pnpm registry:build",
+    "pack:check": "pnpm --filter aq-ui pack:check",
+    "release:check": "node scripts/check-release.mjs && pnpm audit:prod && pnpm pack:check",
+    "release": "pnpm release:check && pnpm build && changeset publish --tag alpha",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm registry:check && pnpm schema:check && pnpm release:check && pnpm test && pnpm build && pnpm --filter @aq-ui/docs performance:check && pnpm storybook:build"
+  },
+  "devDependencies": {
+    "@aq-ui/eslint-config": "workspace:*",
+    "@aq-ui/typescript-config": "workspace:*",
+    "@changesets/cli": "^3.0.0",
+    "ajv": "^8.20.0",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "turbo": "2.9.18",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "file-upload",
+  "type": "registry:ui",
+  "title": "File Upload",
+  "description": "Keyboard-accessible drop zone with validation, progress, retry, cancellation, and transport-neutral uploads.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "progress",
+    "upload",
+    "use-file-upload",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/file-upload.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport {\n  FileIcon,\n  LoaderCircleIcon,\n  RotateCcwIcon,\n  UploadCloudIcon,\n  XIcon,\n} from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { Progress } from \"@/components/ui/progress\"\nimport {\n  useFileUpload,\n  type FileUploadEntry as ControllerFileUploadEntry,\n  type FileUploadRejection,\n  type FileUploadStatus,\n} from \"@/hooks/use-file-upload\"\nimport { cn } from \"@/lib/utils\"\nimport type {\n  EditorAssetUploadAdapter,\n  UploadedAsset,\n} from \"@/lib/upload\"\n\ntype UploadStatus = FileUploadStatus\ntype FileUploadEntry = ControllerFileUploadEntry\n\ninterface FileUploadProps extends Omit<\n  React.ComponentProps<\"div\">,\n  \"defaultValue\" | \"onChange\"\n> {\n  value?: File[]\n  defaultValue?: File[]\n  onValueChange?: (files: File[]) => void\n  onUploadComplete?: (assets: UploadedAsset[]) => void\n  uploadAdapter?: EditorAssetUploadAdapter\n  autoUpload?: boolean\n  accept?: string\n  multiple?: boolean\n  maxFiles?: number\n  maxSize?: number\n  disabled?: boolean\n  onReject?: (rejections: FileUploadRejection[]) => void\n  name?: string\n  label?: React.ReactNode\n  description?: React.ReactNode\n}\n\nconst FileUpload = React.forwardRef<React.ComponentRef<\"div\">, FileUploadProps>(\n  function FileUpload(\n    {\n      value,\n      defaultValue = [],\n      onValueChange,\n      onUploadComplete,\n      uploadAdapter,\n      autoUpload = true,\n      accept,\n      multiple = true,\n      maxFiles = Number.POSITIVE_INFINITY,\n      maxSize = Number.POSITIVE_INFINITY,\n      disabled,\n      onReject,\n      name,\n      label = \"Drop files here or choose files\",\n      description,\n      className,\n      ...props\n    },\n    ref\n  ) {\n    const {\n      inputRef,\n      inputProps,\n      rootProps,\n      entries,\n      isDragging,\n      open,\n      remove,\n      retry,\n    } = useFileUpload({\n      value,\n      defaultValue,\n      onValueChange,\n      onUploadComplete,\n      uploadAdapter,\n      autoUpload,\n      accept,\n      multiple,\n      maxFiles,\n      maxSize,\n      disabled,\n      onReject,\n    })\n\n    return (\n      <div\n        ref={ref}\n        data-slot=\"file-upload\"\n        className={cn(\"flex flex-col gap-3\", className)}\n        {...props}\n      >\n        <input\n          ref={inputRef}\n          data-slot=\"file-upload-input\"\n          type=\"file\"\n          name={name}\n          {...inputProps}\n          hidden\n          tabIndex={-1}\n        />\n        <button\n          type=\"button\"\n          data-slot=\"file-upload-dropzone\"\n          data-dragging={isDragging || undefined}\n          disabled={disabled}\n          className=\"flex min-h-36 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/30 p-6 text-center transition-colors outline-none hover:bg-muted/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[dragging=true]:border-primary data-[dragging=true]:bg-primary/5\"\n          onClick={open}\n          {...rootProps}\n        >\n          <UploadCloudIcon className=\"size-8 text-muted-foreground\" />\n          <span className=\"font-medium\">{label}</span>\n          {description ? (\n            <span className=\"text-sm text-muted-foreground\">{description}</span>\n          ) : null}\n        </button>\n        {entries.length ? (\n          <ul\n            data-slot=\"file-upload-list\"\n            className=\"flex flex-col gap-2\"\n            aria-live=\"polite\"\n          >\n            {entries.map((entry) => (\n              <li\n                key={entry.id}\n                className=\"flex items-center gap-3 rounded-lg border p-3\"\n              >\n                <FileIcon className=\"size-5 shrink-0 text-muted-foreground\" />\n                <div className=\"min-w-0 flex-1\">\n                  <p className=\"truncate text-sm font-medium\">\n                    {entry.file.name}\n                  </p>\n                  <p className=\"text-xs text-muted-foreground\">\n                    {formatBytes(entry.file.size)}\n                    {entry.error ? ` · ${entry.error}` : \"\"}\n                  </p>\n                  {entry.status === \"uploading\" ? (\n                    <Progress value={entry.progress} className=\"mt-2 h-1.5\" />\n                  ) : null}\n                </div>\n                {entry.status === \"uploading\" ? (\n                  <LoaderCircleIcon\n                    className=\"size-4 animate-spin\"\n                    aria-label=\"Uploading\"\n                  />\n                ) : null}\n                {entry.status === \"error\" && uploadAdapter ? (\n                  <Button\n                    type=\"button\"\n                    size=\"icon-sm\"\n                    variant=\"ghost\"\n                    onClick={() => void retry(entry.id)}\n                    aria-label={`Retry ${entry.file.name}`}\n                  >\n                    <RotateCcwIcon />\n                  </Button>\n                ) : null}\n                <Button\n                  type=\"button\"\n                  size=\"icon-sm\"\n                  variant=\"ghost\"\n                  onClick={() => remove(entry.id)}\n                  aria-label={`Remove ${entry.file.name}`}\n                >\n                  <XIcon />\n                </Button>\n              </li>\n            ))}\n          </ul>\n        ) : null}\n      </div>\n    )\n  }\n)\nFileUpload.displayName = \"FileUpload\"\n\nfunction formatBytes(bytes: number) {\n  if (!bytes) return \"0 B\"\n  const units = [\"B\", \"KB\", \"MB\", \"GB\"]\n  const index = Math.min(\n    Math.floor(Math.log(bytes) / Math.log(1024)),\n    units.length - 1\n  )\n  return `${(bytes / 1024 ** index).toFixed(index ? 1 : 0)} ${units[index]}`\n}\n\nexport {\n  FileUpload,\n  type FileUploadEntry,\n  type FileUploadProps,\n  type UploadStatus,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-541565df5e50707cecb8d64ad54e81bea16b6ffefe6a4dff49915f2246f3d2a5",
+    "api": [
+      {
+        "name": "FileUpload",
+        "kind": "const",
+        "line": 50,
+        "signature": "const FileUpload = React.forwardRef<React.ComponentRef<\"div\">, FileUploadProps>(…)",
+        "propsType": "FileUploadProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "File[]"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "File[]",
+            "default": "[]"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(files: File[]) => void"
+          },
+          {
+            "name": "onUploadComplete",
+            "kind": "property",
+            "optional": true,
+            "type": "(assets: UploadedAsset[]) => void"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "autoUpload",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "accept",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "maxFiles",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "maxSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "onReject",
+            "kind": "property",
+            "optional": true,
+            "type": "(rejections: FileUploadRejection[]) => void"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode",
+            "default": "\"Drop files here or choose files\""
+          },
+          {
+            "name": "description",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode"
+          }
+        ],
+        "usage": "<FileUpload />"
+      },
+      {
+        "name": "FileUploadEntry",
+        "kind": "type",
+        "line": 27,
+        "signature": "type FileUploadEntry = ControllerFileUploadEntry"
+      },
+      {
+        "name": "FileUploadProps",
+        "kind": "interface",
+        "line": 29,
+        "signature": "interface FileUploadProps extends Omit< React.ComponentProps<\"div\">, \"defaultValue\" | \"onChange\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "File[]"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "File[]",
+            "default": "[]"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(files: File[]) => void"
+          },
+          {
+            "name": "onUploadComplete",
+            "kind": "property",
+            "optional": true,
+            "type": "(assets: UploadedAsset[]) => void"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "autoUpload",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "accept",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "maxFiles",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "maxSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "onReject",
+            "kind": "property",
+            "optional": true,
+            "type": "(rejections: FileUploadRejection[]) => void"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode",
+            "default": "\"Drop files here or choose files\""
+          },
+          {
+            "name": "description",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode"
+          }
+        ]
+      },
+      {
+        "name": "UploadStatus",
+        "kind": "type",
+        "line": 26,
+        "signature": "type UploadStatus = FileUploadStatus"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/file-upload",
+      "importStatement": "import { FileUpload } from \"@/components/ui/file-upload\"",
+      "primaryExport": "FileUpload",
+      "example": "<FileUpload />"
+    },
+    "ssr": false
+  }
+}

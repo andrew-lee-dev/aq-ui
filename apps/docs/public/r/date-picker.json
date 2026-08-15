@@ -1,0 +1,204 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "date-picker",
+  "type": "registry:ui",
+  "title": "Date Picker",
+  "description": "Open-code aq-ui accessible component family for Date Picker.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "date-fns@^4.4.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "calendar",
+    "popover",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/date-picker.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { format } from \"date-fns\"\nimport { CalendarIcon } from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { Calendar } from \"@/components/ui/calendar\"\nimport {\n  Popover,\n  PopoverContent,\n  PopoverTrigger,\n} from \"@/components/ui/popover\"\nimport { cn } from \"@/lib/utils\"\n\ninterface DatePickerProps extends Omit<\n  React.ComponentPropsWithoutRef<\"div\">,\n  \"children\" | \"defaultValue\" | \"onChange\"\n> {\n  value?: Date\n  defaultValue?: Date\n  onValueChange?: (date: Date | undefined) => void\n  placeholder?: string\n  disabled?: boolean\n  fromDate?: Date\n  toDate?: Date\n  locale?: React.ComponentProps<typeof Calendar>[\"locale\"]\n  formatDate?: (date: Date) => string\n  className?: string\n  calendarClassName?: string\n  name?: string\n}\n\nconst DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(\n  function DatePicker(\n    {\n      value,\n      defaultValue,\n      onValueChange,\n      placeholder = \"Pick a date\",\n      disabled,\n      fromDate,\n      toDate,\n      locale,\n      formatDate = (date) => format(date, \"PPP\"),\n      className,\n      calendarClassName,\n      name,\n      ...props\n    },\n    ref\n  ) {\n    const [internalValue, setInternalValue] = React.useState<Date | undefined>(\n      defaultValue\n    )\n    const selected = value !== undefined ? value : internalValue\n\n    const select = React.useCallback(\n      (date: Date | undefined) => {\n        if (value === undefined) setInternalValue(date)\n        onValueChange?.(date)\n      },\n      [onValueChange, value]\n    )\n\n    return (\n      <div\n        ref={ref}\n        data-slot=\"date-picker\"\n        className={cn(\"inline-flex\", className)}\n        {...props}\n      >\n        {name ? (\n          <input\n            type=\"hidden\"\n            name={name}\n            value={selected?.toISOString() ?? \"\"}\n          />\n        ) : null}\n        <Popover>\n          <PopoverTrigger\n            disabled={disabled}\n            render={\n              <Button\n                variant=\"outline\"\n                className={cn(\n                  \"w-64 justify-start text-start font-normal\",\n                  !selected && \"text-muted-foreground\"\n                )}\n              />\n            }\n          >\n            <CalendarIcon data-icon=\"inline-start\" />\n            {selected ? formatDate(selected) : placeholder}\n          </PopoverTrigger>\n          <PopoverContent className=\"w-auto p-0\" align=\"start\">\n            <Calendar\n              mode=\"single\"\n              selected={selected}\n              onSelect={select}\n              startMonth={fromDate}\n              endMonth={toDate}\n              disabled={(date) =>\n                (fromDate ? date < fromDate : false) ||\n                (toDate ? date > toDate : false)\n              }\n              locale={locale}\n              className={calendarClassName}\n              autoFocus\n            />\n          </PopoverContent>\n        </Popover>\n      </div>\n    )\n  }\n)\nDatePicker.displayName = \"DatePicker\"\n\nexport { DatePicker, type DatePickerProps }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-8b0838c14c3456d141a297c7358bb90f7dfc1fb2088ddaaa4965adf751c24fe1",
+    "api": [
+      {
+        "name": "DatePicker",
+        "kind": "const",
+        "line": 34,
+        "signature": "const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(…)",
+        "propsType": "DatePickerProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(date: Date | undefined) => void"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Pick a date\""
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "fromDate",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "toDate",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "locale",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ComponentProps<typeof Calendar>[\"locale\"]"
+          },
+          {
+            "name": "formatDate",
+            "kind": "property",
+            "optional": true,
+            "type": "(date: Date) => string",
+            "default": "(date) => format(date, \"PPP\")"
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "calendarClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ],
+        "usage": "<DatePicker />"
+      },
+      {
+        "name": "DatePickerProps",
+        "kind": "interface",
+        "line": 16,
+        "signature": "interface DatePickerProps extends Omit< React.ComponentPropsWithoutRef<\"div\">, \"children\" | \"defaultValue\" | \"onChange\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(date: Date | undefined) => void"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Pick a date\""
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "fromDate",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "toDate",
+            "kind": "property",
+            "optional": true,
+            "type": "Date"
+          },
+          {
+            "name": "locale",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ComponentProps<typeof Calendar>[\"locale\"]"
+          },
+          {
+            "name": "formatDate",
+            "kind": "property",
+            "optional": true,
+            "type": "(date: Date) => string",
+            "default": "(date) => format(date, \"PPP\")"
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "calendarClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/date-picker",
+      "importStatement": "import { DatePicker } from \"@/components/ui/date-picker\"",
+      "primaryExport": "DatePicker",
+      "example": "<DatePicker />"
+    },
+    "ssr": false
+  }
+}

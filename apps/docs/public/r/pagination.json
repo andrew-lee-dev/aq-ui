@@ -1,0 +1,145 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "pagination",
+  "type": "registry:ui",
+  "title": "Pagination",
+  "description": "Open-code aq-ui accessible component family for Pagination.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/pagination.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\nimport {\n  buttonVariants,\n  type ButtonProps,\n} from \"@/components/ui/button\"\nimport {\n  ChevronLeftIcon,\n  ChevronRightIcon,\n  MoreHorizontalIcon,\n} from \"lucide-react\"\n\nconst Pagination = React.forwardRef<\n  React.ComponentRef<\"nav\">,\n  React.ComponentProps<\"nav\">\n>(function Pagination({ className, ...props }, ref) {\n  return (\n    <nav\n      ref={ref}\n      role=\"navigation\"\n      aria-label=\"pagination\"\n      className={cn(\"mx-auto flex w-full justify-center\", className)}\n      {...props}\n      data-slot=\"pagination\"\n    />\n  )\n})\nPagination.displayName = \"Pagination\"\n\nconst PaginationContent = React.forwardRef<\n  React.ComponentRef<\"ul\">,\n  React.ComponentProps<\"ul\">\n>(function PaginationContent({ className, ...props }, ref) {\n  return (\n    <ul\n      ref={ref}\n      className={cn(\"flex items-center gap-0.5\", className)}\n      {...props}\n      data-slot=\"pagination-content\"\n    />\n  )\n})\nPaginationContent.displayName = \"PaginationContent\"\n\nconst PaginationItem = React.forwardRef<\n  React.ComponentRef<\"li\">,\n  React.ComponentProps<\"li\">\n>(function PaginationItem({ ...props }, ref) {\n  return <li ref={ref} {...props} data-slot=\"pagination-item\" />\n})\nPaginationItem.displayName = \"PaginationItem\"\n\ntype PaginationLinkProps = {\n  disabled?: boolean\n  isActive?: boolean\n} & Pick<ButtonProps, \"size\"> &\n  React.ComponentProps<\"a\">\n\nconst PaginationLink = React.forwardRef<\n  React.ComponentRef<\"a\">,\n  PaginationLinkProps\n>(function PaginationLink(\n  {\n    \"aria-disabled\": ariaDisabled,\n    className,\n    disabled = false,\n    isActive,\n    onClick,\n    onKeyDown,\n    size: sizeProp,\n    tabIndex,\n    ...props\n  },\n  ref\n) {\n  const variant = isActive ? \"outline\" : \"ghost\"\n  const size = sizeProp ?? \"icon\"\n  const isDisabled =\n    disabled || ariaDisabled === true || ariaDisabled === \"true\"\n\n  return (\n    <a\n      {...props}\n      ref={ref}\n      aria-current={isActive ? \"page\" : props[\"aria-current\"]}\n      aria-disabled={isDisabled ? true : ariaDisabled}\n      data-slot=\"pagination-link\"\n      data-active={isActive || undefined}\n      data-disabled={isDisabled || undefined}\n      data-variant={variant}\n      data-size={size}\n      tabIndex={isDisabled ? -1 : tabIndex}\n      className={cn(buttonVariants({ variant, size }), className)}\n      onClick={(event) => {\n        if (isDisabled) {\n          event.preventDefault()\n          event.stopPropagation()\n          return\n        }\n        onClick?.(event)\n      }}\n      onKeyDown={(event) => {\n        if (isDisabled && (event.key === \"Enter\" || event.key === \" \")) {\n          event.preventDefault()\n          event.stopPropagation()\n          return\n        }\n        onKeyDown?.(event)\n      }}\n    />\n  )\n})\nPaginationLink.displayName = \"PaginationLink\"\n\nconst PaginationPrevious = React.forwardRef<\n  React.ComponentRef<typeof PaginationLink>,\n  React.ComponentProps<typeof PaginationLink> & { text?: string }\n>(function PaginationPrevious({ className, text = \"Previous\", ...props }, ref) {\n  return (\n    <PaginationLink\n      ref={ref}\n      aria-label=\"Go to previous page\"\n      size=\"default\"\n      className={cn(\"ps-1.5!\", className)}\n      {...props}\n    >\n      <ChevronLeftIcon data-icon=\"inline-start\" className=\"rtl:rotate-180\" />\n      <span className=\"hidden sm:block\">{text}</span>\n    </PaginationLink>\n  )\n})\nPaginationPrevious.displayName = \"PaginationPrevious\"\n\nconst PaginationNext = React.forwardRef<\n  React.ComponentRef<typeof PaginationLink>,\n  React.ComponentProps<typeof PaginationLink> & { text?: string }\n>(function PaginationNext({ className, text = \"Next\", ...props }, ref) {\n  return (\n    <PaginationLink\n      ref={ref}\n      aria-label=\"Go to next page\"\n      size=\"default\"\n      className={cn(\"pe-1.5!\", className)}\n      {...props}\n    >\n      <span className=\"hidden sm:block\">{text}</span>\n      <ChevronRightIcon data-icon=\"inline-end\" className=\"rtl:rotate-180\" />\n    </PaginationLink>\n  )\n})\nPaginationNext.displayName = \"PaginationNext\"\n\nconst PaginationEllipsis = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function PaginationEllipsis({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      aria-hidden\n      className={cn(\n        \"flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4\",\n        className\n      )}\n      {...props}\n      data-slot=\"pagination-ellipsis\"\n    >\n      <MoreHorizontalIcon />\n      <span className=\"sr-only\">More pages</span>\n    </span>\n  )\n})\nPaginationEllipsis.displayName = \"PaginationEllipsis\"\n\nexport {\n  Pagination,\n  PaginationContent,\n  PaginationEllipsis,\n  PaginationItem,\n  PaginationLink,\n  PaginationNext,\n  PaginationPrevious,\n}\nexport type { PaginationLinkProps }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-fbbeee6e4b676563ab375052de1b8ee2826e93eca970050278e953b06e8ab988",
+    "api": [
+      {
+        "name": "Pagination",
+        "kind": "const",
+        "line": 14,
+        "signature": "const Pagination = React.forwardRef<React.ComponentRef<\"nav\">, React.ComponentProps<\"nav\">>(…)",
+        "propsType": "React.ComponentProps<\"nav\">",
+        "usage": "<Pagination />"
+      },
+      {
+        "name": "PaginationContent",
+        "kind": "const",
+        "line": 31,
+        "signature": "const PaginationContent = React.forwardRef<React.ComponentRef<\"ul\">, React.ComponentProps<\"ul\">>(…)",
+        "propsType": "React.ComponentProps<\"ul\">",
+        "usage": "<PaginationContent />"
+      },
+      {
+        "name": "PaginationEllipsis",
+        "kind": "const",
+        "line": 154,
+        "signature": "const PaginationEllipsis = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<PaginationEllipsis />"
+      },
+      {
+        "name": "PaginationItem",
+        "kind": "const",
+        "line": 46,
+        "signature": "const PaginationItem = React.forwardRef<React.ComponentRef<\"li\">, React.ComponentProps<\"li\">>(…)",
+        "propsType": "React.ComponentProps<\"li\">",
+        "usage": "<PaginationItem />"
+      },
+      {
+        "name": "PaginationLink",
+        "kind": "const",
+        "line": 60,
+        "signature": "const PaginationLink = React.forwardRef<React.ComponentRef<\"a\">, PaginationLinkProps>(…)",
+        "propsType": "PaginationLinkProps",
+        "props": [
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "isActive",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ],
+        "usage": "<PaginationLink />"
+      },
+      {
+        "name": "PaginationLinkProps",
+        "kind": "type",
+        "line": 54,
+        "signature": "type PaginationLinkProps = { … } & Pick<ButtonProps, \"size\"> & React.ComponentProps<\"a\">",
+        "members": [
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "isActive",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "PaginationNext",
+        "kind": "const",
+        "line": 135,
+        "signature": "const PaginationNext = React.forwardRef<React.ComponentRef<typeof PaginationLink>, React.ComponentProps<typeof PaginationLink> & { text?: string }>(…)",
+        "propsType": "React.ComponentProps<typeof PaginationLink> & { text?: string }",
+        "props": [
+          {
+            "name": "text",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Next\""
+          }
+        ],
+        "usage": "<PaginationNext />"
+      },
+      {
+        "name": "PaginationPrevious",
+        "kind": "const",
+        "line": 116,
+        "signature": "const PaginationPrevious = React.forwardRef<React.ComponentRef<typeof PaginationLink>, React.ComponentProps<typeof PaginationLink> & { text?: string }>(…)",
+        "propsType": "React.ComponentProps<typeof PaginationLink> & { text?: string }",
+        "props": [
+          {
+            "name": "text",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Previous\""
+          }
+        ],
+        "usage": "<PaginationPrevious />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/pagination",
+      "importStatement": "import { Pagination } from \"@/components/ui/pagination\"",
+      "primaryExport": "Pagination",
+      "example": "<Pagination />"
+    },
+    "ssr": true
+  }
+}

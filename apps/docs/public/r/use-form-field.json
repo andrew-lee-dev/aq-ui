@@ -1,0 +1,171 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-form-field",
+  "type": "registry:hook",
+  "title": "Use Form Field",
+  "description": "Open-code aq-ui React hook for Use Form Field.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-form-field.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport interface FormFieldError {\n  message?: string\n}\n\nexport interface UseFormFieldOptions {\n  id?: string\n  name?: string\n  disabled?: boolean\n  required?: boolean\n  invalid?: boolean\n  errors?: Array<string | FormFieldError | undefined | null>\n  descriptionId?: string\n  errorId?: string\n}\n\nexport interface FormFieldControls {\n  id: string\n  descriptionId: string\n  errorId: string\n  invalid: boolean\n  errors: string[]\n  inputProps: {\n    id: string\n    name?: string\n    disabled?: boolean\n    required?: boolean\n    \"aria-invalid\"?: true\n    \"aria-describedby\"?: string\n    \"aria-errormessage\"?: string\n  }\n  labelProps: { htmlFor: string }\n  descriptionProps: { id: string }\n  errorProps: { id: string; role: \"alert\"; \"aria-live\": \"polite\" }\n}\n\nconst EMPTY_ERRORS: Array<string | FormFieldError | undefined | null> = []\n\nexport function useFormField({\n  id,\n  name,\n  disabled,\n  required,\n  invalid,\n  errors = EMPTY_ERRORS,\n  descriptionId,\n  errorId,\n}: UseFormFieldOptions = {}): FormFieldControls {\n  const generatedId = React.useId()\n  const fieldId = id ?? \"aq-field-\" + generatedId\n  const resolvedDescriptionId = descriptionId ?? fieldId + \"-description\"\n  const resolvedErrorId = errorId ?? fieldId + \"-error\"\n  const messages = React.useMemo(\n    () =>\n      Array.from(\n        new Set(\n          errors.flatMap((error) => {\n            if (typeof error === \"string\") return error.trim() ? [error] : []\n            return error?.message?.trim() ? [error.message] : []\n          })\n        )\n      ),\n    [errors]\n  )\n  const isInvalid = invalid ?? messages.length > 0\n  const describedBy = [\n    resolvedDescriptionId,\n    isInvalid ? resolvedErrorId : undefined,\n  ]\n    .filter(Boolean)\n    .join(\" \")\n\n  return {\n    id: fieldId,\n    descriptionId: resolvedDescriptionId,\n    errorId: resolvedErrorId,\n    invalid: isInvalid,\n    errors: messages,\n    inputProps: {\n      id: fieldId,\n      name,\n      disabled,\n      required,\n      \"aria-invalid\": isInvalid || undefined,\n      \"aria-describedby\": describedBy || undefined,\n      \"aria-errormessage\": isInvalid ? resolvedErrorId : undefined,\n    },\n    labelProps: { htmlFor: fieldId },\n    descriptionProps: { id: resolvedDescriptionId },\n    errorProps: {\n      id: resolvedErrorId,\n      role: \"alert\",\n      \"aria-live\": \"polite\",\n    },\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-81d34f812e9275af823f0b5625c521aa20484a3a4307a9a9a6992873c7a76238",
+    "api": [
+      {
+        "name": "FormFieldControls",
+        "kind": "interface",
+        "line": 20,
+        "signature": "interface FormFieldControls",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "descriptionId",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "errorId",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "invalid",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "errors",
+            "kind": "property",
+            "type": "string[]"
+          },
+          {
+            "name": "inputProps",
+            "kind": "property",
+            "type": "{ id: string name?: string disabled?: boolean required?: boolean \"aria-invalid\"?: true \"aria-describedby\"?: string \"aria-errormessage\"?: string }"
+          },
+          {
+            "name": "labelProps",
+            "kind": "property",
+            "type": "{ htmlFor: string }"
+          },
+          {
+            "name": "descriptionProps",
+            "kind": "property",
+            "type": "{ id: string }"
+          },
+          {
+            "name": "errorProps",
+            "kind": "property",
+            "type": "{ id: string; role: \"alert\"; \"aria-live\": \"polite\" }"
+          }
+        ]
+      },
+      {
+        "name": "FormFieldError",
+        "kind": "interface",
+        "line": 5,
+        "signature": "interface FormFieldError",
+        "members": [
+          {
+            "name": "message",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "useFormField",
+        "kind": "function",
+        "line": 42,
+        "signature": "function useFormField({ id, name, disabled, required, invalid, errors = EMPTY_ERRORS, descriptionId, errorId, }: UseFormFieldOptions = {}): FormFieldControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseFormFieldOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "FormFieldControls",
+        "usage": "const result = useFormField(/* arguments */)"
+      },
+      {
+        "name": "UseFormFieldOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface UseFormFieldOptions",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "required",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "invalid",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "errors",
+            "kind": "property",
+            "optional": true,
+            "type": "Array<string | FormFieldError | undefined | null>",
+            "default": "EMPTY_ERRORS"
+          },
+          {
+            "name": "descriptionId",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "errorId",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-form-field",
+      "importStatement": "import { useFormField } from \"@/hooks/use-form-field\"",
+      "primaryExport": "useFormField",
+      "example": "const result = useFormField(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

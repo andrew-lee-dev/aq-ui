@@ -1,0 +1,65 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "marker",
+  "type": "registry:ui",
+  "title": "Marker",
+  "description": "Open-code aq-ui accessible component family for Marker.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/marker.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { mergeProps } from \"@base-ui/react/merge-props\"\nimport { useRender } from \"@base-ui/react/use-render\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst markerVariants = cva(\n  \"group/marker relative flex min-h-4 w-full items-center gap-2 text-start text-sm text-muted-foreground [&_svg:not([class*='size-'])]:size-4 [a]:underline [a]:underline-offset-3 [a]:hover:text-foreground\",\n  {\n    variants: {\n      variant: {\n        default: \"\",\n        separator:\n          \"before:me-1 before:h-px before:min-w-0 before:flex-1 before:bg-border after:ms-1 after:h-px after:min-w-0 after:flex-1 after:bg-border\",\n        border: \"border-b border-border pb-2\",\n      },\n    },\n  }\n)\n\nconst Marker = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  useRender.ComponentProps<\"div\"> & VariantProps<typeof markerVariants>\n>(function Marker({ className, variant = \"default\", render, ...props }, ref) {\n  return useRender({\n    ref,\n    defaultTagName: \"div\",\n    props: mergeProps<\"div\">(\n      {\n        className: cn(markerVariants({ variant, className })),\n      },\n      props\n    ),\n    render,\n    state: {\n      slot: \"marker\",\n      variant,\n    },\n  })\n})\nMarker.displayName = \"Marker\"\n\nconst MarkerIcon = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function MarkerIcon({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      data-slot=\"marker-icon\"\n      aria-hidden=\"true\"\n      className={cn(\n        \"size-4 shrink-0 [&_svg:not([class*='size-'])]:size-4\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMarkerIcon.displayName = \"MarkerIcon\"\n\nconst MarkerContent = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function MarkerContent({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      data-slot=\"marker-content\"\n      className={cn(\n        \"min-w-0 wrap-break-word group-data-[variant=separator]/marker:flex-none group-data-[variant=separator]/marker:text-center *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nMarkerContent.displayName = \"MarkerContent\"\n\nexport { Marker, MarkerIcon, MarkerContent, markerVariants }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-da4b02868a749b2b179cc28246f7be80681dc6426bb787ab44517ddff019201a",
+    "api": [
+      {
+        "name": "Marker",
+        "kind": "const",
+        "line": 22,
+        "signature": "const Marker = React.forwardRef<React.ComponentRef<\"div\">, useRender.ComponentProps<\"div\"> & VariantProps<typeof markerVariants>>(…)",
+        "propsType": "useRender.ComponentProps<\"div\"> & VariantProps<typeof markerVariants>",
+        "usage": "<Marker />"
+      },
+      {
+        "name": "MarkerContent",
+        "kind": "const",
+        "line": 63,
+        "signature": "const MarkerContent = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<MarkerContent />"
+      },
+      {
+        "name": "MarkerIcon",
+        "kind": "const",
+        "line": 44,
+        "signature": "const MarkerIcon = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<MarkerIcon />"
+      },
+      {
+        "name": "markerVariants",
+        "kind": "const",
+        "line": 8,
+        "signature": "const markerVariants = cva(…)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/marker",
+      "importStatement": "import { Marker } from \"@/components/ui/marker\"",
+      "primaryExport": "Marker",
+      "example": "<Marker />"
+    },
+    "ssr": true
+  }
+}

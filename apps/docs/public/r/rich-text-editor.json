@@ -1,0 +1,540 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rich-text-editor",
+  "type": "registry:ui",
+  "title": "Rich Text Editor",
+  "description": "Tiptap JSON editor and static renderer with production formatting, tables, media, mentions, and slash commands.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@tiptap/core@^3.30.1",
+    "@tiptap/react@^3.30.1",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "rich-text-html",
+    "rich-text-renderer",
+    "separator",
+    "upload",
+    "use-rich-text-editor",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/rich-text-editor.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport type { AnyExtension, Editor } from \"@tiptap/core\"\nimport {\n  EditorContent as TiptapEditorContent,\n  useEditorState,\n} from \"@tiptap/react\"\nimport {\n  BubbleMenu as TiptapBubbleMenu,\n  FloatingMenu as TiptapFloatingMenu,\n} from \"@tiptap/react/menus\"\nimport {\n  AlignCenterIcon,\n  AlignLeftIcon,\n  AlignRightIcon,\n  BoldIcon,\n  BracesIcon,\n  Code2Icon,\n  Heading2Icon,\n  HighlighterIcon,\n  ImageIcon,\n  ItalicIcon,\n  LinkIcon,\n  ListChecksIcon,\n  ListIcon,\n  ListOrderedIcon,\n  Loader2Icon,\n  QuoteIcon,\n  Redo2Icon,\n  StrikethroughIcon,\n  Table2Icon,\n  UnderlineIcon,\n  Undo2Icon,\n  XIcon,\n} from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { Separator } from \"@/components/ui/separator\"\nimport {\n  createRichTextExtensions,\n  safeEditorLinkUrl,\n  useRichTextEditor,\n  type RichTextDocument,\n  type RichTextMentionItem,\n  type RichTextMentionProvider,\n  type RichTextUpload,\n} from \"@/hooks/use-rich-text-editor\"\nimport type { EditorAssetUploadAdapter } from \"@/lib/upload\"\nimport { cn } from \"@/lib/utils\"\n\ninterface RichTextEditorContextValue {\n  editor: Editor | null\n  disabled: boolean\n  readOnly: boolean\n  uploads: readonly RichTextUpload[]\n  uploadFiles: (files: readonly File[]) => Promise<void>\n  cancelUpload: (id: string) => void\n  retryUpload: (id: string) => void\n  dismissUpload: (id: string) => void\n  mentionProvider?: RichTextMentionProvider\n  canUpload: boolean\n}\n\nconst RichTextEditorContext =\n  React.createContext<RichTextEditorContextValue | null>(null)\n\nfunction useRichTextEditorContext() {\n  return React.useContext(RichTextEditorContext)\n}\n\ninterface ToolbarButtonProps extends React.ComponentProps<typeof Button> {\n  label: string\n  active?: boolean\n}\n\nfunction ToolbarButton({\n  label,\n  active,\n  className,\n  ...props\n}: ToolbarButtonProps) {\n  return (\n    <Button\n      type=\"button\"\n      variant={active ? \"secondary\" : \"ghost\"}\n      size=\"icon-sm\"\n      className={cn(\"shrink-0\", className)}\n      aria-label={label}\n      aria-pressed={active}\n      title={label}\n      {...props}\n    />\n  )\n}\n\ninterface RichTextEditorToolbarProps extends React.ComponentProps<\"div\"> {\n  compact?: boolean\n}\n\nfunction RichTextEditorToolbar({\n  className,\n  compact = false,\n  children,\n  ...props\n}: RichTextEditorToolbarProps) {\n  const context = useRichTextEditorContext()\n  const editor = context?.editor ?? null\n  const state = useEditorState({\n    editor,\n    selector: ({ editor: current }) => ({\n      bold: current?.isActive(\"bold\") ?? false,\n      italic: current?.isActive(\"italic\") ?? false,\n      underline: current?.isActive(\"underline\") ?? false,\n      strike: current?.isActive(\"strike\") ?? false,\n      code: current?.isActive(\"code\") ?? false,\n      highlight: current?.isActive(\"highlight\") ?? false,\n      heading: current?.isActive(\"heading\", { level: 2 }) ?? false,\n      bulletList: current?.isActive(\"bulletList\") ?? false,\n      orderedList: current?.isActive(\"orderedList\") ?? false,\n      taskList: current?.isActive(\"taskList\") ?? false,\n      blockquote: current?.isActive(\"blockquote\") ?? false,\n      codeBlock: current?.isActive(\"codeBlock\") ?? false,\n      link: current?.isActive(\"link\") ?? false,\n      alignLeft: current?.isActive({ textAlign: \"left\" }) ?? false,\n      alignCenter: current?.isActive({ textAlign: \"center\" }) ?? false,\n      alignRight: current?.isActive({ textAlign: \"right\" }) ?? false,\n      table: current?.isActive(\"table\") ?? false,\n      canUndo: current?.can().chain().focus().undo().run() ?? false,\n      canRedo: current?.can().chain().focus().redo().run() ?? false,\n    }),\n  })\n  const unavailable = !editor || context?.disabled || context?.readOnly\n  const fileInputRef = React.useRef<HTMLInputElement>(null)\n\n  const setLink = () => {\n    if (!editor) return\n    const previous = String(editor.getAttributes(\"link\").href ?? \"\")\n    const requested = window.prompt(\"Link URL\", previous || \"https://\")\n    if (requested === null) return\n    if (requested.trim() === \"\") {\n      editor.chain().focus().extendMarkRange(\"link\").unsetLink().run()\n      return\n    }\n\n    const href = requested.trim()\n    const safe = safeEditorLinkUrl(href)\n    if (!safe) return\n    editor.chain().focus().extendMarkRange(\"link\").setLink({ href: safe }).run()\n  }\n\n  return (\n    <div\n      data-slot=\"rich-text-editor-toolbar\"\n      role=\"toolbar\"\n      aria-label=\"Rich text formatting\"\n      className={cn(\n        \"flex min-h-10 max-w-full items-center gap-0.5 overflow-x-auto border-b bg-muted/30 p-1\",\n        className\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          <ToolbarButton\n            label=\"Bold\"\n            active={state?.bold}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleBold().run()}\n          >\n            <BoldIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Italic\"\n            active={state?.italic}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleItalic().run()}\n          >\n            <ItalicIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Underline\"\n            active={state?.underline}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleUnderline().run()}\n          >\n            <UnderlineIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Strikethrough\"\n            active={state?.strike}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleStrike().run()}\n          >\n            <StrikethroughIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Inline code\"\n            active={state?.code}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleCode().run()}\n          >\n            <Code2Icon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Highlight\"\n            active={state?.highlight}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleHighlight().run()}\n          >\n            <HighlighterIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n\n          <Separator orientation=\"vertical\" className=\"mx-1 h-5\" />\n\n          <ToolbarButton\n            label=\"Heading 2\"\n            active={state?.heading}\n            disabled={unavailable}\n            onClick={() =>\n              editor?.chain().focus().toggleHeading({ level: 2 }).run()\n            }\n          >\n            <Heading2Icon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Bullet list\"\n            active={state?.bulletList}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleBulletList().run()}\n          >\n            <ListIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Ordered list\"\n            active={state?.orderedList}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleOrderedList().run()}\n          >\n            <ListOrderedIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Task list\"\n            active={state?.taskList}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleTaskList().run()}\n          >\n            <ListChecksIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Blockquote\"\n            active={state?.blockquote}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleBlockquote().run()}\n          >\n            <QuoteIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Code block\"\n            active={state?.codeBlock}\n            disabled={unavailable}\n            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}\n          >\n            <BracesIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Link\"\n            active={state?.link}\n            disabled={unavailable}\n            onClick={setLink}\n          >\n            <LinkIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n\n          {!compact ? (\n            <>\n              <Separator orientation=\"vertical\" className=\"mx-1 h-5\" />\n              <ToolbarButton\n                label=\"Align left\"\n                active={state?.alignLeft}\n                disabled={unavailable}\n                onClick={() =>\n                  editor?.chain().focus().setTextAlign(\"left\").run()\n                }\n              >\n                <AlignLeftIcon aria-hidden=\"true\" />\n              </ToolbarButton>\n              <ToolbarButton\n                label=\"Align center\"\n                active={state?.alignCenter}\n                disabled={unavailable}\n                onClick={() =>\n                  editor?.chain().focus().setTextAlign(\"center\").run()\n                }\n              >\n                <AlignCenterIcon aria-hidden=\"true\" />\n              </ToolbarButton>\n              <ToolbarButton\n                label=\"Align right\"\n                active={state?.alignRight}\n                disabled={unavailable}\n                onClick={() =>\n                  editor?.chain().focus().setTextAlign(\"right\").run()\n                }\n              >\n                <AlignRightIcon aria-hidden=\"true\" />\n              </ToolbarButton>\n              <ToolbarButton\n                label={state?.table ? \"Delete table\" : \"Insert table\"}\n                active={state?.table}\n                disabled={unavailable}\n                onClick={() => {\n                  if (state?.table) editor?.chain().focus().deleteTable().run()\n                  else\n                    editor\n                      ?.chain()\n                      .focus()\n                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })\n                      .run()\n                }}\n              >\n                <Table2Icon aria-hidden=\"true\" />\n              </ToolbarButton>\n              <ToolbarButton\n                label=\"Upload image or file\"\n                disabled={unavailable || !context?.canUpload}\n                onClick={() => fileInputRef.current?.click()}\n              >\n                <ImageIcon aria-hidden=\"true\" />\n              </ToolbarButton>\n              <input\n                ref={fileInputRef}\n                type=\"file\"\n                multiple\n                className=\"sr-only\"\n                tabIndex={-1}\n                onChange={(event) => {\n                  const files = Array.from(event.target.files ?? [])\n                  if (files.length > 0) void context?.uploadFiles(files)\n                  event.target.value = \"\"\n                }}\n              />\n            </>\n          ) : null}\n\n          <Separator orientation=\"vertical\" className=\"mx-1 h-5\" />\n          <ToolbarButton\n            label=\"Undo\"\n            disabled={unavailable || !state?.canUndo}\n            onClick={() => editor?.chain().focus().undo().run()}\n          >\n            <Undo2Icon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Redo\"\n            disabled={unavailable || !state?.canRedo}\n            onClick={() => editor?.chain().focus().redo().run()}\n          >\n            <Redo2Icon aria-hidden=\"true\" />\n          </ToolbarButton>\n        </>\n      )}\n    </div>\n  )\n}\n\ninterface RichTextEditorContentProps extends Omit<\n  React.ComponentProps<typeof TiptapEditorContent>,\n  \"editor\"\n> {\n  editor?: Editor | null\n}\n\nfunction RichTextEditorContent({\n  editor: editorProp,\n  className,\n  ...props\n}: RichTextEditorContentProps) {\n  const context = useRichTextEditorContext()\n  const editor = editorProp ?? context?.editor ?? null\n  return (\n    <TiptapEditorContent\n      editor={editor}\n      data-slot=\"rich-text-editor-content\"\n      className={cn(\n        \"min-h-48 overflow-auto text-sm\",\n        \"[&_.ProseMirror]:min-h-48 [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:outline-none\",\n        \"[&_.ProseMirror_h1]:my-5 [&_.ProseMirror_h1]:text-3xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h2]:my-5 [&_.ProseMirror_h2]:text-2xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h3]:my-4 [&_.ProseMirror_h3]:text-xl [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_p]:my-3\",\n        \"[&_.ProseMirror_blockquote]:my-4 [&_.ProseMirror_blockquote]:border-s-4 [&_.ProseMirror_blockquote]:ps-4 [&_.ProseMirror_blockquote]:text-muted-foreground [&_.ProseMirror_blockquote]:italic\",\n        \"[&_.ProseMirror_ol]:my-3 [&_.ProseMirror_ol]:ms-6 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ul]:my-3 [&_.ProseMirror_ul]:ms-6 [&_.ProseMirror_ul]:list-disc\",\n        \"[&_.ProseMirror_pre]:my-4 [&_.ProseMirror_pre]:overflow-auto [&_.ProseMirror_pre]:rounded-lg [&_.ProseMirror_pre]:bg-muted [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:font-mono\",\n        \"[&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:bg-muted [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:py-0.5 [&_.ProseMirror_code]:font-mono\",\n        \"[&_.ProseMirror_a]:text-primary [&_.ProseMirror_a]:underline [&_.ProseMirror_a]:underline-offset-4 [&_.ProseMirror_img]:my-4 [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_img]:rounded-lg [&_.ProseMirror_img]:border\",\n        \"[&_.ProseMirror_table]:my-4 [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:border-collapse [&_.ProseMirror_td]:border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_th]:border [&_.ProseMirror_th]:bg-muted/50 [&_.ProseMirror_th]:p-2\",\n        \"[&_.is-editor-empty:first-child]:before:pointer-events-none [&_.is-editor-empty:first-child]:before:float-start [&_.is-editor-empty:first-child]:before:h-0 [&_.is-editor-empty:first-child]:before:text-muted-foreground [&_.is-editor-empty:first-child]:before:content-[attr(data-placeholder)]\",\n        className\n      )}\n      {...props}\n    />\n  )\n}\n\ninterface RichTextEditorBubbleMenuProps extends Omit<\n  React.ComponentProps<typeof TiptapBubbleMenu>,\n  \"editor\"\n> {\n  editor?: Editor | null\n}\n\nfunction RichTextEditorBubbleMenu({\n  editor: editorProp,\n  className,\n  children,\n  ...props\n}: RichTextEditorBubbleMenuProps) {\n  const context = useRichTextEditorContext()\n  const editor = editorProp ?? context?.editor ?? null\n  if (!editor) return null\n\n  return (\n    <TiptapBubbleMenu\n      editor={editor}\n      className={cn(\n        \"flex items-center gap-0.5 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md\",\n        className\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          <ToolbarButton\n            label=\"Bold\"\n            active={editor.isActive(\"bold\")}\n            onClick={() => editor.chain().focus().toggleBold().run()}\n          >\n            <BoldIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Italic\"\n            active={editor.isActive(\"italic\")}\n            onClick={() => editor.chain().focus().toggleItalic().run()}\n          >\n            <ItalicIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Link\"\n            active={editor.isActive(\"link\")}\n            onClick={() => {\n              const href = window.prompt(\"Link URL\", \"https://\")\n              const safe = href ? safeEditorLinkUrl(href) : null\n              if (safe) editor.chain().focus().setLink({ href: safe }).run()\n            }}\n          >\n            <LinkIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n        </>\n      )}\n    </TiptapBubbleMenu>\n  )\n}\n\ninterface RichTextEditorFloatingMenuProps extends Omit<\n  React.ComponentProps<typeof TiptapFloatingMenu>,\n  \"editor\"\n> {\n  editor?: Editor | null\n}\n\nfunction RichTextEditorFloatingMenu({\n  editor: editorProp,\n  className,\n  children,\n  ...props\n}: RichTextEditorFloatingMenuProps) {\n  const context = useRichTextEditorContext()\n  const editor = editorProp ?? context?.editor ?? null\n  if (!editor) return null\n\n  return (\n    <TiptapFloatingMenu\n      editor={editor}\n      className={cn(\n        \"flex items-center gap-0.5 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md\",\n        className\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          <ToolbarButton\n            label=\"Heading 2\"\n            onClick={() =>\n              editor.chain().focus().toggleHeading({ level: 2 }).run()\n            }\n          >\n            <Heading2Icon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Bullet list\"\n            onClick={() => editor.chain().focus().toggleBulletList().run()}\n          >\n            <ListIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n          <ToolbarButton\n            label=\"Blockquote\"\n            onClick={() => editor.chain().focus().toggleBlockquote().run()}\n          >\n            <QuoteIcon aria-hidden=\"true\" />\n          </ToolbarButton>\n        </>\n      )}\n    </TiptapFloatingMenu>\n  )\n}\n\ninterface RichTextEditorStatusBarProps extends React.ComponentProps<\"div\"> {\n  characters?: number\n  words?: number\n  maxLength?: number\n  uploads?: readonly RichTextUpload[]\n}\n\nfunction RichTextEditorStatusBar({\n  className,\n  characters = 0,\n  words = 0,\n  maxLength,\n  uploads: uploadsProp,\n  children,\n  ...props\n}: RichTextEditorStatusBarProps) {\n  const context = useRichTextEditorContext()\n  const uploads = uploadsProp ?? context?.uploads ?? []\n  const active = uploads.filter((upload) => upload.status === \"uploading\")\n  const failed = uploads.filter((upload) => upload.status === \"error\")\n\n  return (\n    <div\n      data-slot=\"rich-text-editor-status-bar\"\n      role=\"status\"\n      aria-live=\"polite\"\n      className={cn(\n        \"flex min-h-8 flex-wrap items-center gap-3 border-t bg-muted/30 px-3 py-1 text-xs text-muted-foreground\",\n        className\n      )}\n      {...props}\n    >\n      {children ?? (\n        <>\n          <span>{words.toLocaleString()} words</span>\n          <span>\n            {characters.toLocaleString()}\n            {typeof maxLength === \"number\"\n              ? ` / ${maxLength.toLocaleString()}`\n              : \"\"}{\" \"}\n            characters\n          </span>\n          {active.map((upload) => (\n            <span\n              key={upload.id}\n              className=\"ms-auto inline-flex items-center gap-1.5\"\n            >\n              <Loader2Icon className=\"size-3 animate-spin\" aria-hidden=\"true\" />\n              {upload.file.name} · {Math.round(upload.progress)}%\n              <button\n                type=\"button\"\n                className=\"rounded-sm p-0.5 hover:bg-muted\"\n                aria-label={`Cancel ${upload.file.name}`}\n                onClick={() => context?.cancelUpload(upload.id)}\n              >\n                <XIcon className=\"size-3\" aria-hidden=\"true\" />\n              </button>\n            </span>\n          ))}\n          {failed.map((upload) => (\n            <span\n              key={upload.id}\n              className=\"ms-auto inline-flex items-center gap-1 text-destructive\"\n            >\n              {upload.file.name} failed\n              <button\n                type=\"button\"\n                className=\"font-medium underline underline-offset-2\"\n                onClick={() => context?.retryUpload(upload.id)}\n              >\n                Retry\n              </button>\n              <button\n                type=\"button\"\n                className=\"rounded-sm p-0.5 hover:bg-muted\"\n                aria-label={`Dismiss ${upload.file.name}`}\n                onClick={() => context?.dismissUpload(upload.id)}\n              >\n                <XIcon className=\"size-3\" aria-hidden=\"true\" />\n              </button>\n            </span>\n          ))}\n        </>\n      )}\n    </div>\n  )\n}\n\ninterface TriggerMatch {\n  from: number\n  to: number\n  query: string\n}\n\nfunction findTrigger(editor: Editor, trigger: \"@\" | \"/\"): TriggerMatch | null {\n  const { $from } = editor.state.selection\n  if (!$from.parent.isTextblock) return null\n  const before = $from.parent.textBetween(0, $from.parentOffset, \"\\n\", \"\\ufffc\")\n  const escaped = trigger === \"@\" ? \"@\" : \"\\\\/\"\n  const match = new RegExp(`(?:^|\\\\s)${escaped}([^\\\\s${escaped}]*)$`, \"u\").exec(\n    before\n  )\n  if (!match) return null\n  const query = match[1] ?? \"\"\n  const to = editor.state.selection.from\n  return { from: to - query.length - 1, to, query }\n}\n\ninterface SuggestionPosition {\n  left: number\n  top: number\n}\n\nfunction suggestionPosition(\n  editor: Editor,\n  position: number\n): SuggestionPosition {\n  const coordinates = editor.view.coordsAtPos(position)\n  return { left: coordinates.left, top: coordinates.bottom + 6 }\n}\n\nfunction RichTextSuggestionMenus() {\n  const context = useRichTextEditorContext()\n  const editor = context?.editor ?? null\n  const [mention, setMention] = React.useState<TriggerMatch | null>(null)\n  const [slash, setSlash] = React.useState<TriggerMatch | null>(null)\n  const [mentionItems, setMentionItems] = React.useState<\n    readonly RichTextMentionItem[]\n  >([])\n  const [mentionLoading, setMentionLoading] = React.useState(false)\n  const [activeIndex, setActiveIndex] = React.useState(0)\n  const mentionProvider = context?.mentionProvider\n\n  React.useEffect(() => {\n    if (!editor) return\n    const update = () => {\n      setMention(mentionProvider ? findTrigger(editor, \"@\") : null)\n      setSlash(findTrigger(editor, \"/\"))\n    }\n    editor.on(\"transaction\", update)\n    editor.on(\"selectionUpdate\", update)\n    update()\n    return () => {\n      editor.off(\"transaction\", update)\n      editor.off(\"selectionUpdate\", update)\n    }\n  }, [editor, mentionProvider])\n\n  React.useEffect(() => {\n    if (!mention || !mentionProvider) {\n      return\n    }\n    const abortController = new AbortController()\n    queueMicrotask(() => {\n      if (!abortController.signal.aborted) setMentionLoading(true)\n    })\n    Promise.resolve()\n      .then(() =>\n        mentionProvider(mention.query, { signal: abortController.signal })\n      )\n      .then((items) => {\n        if (!abortController.signal.aborted) {\n          setMentionItems(items)\n          setActiveIndex(0)\n        }\n      })\n      .catch(() => {\n        if (!abortController.signal.aborted) setMentionItems([])\n      })\n      .finally(() => {\n        if (!abortController.signal.aborted) setMentionLoading(false)\n      })\n    return () => abortController.abort()\n  }, [mention, mentionProvider])\n\n  const slashCommands = React.useMemo(\n    () =>\n      [\n        {\n          label: \"Heading 2\",\n          keywords: \"heading title\",\n          run: (current: Editor) =>\n            current.chain().focus().toggleHeading({ level: 2 }).run(),\n        },\n        {\n          label: \"Bullet list\",\n          keywords: \"bullet unordered list\",\n          run: (current: Editor) =>\n            current.chain().focus().toggleBulletList().run(),\n        },\n        {\n          label: \"Ordered list\",\n          keywords: \"number ordered list\",\n          run: (current: Editor) =>\n            current.chain().focus().toggleOrderedList().run(),\n        },\n        {\n          label: \"Task list\",\n          keywords: \"task todo checklist\",\n          run: (current: Editor) =>\n            current.chain().focus().toggleTaskList().run(),\n        },\n        {\n          label: \"Quote\",\n          keywords: \"blockquote quote\",\n          run: (current: Editor) =>\n            current.chain().focus().toggleBlockquote().run(),\n        },\n        {\n          label: \"Code block\",\n          keywords: \"code pre\",\n          run: (current: Editor) =>\n            current.chain().focus().toggleCodeBlock().run(),\n        },\n        {\n          label: \"Table\",\n          keywords: \"table grid\",\n          run: (current: Editor) =>\n            current\n              .chain()\n              .focus()\n              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })\n              .run(),\n        },\n      ].filter((command) =>\n        `${command.label} ${command.keywords}`\n          .toLowerCase()\n          .includes(slash?.query.toLowerCase() ?? \"\")\n      ),\n    [slash?.query]\n  )\n\n  const visibleItems = mention ? mentionItems : slash ? slashCommands : []\n\n  React.useEffect(() => {\n    if (!editor || visibleItems.length === 0) return\n    const onKeyDown = (event: KeyboardEvent) => {\n      if (event.key === \"ArrowDown\") {\n        event.preventDefault()\n        setActiveIndex((index) => (index + 1) % visibleItems.length)\n      } else if (event.key === \"ArrowUp\") {\n        event.preventDefault()\n        setActiveIndex(\n          (index) => (index - 1 + visibleItems.length) % visibleItems.length\n        )\n      } else if (event.key === \"Escape\") {\n        event.preventDefault()\n        setMention(null)\n        setSlash(null)\n      } else if (event.key === \"Enter\") {\n        event.preventDefault()\n        if (mention) {\n          const item = mentionItems[activeIndex]\n          if (item) {\n            editor\n              .chain()\n              .focus()\n              .deleteRange({ from: mention.from, to: mention.to })\n              .insertContent([\n                { type: \"mention\", attrs: { id: item.id, label: item.label } },\n                { type: \"text\", text: \" \" },\n              ])\n              .run()\n          }\n        } else if (slash) {\n          const command = slashCommands[activeIndex]\n          if (command) {\n            editor\n              .chain()\n              .focus()\n              .deleteRange({ from: slash.from, to: slash.to })\n              .run()\n            command.run(editor)\n          }\n        }\n      }\n    }\n    window.addEventListener(\"keydown\", onKeyDown, true)\n    return () => window.removeEventListener(\"keydown\", onKeyDown, true)\n  }, [\n    activeIndex,\n    editor,\n    mention,\n    mentionItems,\n    slash,\n    slashCommands,\n    visibleItems.length,\n  ])\n\n  if (!editor || (!mention && !slash)) return null\n  const position = suggestionPosition(editor, (mention ?? slash)?.from ?? 0)\n\n  return (\n    <div\n      data-slot={mention ? \"rich-text-mention-menu\" : \"rich-text-slash-menu\"}\n      role=\"listbox\"\n      aria-label={mention ? \"Mention suggestions\" : \"Insert block\"}\n      className=\"fixed z-50 min-w-52 overflow-hidden rounded-lg border bg-popover p-1 text-sm text-popover-foreground shadow-md\"\n      style={{ left: position.left, top: position.top }}\n    >\n      {mentionLoading ? (\n        <div className=\"flex items-center gap-2 px-2 py-1.5 text-muted-foreground\">\n          <Loader2Icon className=\"size-3.5 animate-spin\" aria-hidden=\"true\" />\n          Loading…\n        </div>\n      ) : visibleItems.length === 0 ? (\n        <div className=\"px-2 py-1.5 text-muted-foreground\">No results</div>\n      ) : mention ? (\n        mentionItems.map((item, index) => (\n          <button\n            key={item.id}\n            type=\"button\"\n            role=\"option\"\n            aria-selected={index === activeIndex}\n            className=\"flex w-full flex-col rounded-md px-2 py-1.5 text-start hover:bg-muted aria-selected:bg-muted\"\n            onMouseDown={(event) => event.preventDefault()}\n            onClick={() => {\n              editor\n                .chain()\n                .focus()\n                .deleteRange({ from: mention.from, to: mention.to })\n                .insertContent([\n                  {\n                    type: \"mention\",\n                    attrs: { id: item.id, label: item.label },\n                  },\n                  { type: \"text\", text: \" \" },\n                ])\n                .run()\n            }}\n          >\n            <span className=\"font-medium\">{item.label}</span>\n            {item.description ? (\n              <span className=\"text-xs text-muted-foreground\">\n                {item.description}\n              </span>\n            ) : null}\n          </button>\n        ))\n      ) : (\n        slashCommands.map((command, index) => (\n          <button\n            key={command.label}\n            type=\"button\"\n            role=\"option\"\n            aria-selected={index === activeIndex}\n            className=\"block w-full rounded-md px-2 py-1.5 text-start hover:bg-muted aria-selected:bg-muted\"\n            onMouseDown={(event) => event.preventDefault()}\n            onClick={() => {\n              if (!slash) return\n              editor\n                .chain()\n                .focus()\n                .deleteRange({ from: slash.from, to: slash.to })\n                .run()\n              command.run(editor)\n            }}\n          >\n            {command.label}\n          </button>\n        ))\n      )}\n    </div>\n  )\n}\n\ninterface RichTextEditorProps extends Omit<\n  React.ComponentProps<\"div\">,\n  \"defaultValue\" | \"onChange\"\n> {\n  value?: RichTextDocument\n  defaultValue?: RichTextDocument\n  onChange?: (document: RichTextDocument) => void\n  readOnly?: boolean\n  disabled?: boolean\n  placeholder?: string\n  maxLength?: number\n  autofocus?: boolean\n  extensions?: readonly AnyExtension[]\n  overrideExtensionNames?: readonly string[]\n  uploadAdapter?: EditorAssetUploadAdapter\n  mentionProvider?: RichTextMentionProvider\n  toolbar?: boolean\n  bubbleMenu?: boolean\n  floatingMenu?: boolean\n  statusBar?: boolean\n  contentClassName?: string\n  onReady?: (editor: Editor) => void\n  onDuplicateExtension?: (name: string) => void\n}\n\nconst RichTextEditor = React.forwardRef<HTMLDivElement, RichTextEditorProps>(\n  function RichTextEditor(\n    {\n      value,\n      defaultValue,\n      onChange,\n      readOnly = false,\n      disabled = false,\n      placeholder = \"Write something…\",\n      maxLength,\n      autofocus = false,\n      extensions,\n      overrideExtensionNames,\n      uploadAdapter,\n      mentionProvider,\n      toolbar = true,\n      bubbleMenu = true,\n      floatingMenu = true,\n      statusBar = true,\n      contentClassName,\n      onReady,\n      onDuplicateExtension,\n      className,\n      ...props\n    },\n    forwardedRef\n  ) {\n    const controller = useRichTextEditor({\n      value,\n      defaultValue,\n      onChange,\n      readOnly,\n      disabled,\n      placeholder,\n      maxLength,\n      autofocus,\n      extensions,\n      overrideExtensionNames,\n      uploadAdapter,\n      mentionProvider,\n      onReady,\n      onDuplicateExtension,\n    })\n\n    const context = React.useMemo<RichTextEditorContextValue>(\n      () => ({\n        editor: controller.editor,\n        disabled,\n        readOnly,\n        uploads: controller.uploads,\n        uploadFiles: controller.uploadFiles,\n        cancelUpload: controller.cancelUpload,\n        retryUpload: controller.retryUpload,\n        dismissUpload: controller.dismissUpload,\n        mentionProvider,\n        canUpload: Boolean(uploadAdapter),\n      }),\n      [\n        controller.cancelUpload,\n        controller.dismissUpload,\n        controller.editor,\n        controller.retryUpload,\n        controller.uploadFiles,\n        controller.uploads,\n        disabled,\n        mentionProvider,\n        readOnly,\n        uploadAdapter,\n      ]\n    )\n\n    return (\n      <RichTextEditorContext.Provider value={context}>\n        <div\n          ref={forwardedRef}\n          data-slot=\"rich-text-editor\"\n          data-disabled={disabled ? \"\" : undefined}\n          data-readonly={readOnly ? \"\" : undefined}\n          className={cn(\n            \"relative flex min-w-0 flex-col overflow-hidden rounded-lg border bg-background text-foreground shadow-xs focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 data-disabled:pointer-events-none data-disabled:opacity-50\",\n            className\n          )}\n          {...props}\n        >\n          {toolbar ? <RichTextEditorToolbar /> : null}\n          <RichTextEditorContent className={contentClassName} />\n          {bubbleMenu && !readOnly && !disabled ? (\n            <RichTextEditorBubbleMenu />\n          ) : null}\n          {floatingMenu && !readOnly && !disabled ? (\n            <RichTextEditorFloatingMenu />\n          ) : null}\n          {!readOnly && !disabled ? <RichTextSuggestionMenus /> : null}\n          {statusBar ? (\n            <RichTextEditorStatusBar\n              characters={controller.editorState?.characters ?? 0}\n              words={controller.editorState?.words ?? 0}\n              maxLength={maxLength}\n            />\n          ) : null}\n        </div>\n      </RichTextEditorContext.Provider>\n    )\n  }\n)\n\nexport {\n  RichTextEditor,\n  RichTextEditorBubbleMenu,\n  RichTextEditorContent,\n  RichTextEditorFloatingMenu,\n  RichTextEditorStatusBar,\n  RichTextEditorToolbar,\n  createRichTextExtensions,\n  useRichTextEditor,\n}\nexport type {\n  EditorAssetUploadAdapter,\n  RichTextDocument,\n  RichTextEditorBubbleMenuProps,\n  RichTextEditorContentProps,\n  RichTextEditorFloatingMenuProps,\n  RichTextEditorProps,\n  RichTextEditorStatusBarProps,\n  RichTextEditorToolbarProps,\n  RichTextMentionItem,\n  RichTextMentionProvider,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ff5217dd192f3b9d80e2ed0a543c83c33593c8b7fd8416aac0aadd9c687e43d4",
+    "api": [
+      {
+        "name": "createRichTextExtensions",
+        "kind": "function",
+        "line": 41,
+        "signature": "export { createRichTextExtensions } from \"@/hooks/use-rich-text-editor\"",
+        "source": "@/hooks/use-rich-text-editor",
+        "usage": "createRichTextExtensions(/* arguments */)"
+      },
+      {
+        "name": "EditorAssetUploadAdapter",
+        "kind": "type",
+        "line": 49,
+        "signature": "export type { EditorAssetUploadAdapter } from \"@/lib/upload\"",
+        "source": "@/lib/upload"
+      },
+      {
+        "name": "RichTextDocument",
+        "kind": "type",
+        "line": 44,
+        "signature": "export type { RichTextDocument } from \"@/hooks/use-rich-text-editor\"",
+        "source": "@/hooks/use-rich-text-editor"
+      },
+      {
+        "name": "RichTextEditor",
+        "kind": "const",
+        "line": 907,
+        "signature": "const RichTextEditor = React.forwardRef<HTMLDivElement, RichTextEditorProps>(…)",
+        "propsType": "RichTextEditorProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(document: RichTextDocument) => void"
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Write something…\""
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly AnyExtension[]"
+          },
+          {
+            "name": "overrideExtensionNames",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly string[]"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "mentionProvider",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextMentionProvider"
+          },
+          {
+            "name": "toolbar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "bubbleMenu",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "floatingMenu",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "statusBar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "contentClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "onReady",
+            "kind": "property",
+            "optional": true,
+            "type": "(editor: Editor) => void"
+          },
+          {
+            "name": "onDuplicateExtension",
+            "kind": "property",
+            "optional": true,
+            "type": "(name: string) => void"
+          }
+        ],
+        "usage": "<RichTextEditor />"
+      },
+      {
+        "name": "RichTextEditorBubbleMenu",
+        "kind": "function",
+        "line": 410,
+        "signature": "function RichTextEditorBubbleMenu({ editor: editorProp, className, children, ...props }: RichTextEditorBubbleMenuProps)",
+        "propsType": "RichTextEditorBubbleMenuProps",
+        "props": [
+          {
+            "name": "editor",
+            "kind": "property",
+            "optional": true,
+            "type": "Editor | null"
+          }
+        ],
+        "usage": "<RichTextEditorBubbleMenu />"
+      },
+      {
+        "name": "RichTextEditorBubbleMenuProps",
+        "kind": "interface",
+        "line": 403,
+        "signature": "interface RichTextEditorBubbleMenuProps extends Omit< React.ComponentProps<typeof TiptapBubbleMenu>, \"editor\" >",
+        "members": [
+          {
+            "name": "editor",
+            "kind": "property",
+            "optional": true,
+            "type": "Editor | null"
+          }
+        ]
+      },
+      {
+        "name": "RichTextEditorContent",
+        "kind": "function",
+        "line": 374,
+        "signature": "function RichTextEditorContent({ editor: editorProp, className, ...props }: RichTextEditorContentProps)",
+        "propsType": "RichTextEditorContentProps",
+        "props": [
+          {
+            "name": "editor",
+            "kind": "property",
+            "optional": true,
+            "type": "Editor | null"
+          }
+        ],
+        "usage": "<RichTextEditorContent />"
+      },
+      {
+        "name": "RichTextEditorContentProps",
+        "kind": "interface",
+        "line": 367,
+        "signature": "interface RichTextEditorContentProps extends Omit< React.ComponentProps<typeof TiptapEditorContent>, \"editor\" >",
+        "members": [
+          {
+            "name": "editor",
+            "kind": "property",
+            "optional": true,
+            "type": "Editor | null"
+          }
+        ]
+      },
+      {
+        "name": "RichTextEditorFloatingMenu",
+        "kind": "function",
+        "line": 469,
+        "signature": "function RichTextEditorFloatingMenu({ editor: editorProp, className, children, ...props }: RichTextEditorFloatingMenuProps)",
+        "propsType": "RichTextEditorFloatingMenuProps",
+        "props": [
+          {
+            "name": "editor",
+            "kind": "property",
+            "optional": true,
+            "type": "Editor | null"
+          }
+        ],
+        "usage": "<RichTextEditorFloatingMenu />"
+      },
+      {
+        "name": "RichTextEditorFloatingMenuProps",
+        "kind": "interface",
+        "line": 462,
+        "signature": "interface RichTextEditorFloatingMenuProps extends Omit< React.ComponentProps<typeof TiptapFloatingMenu>, \"editor\" >",
+        "members": [
+          {
+            "name": "editor",
+            "kind": "property",
+            "optional": true,
+            "type": "Editor | null"
+          }
+        ]
+      },
+      {
+        "name": "RichTextEditorProps",
+        "kind": "interface",
+        "line": 882,
+        "signature": "interface RichTextEditorProps extends Omit< React.ComponentProps<\"div\">, \"defaultValue\" | \"onChange\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(document: RichTextDocument) => void"
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Write something…\""
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly AnyExtension[]"
+          },
+          {
+            "name": "overrideExtensionNames",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly string[]"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "mentionProvider",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextMentionProvider"
+          },
+          {
+            "name": "toolbar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "bubbleMenu",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "floatingMenu",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "statusBar",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "contentClassName",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "onReady",
+            "kind": "property",
+            "optional": true,
+            "type": "(editor: Editor) => void"
+          },
+          {
+            "name": "onDuplicateExtension",
+            "kind": "property",
+            "optional": true,
+            "type": "(name: string) => void"
+          }
+        ]
+      },
+      {
+        "name": "RichTextEditorStatusBar",
+        "kind": "function",
+        "line": 523,
+        "signature": "function RichTextEditorStatusBar({ className, characters = 0, words = 0, maxLength, uploads: uploadsProp, children, ...props }: RichTextEditorStatusBarProps)",
+        "propsType": "RichTextEditorStatusBarProps",
+        "props": [
+          {
+            "name": "characters",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "words",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "uploads",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly RichTextUpload[]"
+          }
+        ],
+        "usage": "<RichTextEditorStatusBar />"
+      },
+      {
+        "name": "RichTextEditorStatusBarProps",
+        "kind": "interface",
+        "line": 516,
+        "signature": "interface RichTextEditorStatusBarProps extends React.ComponentProps<\"div\">",
+        "members": [
+          {
+            "name": "characters",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "words",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "uploads",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly RichTextUpload[]"
+          }
+        ]
+      },
+      {
+        "name": "RichTextEditorToolbar",
+        "kind": "function",
+        "line": 101,
+        "signature": "function RichTextEditorToolbar({ className, compact = false, children, ...props }: RichTextEditorToolbarProps)",
+        "propsType": "RichTextEditorToolbarProps",
+        "props": [
+          {
+            "name": "compact",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "usage": "<RichTextEditorToolbar />"
+      },
+      {
+        "name": "RichTextEditorToolbarProps",
+        "kind": "interface",
+        "line": 97,
+        "signature": "interface RichTextEditorToolbarProps extends React.ComponentProps<\"div\">",
+        "members": [
+          {
+            "name": "compact",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      },
+      {
+        "name": "RichTextMentionItem",
+        "kind": "type",
+        "line": 45,
+        "signature": "export type { RichTextMentionItem } from \"@/hooks/use-rich-text-editor\"",
+        "source": "@/hooks/use-rich-text-editor"
+      },
+      {
+        "name": "RichTextMentionProvider",
+        "kind": "type",
+        "line": 46,
+        "signature": "export type { RichTextMentionProvider } from \"@/hooks/use-rich-text-editor\"",
+        "source": "@/hooks/use-rich-text-editor"
+      },
+      {
+        "name": "useRichTextEditor",
+        "kind": "function",
+        "line": 43,
+        "signature": "export { useRichTextEditor } from \"@/hooks/use-rich-text-editor\"",
+        "source": "@/hooks/use-rich-text-editor",
+        "usage": "const result = useRichTextEditor(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/rich-text-editor",
+      "importStatement": "import { RichTextEditor } from \"@/components/ui/rich-text-editor\"",
+      "primaryExport": "RichTextEditor",
+      "example": "<RichTextEditor />"
+    },
+    "ssr": false
+  }
+}

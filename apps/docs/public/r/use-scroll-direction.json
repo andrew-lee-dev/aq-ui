@@ -1,0 +1,84 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-scroll-direction",
+  "type": "registry:hook",
+  "title": "Use Scroll Direction",
+  "description": "Open-code aq-ui React hook for Use Scroll Direction.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-scroll-position"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-scroll-direction.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport type { Target } from \"@/hooks/_target\"\nimport {\n  useScrollPosition,\n  type ScrollPosition,\n} from \"@/hooks/use-scroll-position\"\n\nexport type ScrollDirection = \"up\" | \"down\" | \"left\" | \"right\" | null\n\nexport interface UseScrollDirectionOptions {\n  threshold?: number\n  axis?: \"x\" | \"y\" | \"both\"\n}\n\nexport function useScrollDirection(\n  target?: Target<Element | Window>,\n  { threshold = 4, axis = \"y\" }: UseScrollDirectionOptions = {}\n): ScrollDirection {\n  const position = useScrollPosition(target)\n  const previousRef = React.useRef<ScrollPosition>(position)\n  const [direction, setDirection] = React.useState<ScrollDirection>(null)\n\n  React.useEffect(() => {\n    const dx = position.x - previousRef.current.x\n    const dy = position.y - previousRef.current.y\n    previousRef.current = position\n\n    if (\n      axis !== \"y\" &&\n      Math.abs(dx) >= threshold &&\n      Math.abs(dx) >= Math.abs(dy)\n    ) {\n      setDirection(dx > 0 ? \"right\" : \"left\")\n    } else if (axis !== \"x\" && Math.abs(dy) >= threshold) {\n      setDirection(dy > 0 ? \"down\" : \"up\")\n    }\n  }, [axis, position, threshold])\n\n  return direction\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-a7d09f9138f579d389f4051ef54fea2b627de5f37f37563a6537e60af0163b1a",
+    "api": [
+      {
+        "name": "ScrollDirection",
+        "kind": "type",
+        "line": 11,
+        "signature": "type ScrollDirection = \"up\" | \"down\" | \"left\" | \"right\" | null"
+      },
+      {
+        "name": "useScrollDirection",
+        "kind": "function",
+        "line": 18,
+        "signature": "function useScrollDirection(target?: Target<Element | Window>, { threshold = 4, axis = \"y\" }: UseScrollDirectionOptions = {}): ScrollDirection",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "optional": true,
+            "type": "Target<Element | Window>"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseScrollDirectionOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "ScrollDirection",
+        "usage": "const result = useScrollDirection(/* arguments */)"
+      },
+      {
+        "name": "UseScrollDirectionOptions",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface UseScrollDirectionOptions",
+        "members": [
+          {
+            "name": "threshold",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "4"
+          },
+          {
+            "name": "axis",
+            "kind": "property",
+            "optional": true,
+            "type": "\"x\" | \"y\" | \"both\"",
+            "default": "\"y\""
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-scroll-direction",
+      "importStatement": "import { useScrollDirection } from \"@/hooks/use-scroll-direction\"",
+      "primaryExport": "useScrollDirection",
+      "example": "const result = useScrollDirection(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

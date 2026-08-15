@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-json",
+  "type": "registry:lib",
+  "title": "Code Language Json",
+  "description": "Open-code aq-ui shared library for Code Language Json.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-json@^6.0.2"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-json.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"json\", async () => {\n  const { json } = await import(\"@codemirror/lang-json\")\n  return json()\n})\n\nconst codeLanguageJson = \"json\" as const\n\nexport { codeLanguageJson }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-fef6751eda0235aa38f1c684350f0497c60861275e0024b5b03034d925c90634",
+    "api": [
+      {
+        "name": "codeLanguageJson",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageJson = \"json\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-json",
+      "importStatement": "import { codeLanguageJson } from \"@/lib/code-language-json\"",
+      "primaryExport": "codeLanguageJson"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

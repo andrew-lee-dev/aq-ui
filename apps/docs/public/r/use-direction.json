@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-direction",
+  "type": "registry:hook",
+  "title": "Use Direction",
+  "description": "Open-code aq-ui React hook for Use Direction.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-direction.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport type Direction = \"ltr\" | \"rtl\"\n\ninterface DirectionStore {\n  subscribe: (listener: () => void) => () => void\n  getSnapshot: () => Direction\n}\n\nlet cachedDirection: Direction = \"ltr\"\nlet directionObserver: MutationObserver | null = null\nconst directionListeners = new Set<() => void>()\n\nfunction readDirection(): Direction {\n  if (typeof document === \"undefined\") return cachedDirection\n  const explicit = document.documentElement.getAttribute(\"dir\")\n  if (explicit === \"rtl\" || explicit === \"ltr\") return explicit\n  return getComputedStyle(document.documentElement).direction === \"rtl\"\n    ? \"rtl\"\n    : \"ltr\"\n}\n\nconst directionStore: DirectionStore = {\n  subscribe(listener) {\n    directionListeners.add(listener)\n    if (\n      directionListeners.size === 1 &&\n      typeof document !== \"undefined\" &&\n      typeof MutationObserver !== \"undefined\"\n    ) {\n      cachedDirection = readDirection()\n      directionObserver = new MutationObserver(() => {\n        const next = readDirection()\n        if (next === cachedDirection) return\n        cachedDirection = next\n        directionListeners.forEach((notify) => notify())\n      })\n      directionObserver.observe(document.documentElement, {\n        attributes: true,\n        attributeFilter: [\"dir\", \"class\", \"style\"],\n      })\n    }\n    return () => {\n      directionListeners.delete(listener)\n      if (directionListeners.size === 0) {\n        directionObserver?.disconnect()\n        directionObserver = null\n      }\n    }\n  },\n  getSnapshot() {\n    cachedDirection = readDirection()\n    return cachedDirection\n  },\n}\n\nexport function useDirection(defaultDirection: Direction = \"ltr\"): Direction {\n  return React.useSyncExternalStore(\n    directionStore.subscribe,\n    directionStore.getSnapshot,\n    () => defaultDirection\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ff8c5255ddc376ced44716eb032b259d53d914fd82b74faafbbee1f3d8583eda",
+    "api": [
+      {
+        "name": "Direction",
+        "kind": "type",
+        "line": 5,
+        "signature": "type Direction = \"ltr\" | \"rtl\""
+      },
+      {
+        "name": "useDirection",
+        "kind": "function",
+        "line": 59,
+        "signature": "function useDirection(defaultDirection: Direction = \"ltr\"): Direction",
+        "parameters": [
+          {
+            "name": "defaultDirection",
+            "kind": "parameter",
+            "optional": true,
+            "type": "Direction",
+            "default": "\"ltr\""
+          }
+        ],
+        "returns": "Direction",
+        "usage": "const result = useDirection(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-direction",
+      "importStatement": "import { useDirection } from \"@/hooks/use-direction\"",
+      "primaryExport": "useDirection",
+      "example": "const result = useDirection(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

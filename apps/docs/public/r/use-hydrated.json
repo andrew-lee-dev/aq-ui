@@ -1,0 +1,38 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-hydrated",
+  "type": "registry:hook",
+  "title": "Use Hydrated",
+  "description": "Open-code aq-ui React hook for Use Hydrated.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-hydrated.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nconst subscribe = () => () => undefined\n\nexport function useHydrated(): boolean {\n  return React.useSyncExternalStore(\n    subscribe,\n    () => true,\n    () => false\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-f0acc0bdcf3600e39886d1a69c0d5da46b6e13cf06dbc3fe1352fde59aaeba52",
+    "api": [
+      {
+        "name": "useHydrated",
+        "kind": "function",
+        "line": 7,
+        "signature": "function useHydrated(): boolean",
+        "returns": "boolean",
+        "usage": "const result = useHydrated(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-hydrated",
+      "importStatement": "import { useHydrated } from \"@/hooks/use-hydrated\"",
+      "primaryExport": "useHydrated",
+      "example": "const result = useHydrated(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

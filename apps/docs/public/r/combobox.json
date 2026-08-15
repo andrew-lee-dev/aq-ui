@@ -1,0 +1,202 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "combobox",
+  "type": "registry:ui",
+  "title": "Combobox",
+  "description": "Open-code aq-ui accessible component family for Combobox.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "input-group",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/combobox.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Combobox as ComboboxPrimitive } from \"@base-ui/react\"\n\nimport { cn } from \"@/lib/utils\"\nimport { Button } from \"@/components/ui/button\"\nimport {\n  InputGroup,\n  InputGroupAddon,\n  InputGroupButton,\n  InputGroupInput,\n} from \"@/components/ui/input-group\"\nimport { ChevronDownIcon, XIcon, CheckIcon } from \"lucide-react\"\n\nconst Combobox = ComboboxPrimitive.Root\n\nfunction ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {\n  return <ComboboxPrimitive.Value data-slot=\"combobox-value\" {...props} />\n}\n\nconst ComboboxTrigger = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Trigger>,\n  ComboboxPrimitive.Trigger.Props\n>(function ComboboxTrigger({ className, children, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Trigger\n      ref={ref}\n      data-slot=\"combobox-trigger\"\n      className={cn(\"[&_svg:not([class*='size-'])]:size-4\", className)}\n      {...props}\n    >\n      {children}\n      <ChevronDownIcon className=\"pointer-events-none size-4 text-muted-foreground\" />\n    </ComboboxPrimitive.Trigger>\n  )\n})\nComboboxTrigger.displayName = \"ComboboxTrigger\"\n\nconst ComboboxClear = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Clear>,\n  ComboboxPrimitive.Clear.Props\n>(function ComboboxClear({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Clear\n      ref={ref}\n      data-slot=\"combobox-clear\"\n      aria-label=\"Clear selection\"\n      render={<InputGroupButton variant=\"ghost\" size=\"icon-xs\" />}\n      className={cn(className)}\n      {...props}\n    >\n      <XIcon className=\"pointer-events-none\" />\n    </ComboboxPrimitive.Clear>\n  )\n})\nComboboxClear.displayName = \"ComboboxClear\"\n\nconst ComboboxInput = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Input>,\n  ComboboxPrimitive.Input.Props & {\n    showTrigger?: boolean\n    showClear?: boolean\n    triggerLabel?: string\n    clearLabel?: string\n  }\n>(function ComboboxInput(\n  {\n    className,\n    children,\n    disabled = false,\n    showTrigger = true,\n    showClear = false,\n    triggerLabel = \"Open options\",\n    clearLabel = \"Clear selection\",\n    ...props\n  },\n  ref\n) {\n  return (\n    <InputGroup className={cn(\"w-auto\", className)}>\n      <ComboboxPrimitive.Input\n        ref={ref}\n        render={<InputGroupInput disabled={disabled} />}\n        {...props}\n      />\n      <InputGroupAddon align=\"inline-end\">\n        {showTrigger && (\n          <InputGroupButton\n            size=\"icon-xs\"\n            variant=\"ghost\"\n            render={<ComboboxTrigger />}\n            data-slot=\"input-group-button\"\n            aria-label={triggerLabel}\n            className=\"group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent\"\n            disabled={disabled}\n          />\n        )}\n        {showClear && (\n          <ComboboxClear aria-label={clearLabel} disabled={disabled} />\n        )}\n      </InputGroupAddon>\n      {children}\n    </InputGroup>\n  )\n})\nComboboxInput.displayName = \"ComboboxInput\"\n\nconst ComboboxContent = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Popup>,\n  ComboboxPrimitive.Popup.Props &\n    Pick<\n      ComboboxPrimitive.Positioner.Props,\n      \"side\" | \"align\" | \"sideOffset\" | \"alignOffset\" | \"anchor\"\n    >\n>(function ComboboxContent(\n  {\n    className,\n    side = \"bottom\",\n    sideOffset = 6,\n    align = \"start\",\n    alignOffset = 0,\n    anchor,\n    ...props\n  },\n  ref\n) {\n  return (\n    <ComboboxPrimitive.Portal>\n      <ComboboxPrimitive.Positioner\n        side={side}\n        sideOffset={sideOffset}\n        align={align}\n        alignOffset={alignOffset}\n        anchor={anchor}\n        className=\"isolate z-50\"\n      >\n        <ComboboxPrimitive.Popup\n          ref={ref}\n          data-slot=\"combobox-content\"\n          data-chips={!!anchor}\n          className={cn(\n            \"group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[chips=true]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-start-2 data-[side=inline-start]:slide-in-from-end-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95\",\n            className\n          )}\n          {...props}\n        />\n      </ComboboxPrimitive.Positioner>\n    </ComboboxPrimitive.Portal>\n  )\n})\nComboboxContent.displayName = \"ComboboxContent\"\n\nconst ComboboxList = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.List>,\n  ComboboxPrimitive.List.Props\n>(function ComboboxList({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.List\n      ref={ref}\n      data-slot=\"combobox-list\"\n      className={cn(\n        \"no-scrollbar max-h-[min(calc(--spacing(72)---spacing(9)),calc(var(--available-height)---spacing(9)))] scroll-py-1 overflow-y-auto overscroll-contain p-1 data-empty:p-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nComboboxList.displayName = \"ComboboxList\"\n\nconst ComboboxItem = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Item>,\n  ComboboxPrimitive.Item.Props\n>(function ComboboxItem({ className, children, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Item\n      ref={ref}\n      data-slot=\"combobox-item\"\n      className={cn(\n        \"relative flex w-full cursor-default items-center gap-2 rounded-md py-1 ps-1.5 pe-8 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n      <ComboboxPrimitive.ItemIndicator\n        render={\n          <span className=\"pointer-events-none absolute end-2 flex size-4 items-center justify-center\" />\n        }\n      >\n        <CheckIcon className=\"pointer-events-none\" />\n      </ComboboxPrimitive.ItemIndicator>\n    </ComboboxPrimitive.Item>\n  )\n})\nComboboxItem.displayName = \"ComboboxItem\"\n\nconst ComboboxGroup = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Group>,\n  ComboboxPrimitive.Group.Props\n>(function ComboboxGroup({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Group\n      ref={ref}\n      data-slot=\"combobox-group\"\n      className={cn(className)}\n      {...props}\n    />\n  )\n})\nComboboxGroup.displayName = \"ComboboxGroup\"\n\nconst ComboboxLabel = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.GroupLabel>,\n  ComboboxPrimitive.GroupLabel.Props\n>(function ComboboxLabel({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.GroupLabel\n      ref={ref}\n      data-slot=\"combobox-label\"\n      className={cn(\"px-2 py-1.5 text-xs text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nComboboxLabel.displayName = \"ComboboxLabel\"\n\nfunction ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props) {\n  return (\n    <ComboboxPrimitive.Collection data-slot=\"combobox-collection\" {...props} />\n  )\n}\n\nconst ComboboxEmpty = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Empty>,\n  ComboboxPrimitive.Empty.Props\n>(function ComboboxEmpty({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Empty\n      ref={ref}\n      data-slot=\"combobox-empty\"\n      className={cn(\n        \"hidden w-full justify-center py-2 text-center text-sm text-muted-foreground group-data-empty/combobox-content:flex\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nComboboxEmpty.displayName = \"ComboboxEmpty\"\n\nconst ComboboxSeparator = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Separator>,\n  ComboboxPrimitive.Separator.Props\n>(function ComboboxSeparator({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Separator\n      ref={ref}\n      data-slot=\"combobox-separator\"\n      className={cn(\"-mx-1 my-1 h-px bg-border\", className)}\n      {...props}\n    />\n  )\n})\nComboboxSeparator.displayName = \"ComboboxSeparator\"\n\nconst ComboboxChips = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Chips>,\n  React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> &\n    ComboboxPrimitive.Chips.Props\n>(function ComboboxChips({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Chips\n      ref={ref}\n      data-slot=\"combobox-chips\"\n      className={cn(\n        \"flex min-h-8 flex-wrap items-center gap-1 rounded-lg border border-input bg-transparent bg-clip-padding px-2.5 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20 has-data-[slot=combobox-chip]:px-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50 dark:has-aria-invalid:ring-destructive/40\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nComboboxChips.displayName = \"ComboboxChips\"\n\nconst ComboboxChip = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Chip>,\n  ComboboxPrimitive.Chip.Props & {\n    showRemove?: boolean\n  }\n>(function ComboboxChip(\n  { className, children, showRemove = true, ...props },\n  ref\n) {\n  return (\n    <ComboboxPrimitive.Chip\n      ref={ref}\n      data-slot=\"combobox-chip\"\n      className={cn(\n        \"flex h-[calc(--spacing(5.25))] w-fit items-center justify-center gap-1 rounded-sm bg-muted px-1.5 text-xs font-medium whitespace-nowrap text-foreground has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50 has-data-[slot=combobox-chip-remove]:pe-0\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n      {showRemove && (\n        <ComboboxPrimitive.ChipRemove\n          render={<Button variant=\"ghost\" size=\"icon-xs\" />}\n          className=\"-ms-1 opacity-50 hover:opacity-100\"\n          data-slot=\"combobox-chip-remove\"\n        >\n          <XIcon className=\"pointer-events-none\" />\n        </ComboboxPrimitive.ChipRemove>\n      )}\n    </ComboboxPrimitive.Chip>\n  )\n})\nComboboxChip.displayName = \"ComboboxChip\"\n\nconst ComboboxChipsInput = React.forwardRef<\n  React.ComponentRef<typeof ComboboxPrimitive.Input>,\n  ComboboxPrimitive.Input.Props\n>(function ComboboxChipsInput({ className, ...props }, ref) {\n  return (\n    <ComboboxPrimitive.Input\n      ref={ref}\n      data-slot=\"combobox-chip-input\"\n      className={cn(\"min-w-16 flex-1 outline-none\", className)}\n      {...props}\n    />\n  )\n})\nComboboxChipsInput.displayName = \"ComboboxChipsInput\"\n\nfunction useComboboxAnchor() {\n  return React.useRef<HTMLDivElement | null>(null)\n}\n\nexport {\n  Combobox,\n  ComboboxInput,\n  ComboboxContent,\n  ComboboxList,\n  ComboboxItem,\n  ComboboxGroup,\n  ComboboxLabel,\n  ComboboxCollection,\n  ComboboxEmpty,\n  ComboboxSeparator,\n  ComboboxChips,\n  ComboboxChip,\n  ComboboxChipsInput,\n  ComboboxTrigger,\n  ComboboxValue,\n  useComboboxAnchor,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-22f31af55ed7d81cd2eaa9020c3deeba2699b0b29b915920aa3efdeb8d10de2f",
+    "api": [
+      {
+        "name": "Combobox",
+        "kind": "const",
+        "line": 16,
+        "signature": "const Combobox = ComboboxPrimitive.Root",
+        "usage": "<Combobox />"
+      },
+      {
+        "name": "ComboboxChip",
+        "kind": "const",
+        "line": 287,
+        "signature": "const ComboboxChip = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Chip>, ComboboxPrimitive.Chip.Props & { showRemove?: boolean }>(…)",
+        "propsType": "ComboboxPrimitive.Chip.Props & { showRemove?: boolean }",
+        "props": [
+          {
+            "name": "showRemove",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ],
+        "usage": "<ComboboxChip />"
+      },
+      {
+        "name": "ComboboxChips",
+        "kind": "const",
+        "line": 268,
+        "signature": "const ComboboxChips = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Chips>, React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> & ComboboxPrimitive.Chips.Props>(…)",
+        "propsType": "React.ComponentPropsWithRef<typeof ComboboxPrimitive.Chips> & ComboboxPrimitive.Chips.Props",
+        "usage": "<ComboboxChips />"
+      },
+      {
+        "name": "ComboboxChipsInput",
+        "kind": "const",
+        "line": 321,
+        "signature": "const ComboboxChipsInput = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Input>, ComboboxPrimitive.Input.Props>(…)",
+        "propsType": "ComboboxPrimitive.Input.Props",
+        "usage": "<ComboboxChipsInput />"
+      },
+      {
+        "name": "ComboboxCollection",
+        "kind": "function",
+        "line": 229,
+        "signature": "function ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props)",
+        "propsType": "ComboboxPrimitive.Collection.Props",
+        "usage": "<ComboboxCollection />"
+      },
+      {
+        "name": "ComboboxContent",
+        "kind": "const",
+        "line": 109,
+        "signature": "const ComboboxContent = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Popup>, ComboboxPrimitive.Popup.Props & Pick< ComboboxPrimitive.Positioner.Props, \"side\" | \"align\" | \"sideOffset\" | \"alignOffset\" | \"anchor\" >>(…)",
+        "propsType": "ComboboxPrimitive.Popup.Props & Pick< ComboboxPrimitive.Positioner.Props, \"side\" | \"align\" | \"sideOffset\" | \"alignOffset\" | \"anchor\" >",
+        "usage": "<ComboboxContent />"
+      },
+      {
+        "name": "ComboboxEmpty",
+        "kind": "const",
+        "line": 235,
+        "signature": "const ComboboxEmpty = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Empty>, ComboboxPrimitive.Empty.Props>(…)",
+        "propsType": "ComboboxPrimitive.Empty.Props",
+        "usage": "<ComboboxEmpty />"
+      },
+      {
+        "name": "ComboboxGroup",
+        "kind": "const",
+        "line": 199,
+        "signature": "const ComboboxGroup = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Group>, ComboboxPrimitive.Group.Props>(…)",
+        "propsType": "ComboboxPrimitive.Group.Props",
+        "usage": "<ComboboxGroup />"
+      },
+      {
+        "name": "ComboboxInput",
+        "kind": "const",
+        "line": 59,
+        "signature": "const ComboboxInput = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Input>, ComboboxPrimitive.Input.Props & { showTrigger?: boolean showClear?: boolean triggerLabel?: string clearLabel?: string }>(…)",
+        "propsType": "ComboboxPrimitive.Input.Props & { showTrigger?: boolean showClear?: boolean triggerLabel?: string clearLabel?: string }",
+        "props": [
+          {
+            "name": "showTrigger",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "showClear",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "triggerLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Open options\""
+          },
+          {
+            "name": "clearLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Clear selection\""
+          }
+        ],
+        "usage": "<ComboboxInput />"
+      },
+      {
+        "name": "ComboboxItem",
+        "kind": "const",
+        "line": 172,
+        "signature": "const ComboboxItem = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Item>, ComboboxPrimitive.Item.Props>(…)",
+        "propsType": "ComboboxPrimitive.Item.Props",
+        "usage": "<ComboboxItem />"
+      },
+      {
+        "name": "ComboboxLabel",
+        "kind": "const",
+        "line": 214,
+        "signature": "const ComboboxLabel = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.GroupLabel>, ComboboxPrimitive.GroupLabel.Props>(…)",
+        "propsType": "ComboboxPrimitive.GroupLabel.Props",
+        "usage": "<ComboboxLabel />"
+      },
+      {
+        "name": "ComboboxList",
+        "kind": "const",
+        "line": 154,
+        "signature": "const ComboboxList = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.List>, ComboboxPrimitive.List.Props>(…)",
+        "propsType": "ComboboxPrimitive.List.Props",
+        "usage": "<ComboboxList />"
+      },
+      {
+        "name": "ComboboxSeparator",
+        "kind": "const",
+        "line": 253,
+        "signature": "const ComboboxSeparator = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Separator>, ComboboxPrimitive.Separator.Props>(…)",
+        "propsType": "ComboboxPrimitive.Separator.Props",
+        "usage": "<ComboboxSeparator />"
+      },
+      {
+        "name": "ComboboxTrigger",
+        "kind": "const",
+        "line": 22,
+        "signature": "const ComboboxTrigger = React.forwardRef<React.ComponentRef<typeof ComboboxPrimitive.Trigger>, ComboboxPrimitive.Trigger.Props>(…)",
+        "propsType": "ComboboxPrimitive.Trigger.Props",
+        "usage": "<ComboboxTrigger />"
+      },
+      {
+        "name": "ComboboxValue",
+        "kind": "function",
+        "line": 18,
+        "signature": "function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props)",
+        "propsType": "ComboboxPrimitive.Value.Props",
+        "usage": "<ComboboxValue />"
+      },
+      {
+        "name": "useComboboxAnchor",
+        "kind": "function",
+        "line": 336,
+        "signature": "function useComboboxAnchor()",
+        "usage": "const result = useComboboxAnchor(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/combobox",
+      "importStatement": "import { Combobox } from \"@/components/ui/combobox\"",
+      "primaryExport": "Combobox",
+      "example": "<Combobox />"
+    },
+    "ssr": false
+  }
+}

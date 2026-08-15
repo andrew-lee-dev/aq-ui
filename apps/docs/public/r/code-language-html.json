@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-html",
+  "type": "registry:lib",
+  "title": "Code Language Html",
+  "description": "Open-code aq-ui shared library for Code Language Html.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-html@^6.4.12"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-html.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"html\", async () => {\n  const { html } = await import(\"@codemirror/lang-html\")\n  return html()\n})\n\nconst codeLanguageHtml = \"html\" as const\n\nexport { codeLanguageHtml }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-62f8018471453dbc00df31c38113f764c37d54168c43764150bd45ac90c471e6",
+    "api": [
+      {
+        "name": "codeLanguageHtml",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageHtml = \"html\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-html",
+      "importStatement": "import { codeLanguageHtml } from \"@/lib/code-language-html\"",
+      "primaryExport": "codeLanguageHtml"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

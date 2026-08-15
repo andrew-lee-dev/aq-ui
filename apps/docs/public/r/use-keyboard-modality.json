@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-keyboard-modality",
+  "type": "registry:hook",
+  "title": "Use Keyboard Modality",
+  "description": "Open-code aq-ui React hook for Use Keyboard Modality.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-keyboard-modality.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport type InputModality = \"keyboard\" | \"pointer\"\n\nlet currentModality: InputModality = \"keyboard\"\nlet modalityListening = false\nconst modalityListeners = new Set<() => void>()\n\nfunction setModality(modality: InputModality) {\n  if (currentModality === modality) return\n  currentModality = modality\n  modalityListeners.forEach((listener) => listener())\n}\n\nfunction onKeyDown(event: KeyboardEvent) {\n  if (!event.metaKey && !event.altKey && !event.ctrlKey) {\n    setModality(\"keyboard\")\n  }\n}\n\nfunction onPointerDown() {\n  setModality(\"pointer\")\n}\n\nfunction subscribe(listener: () => void) {\n  modalityListeners.add(listener)\n  if (!modalityListening && typeof document !== \"undefined\") {\n    document.addEventListener(\"keydown\", onKeyDown, true)\n    document.addEventListener(\"pointerdown\", onPointerDown, true)\n    modalityListening = true\n  }\n  return () => {\n    modalityListeners.delete(listener)\n    if (\n      modalityListeners.size === 0 &&\n      modalityListening &&\n      typeof document !== \"undefined\"\n    ) {\n      document.removeEventListener(\"keydown\", onKeyDown, true)\n      document.removeEventListener(\"pointerdown\", onPointerDown, true)\n      modalityListening = false\n    }\n  }\n}\n\nexport function useKeyboardModality(\n  defaultValue: InputModality = \"keyboard\"\n): InputModality {\n  return React.useSyncExternalStore(\n    subscribe,\n    () => currentModality,\n    () => defaultValue\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ae72f3e44b1a4c81371b486b3d103394da8cbc8694e539228c761282ee44af8c",
+    "api": [
+      {
+        "name": "InputModality",
+        "kind": "type",
+        "line": 5,
+        "signature": "type InputModality = \"keyboard\" | \"pointer\""
+      },
+      {
+        "name": "useKeyboardModality",
+        "kind": "function",
+        "line": 48,
+        "signature": "function useKeyboardModality(defaultValue: InputModality = \"keyboard\"): InputModality",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "type": "InputModality",
+            "default": "\"keyboard\""
+          }
+        ],
+        "returns": "InputModality",
+        "usage": "const result = useKeyboardModality(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-keyboard-modality",
+      "importStatement": "import { useKeyboardModality } from \"@/hooks/use-keyboard-modality\"",
+      "primaryExport": "useKeyboardModality",
+      "example": "const result = useKeyboardModality(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

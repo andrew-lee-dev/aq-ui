@@ -1,0 +1,91 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "avatar",
+  "type": "registry:ui",
+  "title": "Avatar",
+  "description": "Open-code aq-ui accessible component family for Avatar.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/avatar.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Avatar as AvatarPrimitive } from \"@base-ui/react/avatar\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Avatar = React.forwardRef<\n  React.ComponentRef<typeof AvatarPrimitive.Root>,\n  AvatarPrimitive.Root.Props & {\n    size?: \"default\" | \"sm\" | \"lg\"\n  }\n>(function Avatar({ className, size = \"default\", ...props }, ref) {\n  return (\n    <AvatarPrimitive.Root\n      ref={ref}\n      data-slot=\"avatar\"\n      data-size={size}\n      className={cn(\n        \"group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAvatar.displayName = \"Avatar\"\n\nconst AvatarImage = React.forwardRef<\n  React.ComponentRef<typeof AvatarPrimitive.Image>,\n  AvatarPrimitive.Image.Props\n>(function AvatarImage({ className, ...props }, ref) {\n  return (\n    <AvatarPrimitive.Image\n      ref={ref}\n      data-slot=\"avatar-image\"\n      className={cn(\n        \"aspect-square size-full rounded-full object-cover\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAvatarImage.displayName = \"AvatarImage\"\n\nconst AvatarFallback = React.forwardRef<\n  React.ComponentRef<typeof AvatarPrimitive.Fallback>,\n  AvatarPrimitive.Fallback.Props\n>(function AvatarFallback({ className, ...props }, ref) {\n  return (\n    <AvatarPrimitive.Fallback\n      ref={ref}\n      data-slot=\"avatar-fallback\"\n      className={cn(\n        \"flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAvatarFallback.displayName = \"AvatarFallback\"\n\nconst AvatarBadge = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function AvatarBadge({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      data-slot=\"avatar-badge\"\n      className={cn(\n        \"absolute end-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground bg-blend-color ring-2 ring-background select-none\",\n        \"group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden\",\n        \"group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2\",\n        \"group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAvatarBadge.displayName = \"AvatarBadge\"\n\nconst AvatarGroup = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function AvatarGroup({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"avatar-group\"\n      className={cn(\n        \"group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAvatarGroup.displayName = \"AvatarGroup\"\n\nconst AvatarGroupCount = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function AvatarGroupCount({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"avatar-group-count\"\n      className={cn(\n        \"relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground ring-2 ring-background group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAvatarGroupCount.displayName = \"AvatarGroupCount\"\n\nexport {\n  Avatar,\n  AvatarImage,\n  AvatarFallback,\n  AvatarGroup,\n  AvatarGroupCount,\n  AvatarBadge,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-19798741d61cd8f0096b8c73c9c58175ce5a8d286cf2b05c5c3cd6da727c6625",
+    "api": [
+      {
+        "name": "Avatar",
+        "kind": "const",
+        "line": 8,
+        "signature": "const Avatar = React.forwardRef<React.ComponentRef<typeof AvatarPrimitive.Root>, AvatarPrimitive.Root.Props & { size?: \"default\" | \"sm\" | \"lg\" }>(…)",
+        "propsType": "AvatarPrimitive.Root.Props & { size?: \"default\" | \"sm\" | \"lg\" }",
+        "props": [
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "\"default\" | \"sm\" | \"lg\"",
+            "default": "\"default\""
+          }
+        ],
+        "usage": "<Avatar />"
+      },
+      {
+        "name": "AvatarBadge",
+        "kind": "const",
+        "line": 65,
+        "signature": "const AvatarBadge = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<AvatarBadge />"
+      },
+      {
+        "name": "AvatarFallback",
+        "kind": "const",
+        "line": 47,
+        "signature": "const AvatarFallback = React.forwardRef<React.ComponentRef<typeof AvatarPrimitive.Fallback>, AvatarPrimitive.Fallback.Props>(…)",
+        "propsType": "AvatarPrimitive.Fallback.Props",
+        "usage": "<AvatarFallback />"
+      },
+      {
+        "name": "AvatarGroup",
+        "kind": "const",
+        "line": 86,
+        "signature": "const AvatarGroup = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<AvatarGroup />"
+      },
+      {
+        "name": "AvatarGroupCount",
+        "kind": "const",
+        "line": 104,
+        "signature": "const AvatarGroupCount = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<AvatarGroupCount />"
+      },
+      {
+        "name": "AvatarImage",
+        "kind": "const",
+        "line": 29,
+        "signature": "const AvatarImage = React.forwardRef<React.ComponentRef<typeof AvatarPrimitive.Image>, AvatarPrimitive.Image.Props>(…)",
+        "propsType": "AvatarPrimitive.Image.Props",
+        "usage": "<AvatarImage />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/avatar",
+      "importStatement": "import { Avatar } from \"@/components/ui/avatar\"",
+      "primaryExport": "Avatar",
+      "example": "<Avatar />"
+    },
+    "ssr": false
+  }
+}

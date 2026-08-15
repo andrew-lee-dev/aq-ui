@@ -1,0 +1,48 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-reduced-motion",
+  "type": "registry:hook",
+  "title": "Use Reduced Motion",
+  "description": "Open-code aq-ui React hook for Use Reduced Motion.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-media-query"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-reduced-motion.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport { useMediaQuery } from \"@/hooks/use-media-query\"\n\nexport function useReducedMotion(defaultValue = false): boolean {\n  return useMediaQuery(\"(prefers-reduced-motion: reduce)\", { defaultValue })\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-cb88237a042cba449feb3f7bfe3f4b8c96dad50fe4f5fa439767ffe91a54a112",
+    "api": [
+      {
+        "name": "useReducedMotion",
+        "kind": "function",
+        "line": 5,
+        "signature": "function useReducedMotion(defaultValue = false): boolean",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "default": "false"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useReducedMotion(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-reduced-motion",
+      "importStatement": "import { useReducedMotion } from \"@/hooks/use-reduced-motion\"",
+      "primaryExport": "useReducedMotion",
+      "example": "const result = useReducedMotion(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

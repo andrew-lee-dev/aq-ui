@@ -1,0 +1,126 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-markdown-editor",
+  "type": "registry:hook",
+  "title": "Use Markdown Editor",
+  "description": "Open-code aq-ui React hook for Use Markdown Editor.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-code-editor"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-markdown-editor.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport type { CodeEditorHandle } from \"@/hooks/use-code-editor\"\n\ntype MarkdownEditorMode = \"write\" | \"preview\" | \"split\"\n\ntype MarkdownCommand =\n  | \"bold\"\n  | \"italic\"\n  | \"strike\"\n  | \"heading\"\n  | \"bullet-list\"\n  | \"ordered-list\"\n  | \"task-list\"\n  | \"quote\"\n  | \"link\"\n  | \"image\"\n  | \"table\"\n  | \"code\"\n\ninterface UseMarkdownEditorOptions {\n  value?: string\n  defaultValue?: string\n  onChange?: (value: string) => void\n  mode?: MarkdownEditorMode\n  defaultMode?: MarkdownEditorMode\n  onModeChange?: (mode: MarkdownEditorMode) => void\n  maxLength?: number\n}\n\nfunction countWords(value: string) {\n  const trimmed = value.trim()\n  return trimmed ? trimmed.split(/\\s+/u).length : 0\n}\n\nfunction useMarkdownEditor({\n  value,\n  defaultValue = \"\",\n  onChange,\n  mode,\n  defaultMode = \"write\",\n  onModeChange,\n  maxLength,\n}: UseMarkdownEditorOptions = {}) {\n  const controlled = value !== undefined\n  const modeControlled = mode !== undefined\n  const [internalValue, setInternalValue] = React.useState(defaultValue)\n  const [internalMode, setInternalMode] =\n    React.useState<MarkdownEditorMode>(defaultMode)\n  const [fullscreen, setFullscreen] = React.useState(false)\n  const currentValue = controlled ? value : internalValue\n  const currentMode = modeControlled ? mode : internalMode\n\n  const setValue = React.useCallback(\n    (nextValue: string) => {\n      const limited =\n        typeof maxLength === \"number\"\n          ? nextValue.slice(0, Math.max(0, maxLength))\n          : nextValue\n      if (!controlled) setInternalValue(limited)\n      if (limited !== currentValue) onChange?.(limited)\n    },\n    [controlled, currentValue, maxLength, onChange]\n  )\n\n  const setMode = React.useCallback(\n    (nextMode: MarkdownEditorMode) => {\n      if (!modeControlled) setInternalMode(nextMode)\n      if (nextMode !== currentMode) onModeChange?.(nextMode)\n    },\n    [currentMode, modeControlled, onModeChange]\n  )\n\n  const runCommand = React.useCallback(\n    (command: MarkdownCommand, editor: CodeEditorHandle | null) => {\n      if (!editor) return\n      const selection = editor.getSelection()\n      const selected = selection.text\n\n      const replace = (\n        content: string,\n        selectedFrom: number,\n        selectedTo = selectedFrom\n      ) => {\n        editor.replaceSelection(content, {\n          anchor: selection.from + selectedFrom,\n          head: selection.from + selectedTo,\n        })\n      }\n\n      const wrap = (before: string, after: string, fallback: string) => {\n        const content = selected || fallback\n        replace(\n          `${before}${content}${after}`,\n          before.length,\n          before.length + content.length\n        )\n      }\n\n      const prefixLines = (prefix: string, fallback: string) => {\n        const content = selected || fallback\n        const prefixed = content\n          .split(\"\\n\")\n          .map((line, index) =>\n            prefix.includes(\"{n}\")\n              ? `${prefix.replace(\"{n}\", String(index + 1))}${line}`\n              : `${prefix}${line}`\n          )\n          .join(\"\\n\")\n        replace(prefixed, 0, prefixed.length)\n      }\n\n      switch (command) {\n        case \"bold\":\n          wrap(\"**\", \"**\", \"bold text\")\n          break\n        case \"italic\":\n          wrap(\"_\", \"_\", \"italic text\")\n          break\n        case \"strike\":\n          wrap(\"~~\", \"~~\", \"strikethrough text\")\n          break\n        case \"heading\":\n          prefixLines(\"## \", \"Heading\")\n          break\n        case \"bullet-list\":\n          prefixLines(\"- \", \"List item\")\n          break\n        case \"ordered-list\":\n          prefixLines(\"{n}. \", \"List item\")\n          break\n        case \"task-list\":\n          prefixLines(\"- [ ] \", \"Task\")\n          break\n        case \"quote\":\n          prefixLines(\"> \", \"Quote\")\n          break\n        case \"link\":\n          wrap(\"[\", \"](https://example.com)\", \"link text\")\n          break\n        case \"image\":\n          wrap(\"![\", \"](https://example.com/image.png)\", \"image description\")\n          break\n        case \"table\": {\n          const table =\n            \"| Column 1 | Column 2 |\\n| --- | --- |\\n| Value 1 | Value 2 |\"\n          replace(table, 0, table.length)\n          break\n        }\n        case \"code\":\n          if (selected.includes(\"\\n\")) {\n            wrap(\"```\\n\", \"\\n```\", \"code\")\n          } else {\n            wrap(\"`\", \"`\", \"code\")\n          }\n          break\n      }\n    },\n    []\n  )\n\n  return {\n    value: currentValue,\n    setValue,\n    mode: currentMode,\n    setMode,\n    fullscreen,\n    setFullscreen,\n    toggleFullscreen: () => setFullscreen((current) => !current),\n    runCommand,\n    characters: currentValue.length,\n    words: countWords(currentValue),\n    limitReached:\n      typeof maxLength === \"number\" && currentValue.length >= maxLength,\n  }\n}\n\nexport { countWords, useMarkdownEditor }\nexport type { MarkdownCommand, MarkdownEditorMode, UseMarkdownEditorOptions }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-67e89817a6a5f96c0b07180abab672bfd32180957050846ae9031310b4089584",
+    "api": [
+      {
+        "name": "countWords",
+        "kind": "function",
+        "line": 33,
+        "signature": "function countWords(value: string)",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "string"
+          }
+        ],
+        "usage": "countWords(/* arguments */)"
+      },
+      {
+        "name": "MarkdownCommand",
+        "kind": "type",
+        "line": 9,
+        "signature": "type MarkdownCommand = \"bold\" | \"italic\" | \"strike\" | \"heading\" | \"bullet-list\" | \"ordered-list\" | \"task-list\" | \"quote\" | \"link\" | \"image\" | \"table\" | \"code\""
+      },
+      {
+        "name": "MarkdownEditorMode",
+        "kind": "type",
+        "line": 7,
+        "signature": "type MarkdownEditorMode = \"write\" | \"preview\" | \"split\""
+      },
+      {
+        "name": "useMarkdownEditor",
+        "kind": "function",
+        "line": 38,
+        "signature": "function useMarkdownEditor({ value, defaultValue = \"\", onChange, mode, defaultMode = \"write\", onModeChange, maxLength, }: UseMarkdownEditorOptions = {})",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseMarkdownEditorOptions",
+            "default": "{}"
+          }
+        ],
+        "usage": "const result = useMarkdownEditor(/* arguments */)"
+      },
+      {
+        "name": "UseMarkdownEditorOptions",
+        "kind": "interface",
+        "line": 23,
+        "signature": "interface UseMarkdownEditorOptions",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "mode",
+            "kind": "property",
+            "optional": true,
+            "type": "MarkdownEditorMode"
+          },
+          {
+            "name": "defaultMode",
+            "kind": "property",
+            "optional": true,
+            "type": "MarkdownEditorMode",
+            "default": "\"write\""
+          },
+          {
+            "name": "onModeChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(mode: MarkdownEditorMode) => void"
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-markdown-editor",
+      "importStatement": "import { useMarkdownEditor } from \"@/hooks/use-markdown-editor\"",
+      "primaryExport": "useMarkdownEditor",
+      "example": "const result = useMarkdownEditor(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

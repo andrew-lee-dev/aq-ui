@@ -1,0 +1,337 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-code-editor",
+  "type": "registry:hook",
+  "title": "Use Code Editor",
+  "description": "Open-code aq-ui React hook for Use Code Editor.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/autocomplete@^6.20.3",
+    "@codemirror/commands@^6.10.4",
+    "@codemirror/language@^6.12.4",
+    "@codemirror/lint@^6.9.7",
+    "@codemirror/search@^6.7.1",
+    "@codemirror/state@^6.7.1",
+    "@codemirror/view@^6.43.8"
+  ],
+  "registryDependencies": [
+    "code-language-preset",
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-code-editor.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport \"@/lib/code-language-preset\"\n\nimport * as React from \"react\"\nimport {\n  autocompletion,\n  closeBrackets,\n  closeBracketsKeymap,\n  completionKeymap,\n} from \"@codemirror/autocomplete\"\nimport {\n  defaultKeymap,\n  history,\n  historyKeymap,\n  indentWithTab as indentWithTabCommand,\n  redo,\n  undo,\n} from \"@codemirror/commands\"\nimport {\n  bracketMatching,\n  defaultHighlightStyle,\n  foldGutter as createFoldGutter,\n  foldKeymap,\n  indentUnit,\n  syntaxHighlighting,\n} from \"@codemirror/language\"\nimport { type Diagnostic, lintGutter, setDiagnostics } from \"@codemirror/lint\"\nimport { highlightSelectionMatches, searchKeymap } from \"@codemirror/search\"\nimport {\n  Compartment,\n  Annotation,\n  EditorSelection,\n  EditorState,\n  Transaction,\n  type Extension,\n} from \"@codemirror/state\"\nimport {\n  crosshairCursor,\n  drawSelection,\n  dropCursor,\n  EditorView,\n  highlightActiveLine as createHighlightActiveLine,\n  highlightSpecialChars,\n  keymap,\n  lineNumbers as createLineNumbers,\n  placeholder as createPlaceholder,\n  rectangularSelection,\n} from \"@codemirror/view\"\nimport {\n  loadCodeLanguage,\n  normalizeCodeLanguage,\n  registerCodeLanguage,\n} from \"@/lib/code-language-registry\"\nimport type {\n  BuiltInCodeLanguage,\n  CodeLanguage,\n  CodeLanguageLoader,\n} from \"@/lib/code-language-registry\"\n\ntype CodeDiagnostic = Diagnostic\n\ninterface CodeSelection {\n  from: number\n  to: number\n  anchor: number\n  head: number\n  text: string\n}\n\ninterface CodeEditorHandle {\n  focus: () => void\n  getValue: () => string\n  setValue: (value: string) => void\n  getSelection: () => CodeSelection\n  replaceSelection: (\n    value: string,\n    selection?: { anchor: number; head?: number }\n  ) => void\n  undo: () => boolean\n  redo: () => boolean\n  getView: () => EditorView | null\n  getScrollElement: () => HTMLElement | null\n}\n\nconst externalDocumentUpdate = Annotation.define<boolean>()\nconst emptyCodeExtensions: readonly Extension[] = []\nconst emptyCodeDiagnostics: readonly CodeDiagnostic[] = []\n\nconst aqEditorTheme = EditorView.theme({\n  \"&\": {\n    backgroundColor: \"transparent\",\n    color: \"var(--foreground)\",\n    fontSize: \"0.875rem\",\n    height: \"100%\",\n  },\n  \"&.cm-focused\": { outline: \"none\" },\n  \".cm-scroller\": {\n    fontFamily:\n      \"var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace)\",\n    lineHeight: \"1.6\",\n    minHeight: \"inherit\",\n    maxHeight: \"inherit\",\n  },\n  \".cm-content\": { caretColor: \"var(--foreground)\", padding: \"0.75rem 0\" },\n  \".cm-line\": { padding: \"0 0.875rem\" },\n  \".cm-gutters\": {\n    backgroundColor: \"color-mix(in oklch, var(--muted) 45%, transparent)\",\n    borderRight: \"1px solid var(--border)\",\n    color: \"var(--muted-foreground)\",\n  },\n  \".cm-activeLine, .cm-activeLineGutter\": {\n    backgroundColor: \"color-mix(in oklch, var(--muted) 55%, transparent)\",\n  },\n  \".cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection\":\n    {\n      backgroundColor:\n        \"color-mix(in oklch, var(--primary) 24%, transparent) !important\",\n    },\n  \".cm-cursor, .cm-dropCursor\": { borderLeftColor: \"var(--foreground)\" },\n  \".cm-panels\": {\n    backgroundColor: \"var(--popover)\",\n    color: \"var(--popover-foreground)\",\n  },\n  \".cm-tooltip\": {\n    backgroundColor: \"var(--popover)\",\n    border: \"1px solid var(--border)\",\n    color: \"var(--popover-foreground)\",\n  },\n  \".cm-diagnostic-error\": { borderLeftColor: \"var(--destructive)\" },\n  \".cm-placeholder\": { color: \"var(--muted-foreground)\" },\n})\n\ninterface UseCodeEditorOptions {\n  value?: string\n  defaultValue?: string\n  onChange?: (value: string) => void\n  language?: CodeLanguage\n  readOnly?: boolean\n  disabled?: boolean\n  lineNumbers?: boolean\n  lineWrapping?: boolean\n  foldGutter?: boolean\n  highlightActiveLine?: boolean\n  tabSize?: number\n  indentWithTab?: boolean\n  autofocus?: boolean\n  placeholder?: string\n  diagnostics?: readonly CodeDiagnostic[]\n  extensions?: readonly Extension[]\n  ariaLabel?: string\n  onReady?: (handle: CodeEditorHandle) => void\n  onLanguageError?: (error: Error) => void\n}\n\ntype CodeLanguageStatus = \"idle\" | \"loading\" | \"ready\" | \"error\"\n\nfunction useCodeEditor({\n  value,\n  defaultValue = \"\",\n  onChange,\n  language = \"plaintext\",\n  readOnly = false,\n  disabled = false,\n  lineNumbers = true,\n  lineWrapping = false,\n  foldGutter = true,\n  highlightActiveLine = true,\n  tabSize = 2,\n  indentWithTab = false,\n  autofocus = false,\n  placeholder = \"\",\n  diagnostics = emptyCodeDiagnostics,\n  extensions = emptyCodeExtensions,\n  ariaLabel = \"Code editor\",\n  onReady,\n  onLanguageError,\n}: UseCodeEditorOptions = {}) {\n  const containerRef = React.useRef<HTMLDivElement>(null)\n  const viewRef = React.useRef<EditorView | null>(null)\n  const onChangeRef = React.useRef(onChange)\n  const onReadyRef = React.useRef(onReady)\n  const onLanguageErrorRef = React.useRef(onLanguageError)\n  const initialDocumentRef = React.useRef(value ?? defaultValue)\n  const [view, setView] = React.useState<EditorView | null>(null)\n  const [languageStatus, setLanguageStatus] =\n    React.useState<CodeLanguageStatus>(\"idle\")\n  const [languageError, setLanguageError] = React.useState<Error | null>(null)\n\n  const compartmentsRef = React.useRef({\n    language: new Compartment(),\n    editable: new Compartment(),\n    attributes: new Compartment(),\n    lines: new Compartment(),\n    wrapping: new Compartment(),\n    folding: new Compartment(),\n    activeLine: new Compartment(),\n    indentation: new Compartment(),\n    keymap: new Compartment(),\n    placeholder: new Compartment(),\n    custom: new Compartment(),\n  })\n\n  React.useEffect(() => {\n    onChangeRef.current = onChange\n    onReadyRef.current = onReady\n    onLanguageErrorRef.current = onLanguageError\n  })\n\n  const getHandle = React.useCallback((): CodeEditorHandle => {\n    return {\n      focus() {\n        viewRef.current?.focus()\n      },\n      getValue() {\n        return viewRef.current?.state.doc.toString() ?? \"\"\n      },\n      setValue(nextValue) {\n        const currentView = viewRef.current\n        if (!currentView) return\n        const current = currentView.state.doc.toString()\n        if (current === nextValue) return\n        currentView.dispatch({\n          changes: { from: 0, to: current.length, insert: nextValue },\n        })\n      },\n      getSelection() {\n        const currentView = viewRef.current\n        if (!currentView) {\n          return { from: 0, to: 0, anchor: 0, head: 0, text: \"\" }\n        }\n        const { anchor, head, from, to } = currentView.state.selection.main\n        return {\n          anchor,\n          head,\n          from,\n          to,\n          text: currentView.state.sliceDoc(from, to),\n        }\n      },\n      replaceSelection(nextValue, nextSelection) {\n        const currentView = viewRef.current\n        if (!currentView) return\n        const { from, to } = currentView.state.selection.main\n        const anchor = nextSelection?.anchor ?? from + nextValue.length\n        const head = nextSelection?.head ?? anchor\n        currentView.dispatch({\n          changes: { from, to, insert: nextValue },\n          selection: EditorSelection.single(anchor, head),\n          scrollIntoView: true,\n        })\n        currentView.focus()\n      },\n      undo() {\n        return viewRef.current ? undo(viewRef.current) : false\n      },\n      redo() {\n        return viewRef.current ? redo(viewRef.current) : false\n      },\n      getView() {\n        return viewRef.current\n      },\n      getScrollElement() {\n        return viewRef.current?.scrollDOM ?? null\n      },\n    }\n  }, [])\n\n  React.useEffect(() => {\n    const parent = containerRef.current\n    if (!parent) return\n\n    const compartments = compartmentsRef.current\n    const editable = !(readOnly || disabled)\n    const state = EditorState.create({\n      doc: initialDocumentRef.current,\n      extensions: [\n        highlightSpecialChars(),\n        history(),\n        drawSelection(),\n        dropCursor(),\n        rectangularSelection(),\n        crosshairCursor(),\n        bracketMatching(),\n        closeBrackets(),\n        autocompletion(),\n        highlightSelectionMatches(),\n        lintGutter(),\n        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),\n        aqEditorTheme,\n        compartments.keymap.of(\n          keymap.of([\n            ...closeBracketsKeymap,\n            ...defaultKeymap,\n            ...searchKeymap,\n            ...historyKeymap,\n            ...foldKeymap,\n            ...completionKeymap,\n            ...(indentWithTab ? [indentWithTabCommand] : []),\n          ])\n        ),\n        compartments.language.of([]),\n        compartments.editable.of([\n          EditorState.readOnly.of(!editable),\n          EditorView.editable.of(editable),\n        ]),\n        compartments.attributes.of(\n          EditorView.contentAttributes.of({\n            \"aria-label\": ariaLabel,\n            \"aria-disabled\": disabled ? \"true\" : \"false\",\n            \"aria-readonly\": !editable ? \"true\" : \"false\",\n            spellcheck: \"false\",\n            tabindex: disabled ? \"-1\" : \"0\",\n          })\n        ),\n        compartments.lines.of(lineNumbers ? createLineNumbers() : []),\n        compartments.wrapping.of(lineWrapping ? EditorView.lineWrapping : []),\n        compartments.folding.of(foldGutter ? createFoldGutter() : []),\n        compartments.activeLine.of(\n          highlightActiveLine ? createHighlightActiveLine() : []\n        ),\n        compartments.indentation.of([\n          indentUnit.of(\" \".repeat(tabSize)),\n          EditorState.tabSize.of(tabSize),\n        ]),\n        compartments.placeholder.of(\n          placeholder ? createPlaceholder(placeholder) : []\n        ),\n        compartments.custom.of([...extensions]),\n        EditorView.updateListener.of((update) => {\n          const external = update.transactions.some((transaction) =>\n            transaction.annotation(externalDocumentUpdate)\n          )\n          if (update.docChanged && !external) {\n            onChangeRef.current?.(update.state.doc.toString())\n          }\n        }),\n      ],\n    })\n\n    const nextView = new EditorView({ state, parent })\n    viewRef.current = nextView\n    setView(nextView)\n\n    const handle = getHandle()\n    onReadyRef.current?.(handle)\n    if (autofocus && !disabled) {\n      queueMicrotask(() => nextView.focus())\n    }\n\n    return () => {\n      nextView.destroy()\n      viewRef.current = null\n      setView(null)\n    }\n    // EditorView must be created once. Dynamic options are reconfigured below.\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [])\n\n  React.useEffect(() => {\n    if (!view || value === undefined) return\n    const currentValue = view.state.doc.toString()\n    if (currentValue === value) return\n    const selection = EditorSelection.create(\n      view.state.selection.ranges.map((range) =>\n        EditorSelection.range(\n          Math.min(range.anchor, value.length),\n          Math.min(range.head, value.length)\n        )\n      ),\n      view.state.selection.mainIndex\n    )\n\n    view.dispatch({\n      changes: { from: 0, to: currentValue.length, insert: value },\n      selection,\n      annotations: [\n        externalDocumentUpdate.of(true),\n        Transaction.addToHistory.of(false),\n      ],\n    })\n  }, [value, view])\n\n  React.useEffect(() => {\n    if (!view) return\n    const compartments = compartmentsRef.current\n    const editable = !(readOnly || disabled)\n\n    view.dispatch({\n      effects: [\n        compartments.editable.reconfigure([\n          EditorState.readOnly.of(!editable),\n          EditorView.editable.of(editable),\n        ]),\n        compartments.attributes.reconfigure(\n          EditorView.contentAttributes.of({\n            \"aria-label\": ariaLabel,\n            \"aria-disabled\": disabled ? \"true\" : \"false\",\n            \"aria-readonly\": !editable ? \"true\" : \"false\",\n            spellcheck: \"false\",\n            tabindex: disabled ? \"-1\" : \"0\",\n          })\n        ),\n      ],\n    })\n  }, [ariaLabel, disabled, readOnly, view])\n\n  React.useEffect(() => {\n    if (!view) return\n    const compartments = compartmentsRef.current\n    view.dispatch({\n      effects: [\n        compartments.lines.reconfigure(lineNumbers ? createLineNumbers() : []),\n        compartments.wrapping.reconfigure(\n          lineWrapping ? EditorView.lineWrapping : []\n        ),\n        compartments.folding.reconfigure(foldGutter ? createFoldGutter() : []),\n        compartments.activeLine.reconfigure(\n          highlightActiveLine ? createHighlightActiveLine() : []\n        ),\n      ],\n    })\n  }, [foldGutter, highlightActiveLine, lineNumbers, lineWrapping, view])\n\n  React.useEffect(() => {\n    if (!view) return\n    const compartments = compartmentsRef.current\n    view.dispatch({\n      effects: [\n        compartments.indentation.reconfigure([\n          indentUnit.of(\" \".repeat(Math.max(1, tabSize))),\n          EditorState.tabSize.of(Math.max(1, tabSize)),\n        ]),\n        compartments.keymap.reconfigure(\n          keymap.of([\n            ...closeBracketsKeymap,\n            ...defaultKeymap,\n            ...searchKeymap,\n            ...historyKeymap,\n            ...foldKeymap,\n            ...completionKeymap,\n            ...(indentWithTab ? [indentWithTabCommand] : []),\n          ])\n        ),\n        compartments.placeholder.reconfigure(\n          placeholder ? createPlaceholder(placeholder) : []\n        ),\n        compartments.custom.reconfigure([...extensions]),\n      ],\n    })\n  }, [extensions, indentWithTab, placeholder, tabSize, view])\n\n  React.useEffect(() => {\n    if (!view) return\n    let active = true\n    queueMicrotask(() => {\n      if (!active) return\n      setLanguageStatus(\"loading\")\n      setLanguageError(null)\n    })\n\n    loadCodeLanguage(language)\n      .then((extension) => {\n        if (!active || viewRef.current !== view) return\n        view.dispatch({\n          effects: compartmentsRef.current.language.reconfigure(extension),\n        })\n        setLanguageStatus(\"ready\")\n      })\n      .catch((reason: unknown) => {\n        if (!active) return\n        const error =\n          reason instanceof Error\n            ? reason\n            : new Error(\"Failed to load language\")\n        view.dispatch({\n          effects: compartmentsRef.current.language.reconfigure([]),\n        })\n        setLanguageError(error)\n        setLanguageStatus(\"error\")\n        onLanguageErrorRef.current?.(error)\n      })\n\n    return () => {\n      active = false\n    }\n  }, [language, view])\n\n  React.useEffect(() => {\n    if (!view) return\n    view.dispatch(setDiagnostics(view.state, [...diagnostics]))\n  }, [diagnostics, view])\n\n  const handle = React.useMemo(() => getHandle(), [getHandle])\n\n  return {\n    containerRef,\n    view,\n    handle,\n    language: normalizeCodeLanguage(language),\n    languageStatus,\n    languageError,\n  }\n}\n\nexport {\n  loadCodeLanguage,\n  normalizeCodeLanguage,\n  registerCodeLanguage,\n  useCodeEditor,\n}\nexport type {\n  BuiltInCodeLanguage,\n  CodeDiagnostic,\n  CodeEditorHandle,\n  CodeLanguage,\n  CodeLanguageLoader,\n  CodeLanguageStatus,\n  CodeSelection,\n  UseCodeEditorOptions,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-844c6b76b29ad3c19acb9572f3ced8f2e70cb78d4bb46fccb0ff486eec51e8a3",
+    "api": [
+      {
+        "name": "BuiltInCodeLanguage",
+        "kind": "type",
+        "line": 56,
+        "signature": "export type { BuiltInCodeLanguage } from \"@/lib/code-language-registry\"",
+        "source": "@/lib/code-language-registry"
+      },
+      {
+        "name": "CodeDiagnostic",
+        "kind": "type",
+        "line": 61,
+        "signature": "type CodeDiagnostic = Diagnostic"
+      },
+      {
+        "name": "CodeEditorHandle",
+        "kind": "interface",
+        "line": 71,
+        "signature": "interface CodeEditorHandle",
+        "members": [
+          {
+            "name": "focus",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "getValue",
+            "kind": "property",
+            "type": "() => string"
+          },
+          {
+            "name": "setValue",
+            "kind": "property",
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "getSelection",
+            "kind": "property",
+            "type": "() => CodeSelection"
+          },
+          {
+            "name": "replaceSelection",
+            "kind": "property",
+            "type": "( value: string, selection?: { anchor: number; head?: number } ) => void"
+          },
+          {
+            "name": "undo",
+            "kind": "property",
+            "type": "() => boolean"
+          },
+          {
+            "name": "redo",
+            "kind": "property",
+            "type": "() => boolean"
+          },
+          {
+            "name": "getView",
+            "kind": "property",
+            "type": "() => EditorView | null"
+          },
+          {
+            "name": "getScrollElement",
+            "kind": "property",
+            "type": "() => HTMLElement | null"
+          }
+        ]
+      },
+      {
+        "name": "CodeLanguage",
+        "kind": "type",
+        "line": 57,
+        "signature": "export type { CodeLanguage } from \"@/lib/code-language-registry\"",
+        "source": "@/lib/code-language-registry"
+      },
+      {
+        "name": "CodeLanguageLoader",
+        "kind": "type",
+        "line": 58,
+        "signature": "export type { CodeLanguageLoader } from \"@/lib/code-language-registry\"",
+        "source": "@/lib/code-language-registry"
+      },
+      {
+        "name": "CodeLanguageStatus",
+        "kind": "type",
+        "line": 156,
+        "signature": "type CodeLanguageStatus = \"idle\" | \"loading\" | \"ready\" | \"error\""
+      },
+      {
+        "name": "CodeSelection",
+        "kind": "interface",
+        "line": 63,
+        "signature": "interface CodeSelection",
+        "members": [
+          {
+            "name": "from",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "to",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "anchor",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "head",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "text",
+            "kind": "property",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "loadCodeLanguage",
+        "kind": "function",
+        "line": 51,
+        "signature": "export { loadCodeLanguage } from \"@/lib/code-language-registry\"",
+        "source": "@/lib/code-language-registry",
+        "usage": "loadCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "normalizeCodeLanguage",
+        "kind": "function",
+        "line": 52,
+        "signature": "export { normalizeCodeLanguage } from \"@/lib/code-language-registry\"",
+        "source": "@/lib/code-language-registry",
+        "usage": "normalizeCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "registerCodeLanguage",
+        "kind": "function",
+        "line": 53,
+        "signature": "export { registerCodeLanguage } from \"@/lib/code-language-registry\"",
+        "source": "@/lib/code-language-registry",
+        "usage": "registerCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "useCodeEditor",
+        "kind": "function",
+        "line": 158,
+        "signature": "function useCodeEditor({ value, defaultValue = \"\", onChange, language = \"plaintext\", readOnly = false, disabled = false, lineNumbers = true, lineWrapping = false, foldGutter = true, highlightActiveLine = true, tabSize = 2, indentWithTab = false, autofocus = fals…)",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseCodeEditorOptions",
+            "default": "{}"
+          }
+        ],
+        "usage": "const result = useCodeEditor(/* arguments */)"
+      },
+      {
+        "name": "UseCodeEditorOptions",
+        "kind": "interface",
+        "line": 134,
+        "signature": "interface UseCodeEditorOptions",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "language",
+            "kind": "property",
+            "optional": true,
+            "type": "CodeLanguage",
+            "default": "\"plaintext\""
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "lineNumbers",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "lineWrapping",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "foldGutter",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "highlightActiveLine",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "tabSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "2"
+          },
+          {
+            "name": "indentWithTab",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"\""
+          },
+          {
+            "name": "diagnostics",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly CodeDiagnostic[]",
+            "default": "emptyCodeDiagnostics"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly Extension[]",
+            "default": "emptyCodeExtensions"
+          },
+          {
+            "name": "ariaLabel",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Code editor\""
+          },
+          {
+            "name": "onReady",
+            "kind": "property",
+            "optional": true,
+            "type": "(handle: CodeEditorHandle) => void"
+          },
+          {
+            "name": "onLanguageError",
+            "kind": "property",
+            "optional": true,
+            "type": "(error: Error) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-code-editor",
+      "importStatement": "import { useCodeEditor } from \"@/hooks/use-code-editor\"",
+      "primaryExport": "useCodeEditor",
+      "example": "const result = useCodeEditor(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

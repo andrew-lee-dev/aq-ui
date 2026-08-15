@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-yaml",
+  "type": "registry:lib",
+  "title": "Code Language Yaml",
+  "description": "Open-code aq-ui shared library for Code Language Yaml.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-yaml@^6.1.3"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-yaml.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"yaml\", async () => {\n  const { yaml } = await import(\"@codemirror/lang-yaml\")\n  return yaml()\n})\n\nconst codeLanguageYaml = \"yaml\" as const\n\nexport { codeLanguageYaml }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-336116599ba78ba95c561fd218f9ff7e1d376c7fb78f6405802b79b3d6fe2076",
+    "api": [
+      {
+        "name": "codeLanguageYaml",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageYaml = \"yaml\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-yaml",
+      "importStatement": "import { codeLanguageYaml } from \"@/lib/code-language-yaml\"",
+      "primaryExport": "codeLanguageYaml"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input",
+  "type": "registry:ui",
+  "title": "Input",
+  "description": "Open-code aq-ui accessible component family for Input.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/input.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { Input as InputPrimitive } from \"@base-ui/react/input\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Input = React.forwardRef<\n  React.ComponentRef<typeof InputPrimitive>,\n  React.ComponentProps<\"input\">\n>(function Input({ className, type, ...props }, ref) {\n  return (\n    <InputPrimitive\n      ref={ref}\n      type={type}\n      data-slot=\"input\"\n      className={cn(\n        \"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nInput.displayName = \"Input\"\n\nexport { Input }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-9d3babd32786bc89b3bfec2d6d955c87453ec29df9e06dcdb9291ae9e0dfff3f",
+    "api": [
+      {
+        "name": "Input",
+        "kind": "const",
+        "line": 6,
+        "signature": "const Input = React.forwardRef<React.ComponentRef<typeof InputPrimitive>, React.ComponentProps<\"input\">>(…)",
+        "propsType": "React.ComponentProps<\"input\">",
+        "usage": "<Input />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/input",
+      "importStatement": "import { Input } from \"@/components/ui/input\"",
+      "primaryExport": "Input",
+      "example": "<Input />"
+    },
+    "ssr": true
+  }
+}

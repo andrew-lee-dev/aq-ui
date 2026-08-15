@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-css",
+  "type": "registry:lib",
+  "title": "Code Language Css",
+  "description": "Open-code aq-ui shared library for Code Language Css.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-css@^6.3.1"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-css.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"css\", async () => {\n  const { css } = await import(\"@codemirror/lang-css\")\n  return css()\n})\n\nconst codeLanguageCss = \"css\" as const\n\nexport { codeLanguageCss }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-28dd77b56194b3e459d5b6a81be4cda438c05b082b0515648ae147cd85bb3ec6",
+    "api": [
+      {
+        "name": "codeLanguageCss",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageCss = \"css\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-css",
+      "importStatement": "import { codeLanguageCss } from \"@/lib/code-language-css\"",
+      "primaryExport": "codeLanguageCss"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

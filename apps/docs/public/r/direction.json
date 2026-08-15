@@ -1,0 +1,48 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "direction",
+  "type": "registry:ui",
+  "title": "Direction",
+  "description": "Open-code aq-ui accessible component family for Direction.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "components/ui/direction.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nexport {\n  DirectionProvider,\n  useDirection,\n} from \"@base-ui/react/direction-provider\"\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-661ff5b9c0dc26edde1226bfedc0ab50976d84f8bae42ca83a38dc3b478fd4d4",
+    "api": [
+      {
+        "name": "DirectionProvider",
+        "kind": "const",
+        "line": 4,
+        "signature": "export { DirectionProvider } from \"@base-ui/react/direction-provider\"",
+        "source": "@base-ui/react/direction-provider",
+        "usage": "<DirectionProvider />"
+      },
+      {
+        "name": "useDirection",
+        "kind": "function",
+        "line": 5,
+        "signature": "export { useDirection } from \"@base-ui/react/direction-provider\"",
+        "source": "@base-ui/react/direction-provider",
+        "usage": "const result = useDirection(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/direction",
+      "importStatement": "import { DirectionProvider } from \"@/components/ui/direction\"",
+      "primaryExport": "DirectionProvider",
+      "example": "<DirectionProvider />"
+    },
+    "ssr": false
+  }
+}

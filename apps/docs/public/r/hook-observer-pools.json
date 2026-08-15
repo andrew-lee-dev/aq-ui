@@ -1,0 +1,121 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hook-observer-pools",
+  "type": "registry:hook",
+  "title": "Observer Pools",
+  "description": "Open-code aq-ui React hook for _observer Pools.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/_observer-pools.ts",
+      "type": "registry:hook",
+      "content": "type ResizeSubscriber = (entry: ResizeObserverEntry) => void\ntype IntersectionSubscriber = (entry: IntersectionObserverEntry) => void\ntype MutationSubscriber = (records: MutationRecord[]) => void\n\ninterface FrameBatch<Entry extends { readonly target: Element }> {\n  cancel: () => void\n  deleteTarget: (target: Element) => void\n  enqueue: (entries: Entry[]) => void\n}\n\nfunction scheduleFrame(document: Document, callback: FrameRequestCallback) {\n  const window = document.defaultView\n\n  if (window?.requestAnimationFrame && window.cancelAnimationFrame) {\n    const frame = window.requestAnimationFrame(callback)\n    return () => window.cancelAnimationFrame(frame)\n  }\n\n  const timeout = setTimeout(() => callback(Date.now()), 16)\n  return () => clearTimeout(timeout)\n}\n\nfunction createFrameBatch<Entry extends { readonly target: Element }>(\n  document: Document,\n  subscribers: Map<Element, Set<(entry: Entry) => void>>\n): FrameBatch<Entry> {\n  const pendingEntries = new Map<Element, Entry>()\n  let cancelScheduledFrame: (() => void) | null = null\n\n  const flush = () => {\n    cancelScheduledFrame = null\n    const entries = [...pendingEntries.values()]\n    pendingEntries.clear()\n\n    entries.forEach((entry) => {\n      const targetSubscribers = subscribers.get(entry.target)\n      if (!targetSubscribers) return\n      for (const notify of [...targetSubscribers]) notify(entry)\n    })\n  }\n\n  return {\n    enqueue(entries) {\n      entries.forEach((entry) => pendingEntries.set(entry.target, entry))\n      cancelScheduledFrame ??= scheduleFrame(document, flush)\n    },\n    deleteTarget(target) {\n      pendingEntries.delete(target)\n    },\n    cancel() {\n      cancelScheduledFrame?.()\n      cancelScheduledFrame = null\n      pendingEntries.clear()\n    },\n  }\n}\n\ninterface ResizePool {\n  observer: ResizeObserver\n  subscribers: Map<Element, Set<ResizeSubscriber>>\n  batch: FrameBatch<ResizeObserverEntry>\n  count: number\n}\n\nconst resizePools = new WeakMap<\n  Document,\n  Map<ResizeObserverBoxOptions, ResizePool>\n>()\n\nexport function subscribeResizeObserver(\n  element: Element,\n  box: ResizeObserverBoxOptions,\n  subscriber: ResizeSubscriber\n): (() => void) | null {\n  const document = element.ownerDocument\n  const ResizeObserverConstructor =\n    document.defaultView?.ResizeObserver ??\n    (typeof ResizeObserver === \"undefined\" ? undefined : ResizeObserver)\n  if (!ResizeObserverConstructor) return null\n\n  let documentPools = resizePools.get(document)\n  if (!documentPools) {\n    documentPools = new Map()\n    resizePools.set(document, documentPools)\n  }\n\n  let pool = documentPools.get(box)\n  if (!pool) {\n    const subscribers = new Map<Element, Set<ResizeSubscriber>>()\n    const batch = createFrameBatch(document, subscribers)\n    const observer = new ResizeObserverConstructor((entries) => {\n      batch.enqueue(entries)\n    })\n    pool = { observer, subscribers, batch, count: 0 }\n    documentPools.set(box, pool)\n  }\n\n  let elementSubscribers = pool.subscribers.get(element)\n  if (!elementSubscribers) {\n    elementSubscribers = new Set()\n    pool.subscribers.set(element, elementSubscribers)\n    pool.observer.observe(element, { box })\n  }\n  const registration: ResizeSubscriber = (entry) => subscriber(entry)\n  elementSubscribers.add(registration)\n  pool.count += 1\n\n  let active = true\n  return () => {\n    if (!active || !pool) return\n    active = false\n    const currentSubscribers = pool.subscribers.get(element)\n    currentSubscribers?.delete(registration)\n    pool.count -= 1\n    if (currentSubscribers?.size === 0) {\n      pool.observer.unobserve(element)\n      pool.subscribers.delete(element)\n      pool.batch.deleteTarget(element)\n    }\n    if (pool.count === 0) {\n      pool.batch.cancel()\n      pool.observer.disconnect()\n      documentPools?.delete(box)\n    }\n  }\n}\n\ninterface IntersectionPool {\n  observer: IntersectionObserver\n  subscribers: Map<Element, Set<IntersectionSubscriber>>\n  batch: FrameBatch<IntersectionObserverEntry>\n  root: Element | Document | null\n  rootMargin: string\n  thresholdKey: string\n  count: number\n}\n\nconst intersectionPools = new WeakMap<Document, IntersectionPool[]>()\n\nfunction thresholdKey(threshold: number | number[] | undefined) {\n  return (Array.isArray(threshold) ? threshold : [threshold ?? 0])\n    .slice()\n    .sort((left, right) => left - right)\n    .join(\",\")\n}\n\nexport function subscribeIntersectionObserver(\n  element: Element,\n  options: IntersectionObserverInit,\n  subscriber: IntersectionSubscriber\n): (() => void) | null {\n  const document = element.ownerDocument\n  const IntersectionObserverConstructor =\n    document.defaultView?.IntersectionObserver ??\n    (typeof IntersectionObserver === \"undefined\"\n      ? undefined\n      : IntersectionObserver)\n  if (!IntersectionObserverConstructor) return null\n\n  const root = options.root ?? null\n  const rootMargin = options.rootMargin ?? \"0px\"\n  const key = thresholdKey(options.threshold)\n  let pools = intersectionPools.get(document)\n  if (!pools) {\n    pools = []\n    intersectionPools.set(document, pools)\n  }\n\n  let pool = pools.find(\n    (candidate) =>\n      candidate.root === root &&\n      candidate.rootMargin === rootMargin &&\n      candidate.thresholdKey === key\n  )\n\n  if (!pool) {\n    const subscribers = new Map<Element, Set<IntersectionSubscriber>>()\n    const batch = createFrameBatch(document, subscribers)\n    const observer = new IntersectionObserverConstructor((entries) => {\n      batch.enqueue(entries)\n    }, options)\n    pool = {\n      observer,\n      subscribers,\n      batch,\n      root,\n      rootMargin,\n      thresholdKey: key,\n      count: 0,\n    }\n    pools.push(pool)\n  }\n\n  let elementSubscribers = pool.subscribers.get(element)\n  if (!elementSubscribers) {\n    elementSubscribers = new Set()\n    pool.subscribers.set(element, elementSubscribers)\n    pool.observer.observe(element)\n  }\n  const registration: IntersectionSubscriber = (entry) => subscriber(entry)\n  elementSubscribers.add(registration)\n  pool.count += 1\n\n  let active = true\n  return () => {\n    if (!active || !pool) return\n    active = false\n    const currentSubscribers = pool.subscribers.get(element)\n    currentSubscribers?.delete(registration)\n    pool.count -= 1\n    if (currentSubscribers?.size === 0) {\n      pool.observer.unobserve(element)\n      pool.subscribers.delete(element)\n      pool.batch.deleteTarget(element)\n    }\n    if (pool.count === 0) {\n      pool.batch.cancel()\n      pool.observer.disconnect()\n      const index = pools?.indexOf(pool) ?? -1\n      if (index >= 0) pools?.splice(index, 1)\n    }\n  }\n}\n\ninterface MutationPool {\n  observer: MutationObserver\n  subscribers: Map<Node, Set<MutationSubscriber>>\n  options: MutationObserverInit\n  count: number\n}\n\nconst mutationPools = new WeakMap<Document, Map<string, MutationPool>>()\n\nfunction mutationDocument(target: Node): Document | null {\n  if (target.ownerDocument) return target.ownerDocument\n  return target.nodeType === 9 ? (target as Document) : null\n}\n\nfunction cloneMutationOptions(\n  options: MutationObserverInit\n): MutationObserverInit {\n  return {\n    attributes: options.attributes,\n    attributeFilter: options.attributeFilter\n      ? [...options.attributeFilter]\n      : undefined,\n    attributeOldValue: options.attributeOldValue,\n    characterData: options.characterData,\n    characterDataOldValue: options.characterDataOldValue,\n    childList: options.childList,\n    subtree: options.subtree,\n  }\n}\n\nexport function getMutationObserverOptionsKey(\n  options: MutationObserverInit\n): string {\n  return JSON.stringify([\n    options.attributes,\n    options.attributeFilter ? [...options.attributeFilter].sort() : null,\n    options.attributeOldValue,\n    options.characterData,\n    options.characterDataOldValue,\n    options.childList,\n    options.subtree,\n  ])\n}\n\nfunction dispatchMutations(\n  subscribers: Map<Node, Set<MutationSubscriber>>,\n  options: MutationObserverInit,\n  records: MutationRecord[]\n) {\n  subscribers.forEach((targetSubscribers, target) => {\n    const targetRecords = records.filter(\n      (record) =>\n        record.target === target ||\n        (options.subtree === true && target.contains(record.target))\n    )\n\n    if (targetRecords.length === 0) return\n    for (const notify of [...targetSubscribers]) notify(targetRecords)\n  })\n}\n\nexport function subscribeMutationObserver(\n  target: Node,\n  options: MutationObserverInit,\n  subscriber: MutationSubscriber\n): (() => void) | null {\n  const document = mutationDocument(target)\n  if (!document) return null\n\n  const MutationObserverConstructor =\n    document.defaultView?.MutationObserver ??\n    (typeof MutationObserver === \"undefined\" ? undefined : MutationObserver)\n  if (!MutationObserverConstructor) return null\n\n  let documentPools = mutationPools.get(document)\n  if (!documentPools) {\n    documentPools = new Map()\n    mutationPools.set(document, documentPools)\n  }\n\n  const observerOptions = cloneMutationOptions(options)\n  const optionsKey = getMutationObserverOptionsKey(observerOptions)\n  let pool = documentPools.get(optionsKey)\n\n  if (!pool) {\n    const subscribers = new Map<Node, Set<MutationSubscriber>>()\n    const observer = new MutationObserverConstructor((records) => {\n      dispatchMutations(subscribers, observerOptions, records)\n    })\n    pool = {\n      observer,\n      subscribers,\n      options: observerOptions,\n      count: 0,\n    }\n    documentPools.set(optionsKey, pool)\n  }\n\n  let targetSubscribers = pool.subscribers.get(target)\n  if (!targetSubscribers) {\n    targetSubscribers = new Set()\n    try {\n      pool.observer.observe(target, pool.options)\n    } catch (error) {\n      if (pool.count === 0) {\n        pool.observer.disconnect()\n        documentPools.delete(optionsKey)\n      }\n      throw error\n    }\n    pool.subscribers.set(target, targetSubscribers)\n  }\n\n  const registration: MutationSubscriber = (records) => subscriber(records)\n  targetSubscribers.add(registration)\n  pool.count += 1\n\n  let active = true\n  return () => {\n    if (!active || !pool) return\n    active = false\n    const currentSubscribers = pool.subscribers.get(target)\n    currentSubscribers?.delete(registration)\n    pool.count -= 1\n\n    if (currentSubscribers?.size === 0) {\n      pool.subscribers.delete(target)\n      if (pool.count > 0) {\n        pool.observer.disconnect()\n        const currentPool = pool\n        pool.subscribers.forEach((_subscribers, observedTarget) => {\n          currentPool.observer.observe(observedTarget, currentPool.options)\n        })\n      }\n    }\n\n    if (pool.count === 0) {\n      pool.observer.disconnect()\n      documentPools?.delete(optionsKey)\n    }\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ae7efdeca15f304c97d222bbdd4dbc9b8c33a049c2aa27a191ab695eb278e7d4",
+    "api": [
+      {
+        "name": "getMutationObserverOptionsKey",
+        "kind": "function",
+        "line": 255,
+        "signature": "function getMutationObserverOptionsKey(options: MutationObserverInit): string",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "MutationObserverInit"
+          }
+        ],
+        "returns": "string",
+        "usage": "getMutationObserverOptionsKey(/* arguments */)"
+      },
+      {
+        "name": "subscribeIntersectionObserver",
+        "kind": "function",
+        "line": 147,
+        "signature": "function subscribeIntersectionObserver(element: Element, options: IntersectionObserverInit, subscriber: IntersectionSubscriber): (() => void) | null",
+        "parameters": [
+          {
+            "name": "element",
+            "kind": "parameter",
+            "type": "Element"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "IntersectionObserverInit"
+          },
+          {
+            "name": "subscriber",
+            "kind": "parameter",
+            "type": "IntersectionSubscriber"
+          }
+        ],
+        "returns": "(() => void) | null",
+        "usage": "subscribeIntersectionObserver(/* arguments */)"
+      },
+      {
+        "name": "subscribeMutationObserver",
+        "kind": "function",
+        "line": 286,
+        "signature": "function subscribeMutationObserver(target: Node, options: MutationObserverInit, subscriber: MutationSubscriber): (() => void) | null",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Node"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "MutationObserverInit"
+          },
+          {
+            "name": "subscriber",
+            "kind": "parameter",
+            "type": "MutationSubscriber"
+          }
+        ],
+        "returns": "(() => void) | null",
+        "usage": "subscribeMutationObserver(/* arguments */)"
+      },
+      {
+        "name": "subscribeResizeObserver",
+        "kind": "function",
+        "line": 70,
+        "signature": "function subscribeResizeObserver(element: Element, box: ResizeObserverBoxOptions, subscriber: ResizeSubscriber): (() => void) | null",
+        "parameters": [
+          {
+            "name": "element",
+            "kind": "parameter",
+            "type": "Element"
+          },
+          {
+            "name": "box",
+            "kind": "parameter",
+            "type": "ResizeObserverBoxOptions"
+          },
+          {
+            "name": "subscriber",
+            "kind": "parameter",
+            "type": "ResizeSubscriber"
+          }
+        ],
+        "returns": "(() => void) | null",
+        "usage": "subscribeResizeObserver(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/_observer-pools",
+      "importStatement": "import { getMutationObserverOptionsKey } from \"@/hooks/_observer-pools\"",
+      "primaryExport": "getMutationObserverOptionsKey",
+      "example": "getMutationObserverOptionsKey(/* arguments */)"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

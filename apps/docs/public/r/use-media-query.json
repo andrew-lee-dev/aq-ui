@@ -1,0 +1,67 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-media-query",
+  "type": "registry:hook",
+  "title": "Use Media Query",
+  "description": "Open-code aq-ui React hook for Use Media Query.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-media-query.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\ninterface MediaQueryStore {\n  subscribe: (listener: () => void) => () => void\n  getSnapshot: () => boolean\n}\n\nconst mediaQueryStores = new Map<string, MediaQueryStore>()\n\nfunction createMediaQueryStore(query: string): MediaQueryStore {\n  let mediaQueryList: MediaQueryList | null = null\n  let value = false\n  const listeners = new Set<() => void>()\n\n  const ensureList = () => {\n    if (!mediaQueryList && typeof window !== \"undefined\") {\n      mediaQueryList = window.matchMedia(query)\n      value = mediaQueryList.matches\n    }\n    return mediaQueryList\n  }\n\n  const onChange = (event: MediaQueryListEvent) => {\n    value = event.matches\n    listeners.forEach((listener) => listener())\n  }\n\n  return {\n    subscribe(listener) {\n      listeners.add(listener)\n      const list = ensureList()\n      if (listeners.size === 1) list?.addEventListener(\"change\", onChange)\n\n      return () => {\n        listeners.delete(listener)\n        if (listeners.size === 0 && mediaQueryList) {\n          mediaQueryList.removeEventListener(\"change\", onChange)\n          mediaQueryList = null\n        }\n      }\n    },\n    getSnapshot() {\n      const list = ensureList()\n      if (list) value = list.matches\n      return value\n    },\n  }\n}\n\nfunction getMediaQueryStore(query: string) {\n  let store = mediaQueryStores.get(query)\n  if (!store) {\n    store = createMediaQueryStore(query)\n    mediaQueryStores.set(query, store)\n  }\n  return store\n}\n\nexport interface UseMediaQueryOptions {\n  defaultValue?: boolean\n}\n\nexport function useMediaQuery(\n  query: string,\n  { defaultValue = false }: UseMediaQueryOptions = {}\n): boolean {\n  const store = React.useMemo(() => getMediaQueryStore(query), [query])\n  return React.useSyncExternalStore(\n    store.subscribe,\n    store.getSnapshot,\n    () => defaultValue\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ae6e288b74605bab185a0876b386103aa8cec9bb5240ad393406758c8138340f",
+    "api": [
+      {
+        "name": "useMediaQuery",
+        "kind": "function",
+        "line": 65,
+        "signature": "function useMediaQuery(query: string, { defaultValue = false }: UseMediaQueryOptions = {}): boolean",
+        "parameters": [
+          {
+            "name": "query",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseMediaQueryOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useMediaQuery(/* arguments */)"
+      },
+      {
+        "name": "UseMediaQueryOptions",
+        "kind": "interface",
+        "line": 61,
+        "signature": "interface UseMediaQueryOptions",
+        "members": [
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-media-query",
+      "importStatement": "import { useMediaQuery } from \"@/hooks/use-media-query\"",
+      "primaryExport": "useMediaQuery",
+      "example": "const result = useMediaQuery(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

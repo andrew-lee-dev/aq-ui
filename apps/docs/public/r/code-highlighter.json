@@ -1,0 +1,98 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-highlighter",
+  "type": "registry:lib",
+  "title": "Code Highlighter",
+  "description": "Open-code aq-ui shared library for Code Highlighter.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "highlight.js@^11.12.0",
+    "lowlight@^3.3.0"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "lib/code-highlighter.ts",
+      "type": "registry:lib",
+      "content": "import bash from \"highlight.js/lib/languages/bash\"\nimport css from \"highlight.js/lib/languages/css\"\nimport javascript from \"highlight.js/lib/languages/javascript\"\nimport json from \"highlight.js/lib/languages/json\"\nimport markdown from \"highlight.js/lib/languages/markdown\"\nimport plaintext from \"highlight.js/lib/languages/plaintext\"\nimport sql from \"highlight.js/lib/languages/sql\"\nimport typescript from \"highlight.js/lib/languages/typescript\"\nimport xml from \"highlight.js/lib/languages/xml\"\nimport yaml from \"highlight.js/lib/languages/yaml\"\nimport { createLowlight } from \"lowlight\"\n\ntype CodeBlockLanguage =\n  | \"plaintext\"\n  | \"javascript\"\n  | \"typescript\"\n  | \"jsx\"\n  | \"tsx\"\n  | \"json\"\n  | \"html\"\n  | \"css\"\n  | \"markdown\"\n  | \"yaml\"\n  | \"sql\"\n  | (string & {})\n\ninterface HighlightNode {\n  type: string\n  value?: string\n  properties?: { className?: string[] | string }\n  children?: HighlightNode[]\n}\n\ninterface HighlightToken {\n  text: string\n  className?: string\n}\n\nconst codeLowlight = createLowlight()\n\ncodeLowlight.register({\n  bash,\n  css,\n  javascript,\n  json,\n  markdown,\n  plaintext,\n  sql,\n  typescript,\n  xml,\n  yaml,\n})\n\ncodeLowlight.registerAlias({\n  bash: [\"sh\", \"shell\", \"zsh\"],\n  javascript: [\"js\", \"jsx\", \"mjs\", \"cjs\"],\n  plaintext: [\"text\", \"txt\"],\n  typescript: [\"ts\", \"tsx\", \"mts\", \"cts\"],\n  xml: [\"html\", \"htm\"],\n  yaml: [\"yml\"],\n})\n\nfunction normalizeHighlightLanguage(language: CodeBlockLanguage | undefined) {\n  const value = (language ?? \"plaintext\").toLowerCase()\n  const aliases: Record<string, string> = {\n    js: \"javascript\",\n    jsx: \"javascript\",\n    mjs: \"javascript\",\n    cjs: \"javascript\",\n    ts: \"typescript\",\n    tsx: \"typescript\",\n    mts: \"typescript\",\n    cts: \"typescript\",\n    html: \"xml\",\n    htm: \"xml\",\n    md: \"markdown\",\n    yml: \"yaml\",\n    text: \"plaintext\",\n    txt: \"plaintext\",\n  }\n  return aliases[value] ?? value\n}\n\nfunction highlightCodeLines(code: string, language?: CodeBlockLanguage) {\n  const normalized = normalizeHighlightLanguage(language)\n  let root: HighlightNode\n\n  try {\n    root = codeLowlight.highlight(normalized, code) as HighlightNode\n  } catch {\n    root = { type: \"root\", children: [{ type: \"text\", value: code }] }\n  }\n\n  const lines: HighlightToken[][] = [[]]\n\n  function appendText(value: string, className?: string) {\n    const parts = value.split(\"\\n\")\n    parts.forEach((part, index) => {\n      if (part) lines[lines.length - 1]?.push({ text: part, className })\n      if (index < parts.length - 1) lines.push([])\n    })\n  }\n\n  function walk(node: HighlightNode, inheritedClassName?: string) {\n    if (node.type === \"text\") {\n      appendText(node.value ?? \"\", inheritedClassName)\n      return\n    }\n\n    const ownClasses = Array.isArray(node.properties?.className)\n      ? node.properties.className.join(\" \")\n      : node.properties?.className\n    const className = [inheritedClassName, ownClasses].filter(Boolean).join(\" \")\n    node.children?.forEach((child) => walk(child, className || undefined))\n  }\n\n  walk(root)\n  return lines\n}\n\nexport { codeLowlight, highlightCodeLines, normalizeHighlightLanguage }\nexport type { CodeBlockLanguage, HighlightToken }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-78af70efa9e86238522aa524717999794a7f173c970beee1f38462fa6a7b4471",
+    "api": [
+      {
+        "name": "CodeBlockLanguage",
+        "kind": "type",
+        "line": 13,
+        "signature": "type CodeBlockLanguage = \"plaintext\" | \"javascript\" | \"typescript\" | \"jsx\" | \"tsx\" | \"json\" | \"html\" | \"css\" | \"markdown\" | \"yaml\" | \"sql\" | (string & { … })"
+      },
+      {
+        "name": "codeLowlight",
+        "kind": "const",
+        "line": 39,
+        "signature": "const codeLowlight = createLowlight(…)"
+      },
+      {
+        "name": "highlightCodeLines",
+        "kind": "function",
+        "line": 84,
+        "signature": "function highlightCodeLines(code: string, language?: CodeBlockLanguage)",
+        "parameters": [
+          {
+            "name": "code",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "kind": "parameter",
+            "optional": true,
+            "type": "CodeBlockLanguage"
+          }
+        ],
+        "usage": "highlightCodeLines(/* arguments */)"
+      },
+      {
+        "name": "HighlightToken",
+        "kind": "interface",
+        "line": 34,
+        "signature": "interface HighlightToken",
+        "members": [
+          {
+            "name": "text",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "normalizeHighlightLanguage",
+        "kind": "function",
+        "line": 63,
+        "signature": "function normalizeHighlightLanguage(language: CodeBlockLanguage | undefined)",
+        "parameters": [
+          {
+            "name": "language",
+            "kind": "parameter",
+            "type": "CodeBlockLanguage | undefined"
+          }
+        ],
+        "usage": "normalizeHighlightLanguage(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-highlighter",
+      "importStatement": "import { codeLowlight } from \"@/lib/code-highlighter\"",
+      "primaryExport": "codeLowlight"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

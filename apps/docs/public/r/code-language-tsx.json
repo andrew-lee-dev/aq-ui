@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-tsx",
+  "type": "registry:lib",
+  "title": "Code Language Tsx",
+  "description": "Open-code aq-ui shared library for Code Language Tsx.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/lang-javascript@^6.2.5"
+  ],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-tsx.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"tsx\", async () => {\n  const { javascript } = await import(\"@codemirror/lang-javascript\")\n  return javascript({ jsx: true, typescript: true })\n})\n\nconst codeLanguageTsx = \"tsx\" as const\n\nexport { codeLanguageTsx }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-68b27b3cb66d2345eb73e1c773a4453a40bb9582d90c6bab0fcf183d17694396",
+    "api": [
+      {
+        "name": "codeLanguageTsx",
+        "kind": "const",
+        "line": 8,
+        "signature": "const codeLanguageTsx = \"tsx\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-tsx",
+      "importStatement": "import { codeLanguageTsx } from \"@/lib/code-language-tsx\"",
+      "primaryExport": "codeLanguageTsx"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-toggle",
+  "type": "registry:hook",
+  "title": "Use Toggle",
+  "description": "Open-code aq-ui React hook for Use Toggle.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-controllable-state"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-toggle.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\n\nexport interface UseToggleOptions {\n  value?: boolean\n  defaultValue?: boolean\n  onChange?: (value: boolean) => void\n}\n\nexport interface ToggleControls {\n  toggle: () => void\n  setOn: () => void\n  setOff: () => void\n  setValue: (value: boolean) => void\n}\n\nexport function useToggle({\n  value,\n  defaultValue = false,\n  onChange,\n}: UseToggleOptions = {}): [boolean, ToggleControls] {\n  const [enabled, setValue] = useControllableState({\n    value,\n    defaultValue,\n    onChange,\n  })\n\n  const controls = React.useMemo<ToggleControls>(\n    () => ({\n      toggle: () => setValue((current) => !current),\n      setOn: () => setValue(true),\n      setOff: () => setValue(false),\n      setValue,\n    }),\n    [setValue]\n  )\n\n  return [enabled, controls]\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-a2172ded6fbf6eb2a2768bc6c2eca21a77cec807aa77b83840a03b812fc298a1",
+    "api": [
+      {
+        "name": "ToggleControls",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface ToggleControls",
+        "members": [
+          {
+            "name": "toggle",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "setOn",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "setOff",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "setValue",
+            "kind": "property",
+            "type": "(value: boolean) => void"
+          }
+        ]
+      },
+      {
+        "name": "useToggle",
+        "kind": "function",
+        "line": 20,
+        "signature": "function useToggle({ value, defaultValue = false, onChange, }: UseToggleOptions = {}): [boolean, ToggleControls]",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseToggleOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "[boolean, ToggleControls]",
+        "usage": "const result = useToggle(/* arguments */)"
+      },
+      {
+        "name": "UseToggleOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseToggleOptions",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: boolean) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-toggle",
+      "importStatement": "import { useToggle } from \"@/hooks/use-toggle\"",
+      "primaryExport": "useToggle",
+      "example": "const result = useToggle(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-interval",
+  "type": "registry:hook",
+  "title": "Use Interval",
+  "description": "Open-code aq-ui React hook for Use Interval.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-interval.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\nexport interface IntervalControls {\n  pause: () => void\n  resume: () => void\n  isActive: boolean\n}\n\nexport interface UseIntervalOptions {\n  autoStart?: boolean\n  immediate?: boolean\n}\n\nexport function useInterval(\n  callback: () => void,\n  delay: number | null,\n  { autoStart = true, immediate = false }: UseIntervalOptions = {}\n): IntervalControls {\n  const callbackRef = useLatest(callback)\n  const [isActive, setIsActive] = React.useState(autoStart && delay !== null)\n\n  const pause = React.useCallback(() => setIsActive(false), [])\n  const resume = React.useCallback(() => {\n    if (delay !== null) setIsActive(true)\n  }, [delay])\n\n  React.useEffect(() => {\n    if (!isActive || delay === null) return\n    if (immediate) callbackRef.current()\n    const id = setInterval(() => callbackRef.current(), Math.max(0, delay))\n    return () => clearInterval(id)\n  }, [callbackRef, delay, immediate, isActive])\n\n  return { pause, resume, isActive: isActive && delay !== null }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-0fedfc084756ecdc9b9a9baa554d4db92789d57cbe6cdf70433c56fef8423db2",
+    "api": [
+      {
+        "name": "IntervalControls",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface IntervalControls",
+        "members": [
+          {
+            "name": "pause",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "resume",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "isActive",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "useInterval",
+        "kind": "function",
+        "line": 18,
+        "signature": "function useInterval(callback: () => void, delay: number | null, { autoStart = true, immediate = false }: UseIntervalOptions = {}): IntervalControls",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "() => void"
+          },
+          {
+            "name": "delay",
+            "kind": "parameter",
+            "type": "number | null"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseIntervalOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "IntervalControls",
+        "usage": "const result = useInterval(/* arguments */)"
+      },
+      {
+        "name": "UseIntervalOptions",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface UseIntervalOptions",
+        "members": [
+          {
+            "name": "autoStart",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "immediate",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-interval",
+      "importStatement": "import { useInterval } from \"@/hooks/use-interval\"",
+      "primaryExport": "useInterval",
+      "example": "const result = useInterval(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

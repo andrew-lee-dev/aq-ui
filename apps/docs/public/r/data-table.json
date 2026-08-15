@@ -1,0 +1,109 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "data-table",
+  "type": "registry:ui",
+  "title": "Data Table",
+  "description": "Open-code aq-ui accessible component family for Data Table.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@tanstack/react-table@^8.21.3"
+  ],
+  "registryDependencies": [
+    "button",
+    "table",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/data-table.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport {\n  flexRender,\n  getCoreRowModel,\n  getFilteredRowModel,\n  getPaginationRowModel,\n  getSortedRowModel,\n  useReactTable,\n  type ColumnDef,\n  type ColumnFiltersState,\n  type PaginationState,\n  type RowSelectionState,\n  type SortingState,\n  type VisibilityState,\n} from \"@tanstack/react-table\"\n\nimport { Button } from \"@/components/ui/button\"\nimport {\n  Table,\n  TableBody,\n  TableCell,\n  TableHead,\n  TableHeader,\n  TableRow,\n} from \"@/components/ui/table\"\nimport { cn } from \"@/lib/utils\"\n\ninterface DataTableProps<TData, TValue> extends Omit<\n  React.ComponentPropsWithoutRef<\"div\">,\n  \"children\"\n> {\n  columns: ColumnDef<TData, TValue>[]\n  data: TData[]\n  emptyMessage?: React.ReactNode\n  pageSize?: number\n  enablePagination?: boolean\n  enableRowSelection?: boolean\n  className?: string\n  toolbar?: (table: ReturnType<typeof useReactTable<TData>>) => React.ReactNode\n  getRowId?: (row: TData, index: number) => string\n  onRowSelectionChange?: (selection: RowSelectionState) => void\n}\n\nfunction DataTableInner<TData, TValue>(\n  {\n    columns,\n    data,\n    emptyMessage = \"No results.\",\n    pageSize = 10,\n    enablePagination = true,\n    enableRowSelection = false,\n    className,\n    toolbar,\n    getRowId,\n    onRowSelectionChange,\n    ...props\n  }: DataTableProps<TData, TValue>,\n  ref: React.ForwardedRef<HTMLDivElement>\n) {\n  const [sorting, setSorting] = React.useState<SortingState>([])\n  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(\n    []\n  )\n  const [columnVisibility, setColumnVisibility] =\n    React.useState<VisibilityState>({})\n  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})\n  const [pagination, setPagination] = React.useState<PaginationState>({\n    pageIndex: 0,\n    pageSize,\n  })\n\n  // TanStack Table intentionally returns stateful functions that React Compiler\n  // cannot memoize safely.\n  // eslint-disable-next-line react-hooks/incompatible-library\n  const table = useReactTable({\n    data,\n    columns,\n    state: {\n      sorting,\n      columnFilters,\n      columnVisibility,\n      rowSelection,\n      pagination,\n    },\n    enableRowSelection,\n    getRowId,\n    onSortingChange: setSorting,\n    onColumnFiltersChange: setColumnFilters,\n    onColumnVisibilityChange: setColumnVisibility,\n    onPaginationChange: setPagination,\n    onRowSelectionChange: (updater) => {\n      setRowSelection((current) => {\n        const next = typeof updater === \"function\" ? updater(current) : updater\n        onRowSelectionChange?.(next)\n        return next\n      })\n    },\n    getCoreRowModel: getCoreRowModel(),\n    getFilteredRowModel: getFilteredRowModel(),\n    getSortedRowModel: getSortedRowModel(),\n    getPaginationRowModel: enablePagination\n      ? getPaginationRowModel()\n      : undefined,\n  })\n\n  return (\n    <div\n      ref={ref}\n      data-slot=\"data-table\"\n      className={cn(\"flex flex-col gap-3\", className)}\n      {...props}\n    >\n      {toolbar?.(table)}\n      <div className=\"overflow-hidden rounded-lg border\">\n        <Table>\n          <TableHeader>\n            {table.getHeaderGroups().map((headerGroup) => (\n              <TableRow key={headerGroup.id}>\n                {headerGroup.headers.map((header) => (\n                  <TableHead key={header.id} colSpan={header.colSpan}>\n                    {header.isPlaceholder\n                      ? null\n                      : flexRender(\n                          header.column.columnDef.header,\n                          header.getContext()\n                        )}\n                  </TableHead>\n                ))}\n              </TableRow>\n            ))}\n          </TableHeader>\n          <TableBody>\n            {table.getRowModel().rows.length ? (\n              table.getRowModel().rows.map((row) => (\n                <TableRow\n                  key={row.id}\n                  data-state={row.getIsSelected() ? \"selected\" : undefined}\n                >\n                  {row.getVisibleCells().map((cell) => (\n                    <TableCell key={cell.id}>\n                      {flexRender(\n                        cell.column.columnDef.cell,\n                        cell.getContext()\n                      )}\n                    </TableCell>\n                  ))}\n                </TableRow>\n              ))\n            ) : (\n              <TableRow>\n                <TableCell\n                  colSpan={columns.length}\n                  className=\"h-24 text-center text-muted-foreground\"\n                >\n                  {emptyMessage}\n                </TableCell>\n              </TableRow>\n            )}\n          </TableBody>\n        </Table>\n      </div>\n      {enablePagination ? (\n        <div\n          data-slot=\"data-table-pagination\"\n          className=\"flex items-center justify-between gap-3\"\n        >\n          <p className=\"text-sm text-muted-foreground\">\n            {enableRowSelection\n              ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} selected`\n              : `${table.getFilteredRowModel().rows.length} row(s)`}\n          </p>\n          <div className=\"flex items-center gap-2\">\n            <Button\n              variant=\"outline\"\n              size=\"sm\"\n              onClick={() => table.previousPage()}\n              disabled={!table.getCanPreviousPage()}\n            >\n              Previous\n            </Button>\n            <span className=\"text-sm tabular-nums\">\n              {table.getState().pagination.pageIndex + 1} /{\" \"}\n              {Math.max(table.getPageCount(), 1)}\n            </span>\n            <Button\n              variant=\"outline\"\n              size=\"sm\"\n              onClick={() => table.nextPage()}\n              disabled={!table.getCanNextPage()}\n            >\n              Next\n            </Button>\n          </div>\n        </div>\n      ) : null}\n    </div>\n  )\n}\n\ntype DataTableComponent = <TData, TValue>(\n  props: DataTableProps<TData, TValue> & React.RefAttributes<HTMLDivElement>\n) => React.ReactElement\n\nconst DataTableForwardRef = React.forwardRef(DataTableInner)\nDataTableForwardRef.displayName = \"DataTable\"\nconst DataTable = DataTableForwardRef as DataTableComponent\n\nexport { DataTable, type DataTableProps }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-23acb4bc534b6444baee0007b2309ab7039f682b2e1de4136e85ad0f11db54c8",
+    "api": [
+      {
+        "name": "DataTable",
+        "kind": "const",
+        "line": 208,
+        "signature": "const DataTable = DataTableForwardRef as DataTableComponent",
+        "usage": "<DataTable />"
+      },
+      {
+        "name": "DataTableProps",
+        "kind": "interface",
+        "line": 30,
+        "signature": "interface DataTableProps<TData, TValue> extends Omit< React.ComponentPropsWithoutRef<\"div\">, \"children\" >",
+        "members": [
+          {
+            "name": "columns",
+            "kind": "property",
+            "type": "ColumnDef<TData, TValue>[]"
+          },
+          {
+            "name": "data",
+            "kind": "property",
+            "type": "TData[]"
+          },
+          {
+            "name": "emptyMessage",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode"
+          },
+          {
+            "name": "pageSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "enablePagination",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "enableRowSelection",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "toolbar",
+            "kind": "property",
+            "optional": true,
+            "type": "(table: ReturnType<typeof useReactTable<TData>>) => React.ReactNode"
+          },
+          {
+            "name": "getRowId",
+            "kind": "property",
+            "optional": true,
+            "type": "(row: TData, index: number) => string"
+          },
+          {
+            "name": "onRowSelectionChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(selection: RowSelectionState) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/data-table",
+      "importStatement": "import { DataTable } from \"@/components/ui/data-table\"",
+      "primaryExport": "DataTable",
+      "example": "<DataTable />"
+    },
+    "ssr": false
+  }
+}

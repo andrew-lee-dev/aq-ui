@@ -1,0 +1,46 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-preset",
+  "type": "registry:lib",
+  "title": "Code Language Preset",
+  "description": "Open-code aq-ui shared library for Code Language Preset.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "code-language-css",
+    "code-language-html",
+    "code-language-javascript",
+    "code-language-json",
+    "code-language-jsx",
+    "code-language-markdown",
+    "code-language-plaintext",
+    "code-language-tsx",
+    "code-language-typescript"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-preset.ts",
+      "type": "registry:lib",
+      "content": "import \"@/lib/code-language-plaintext\"\nimport \"@/lib/code-language-javascript\"\nimport \"@/lib/code-language-typescript\"\nimport \"@/lib/code-language-jsx\"\nimport \"@/lib/code-language-tsx\"\nimport \"@/lib/code-language-json\"\nimport \"@/lib/code-language-html\"\nimport \"@/lib/code-language-css\"\nimport \"@/lib/code-language-markdown\"\n\nconst codeLanguagePreset = [\n  \"plaintext\",\n  \"javascript\",\n  \"typescript\",\n  \"jsx\",\n  \"tsx\",\n  \"json\",\n  \"html\",\n  \"css\",\n  \"markdown\",\n] as const\n\nexport { codeLanguagePreset }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-6ae0b6586b6c20dd473f73ae5d57a8ae9c6c10eb3e6e8f4e14309c98f6254627",
+    "api": [
+      {
+        "name": "codeLanguagePreset",
+        "kind": "const",
+        "line": 11,
+        "signature": "const codeLanguagePreset = [ \"plaintext\", \"javascript\", \"typescript\", \"jsx\", \"tsx\", \"json\", \"html\", \"css\", \"markdown\", ] as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-preset",
+      "importStatement": "import { codeLanguagePreset } from \"@/lib/code-language-preset\"",
+      "primaryExport": "codeLanguagePreset"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

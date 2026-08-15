@@ -1,0 +1,10 @@
+{
+  "extends": "@aq-ui/typescript-config/react-library.json",
+  "compilerOptions": {
+    "paths": {
+      "@aq-ui/registry/*": ["./src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

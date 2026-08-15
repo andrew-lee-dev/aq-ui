@@ -1,0 +1,96 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "table",
+  "type": "registry:ui",
+  "title": "Table",
+  "description": "Open-code aq-ui accessible component family for Table.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/table.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Table = React.forwardRef<\n  React.ComponentRef<\"table\">,\n  React.ComponentProps<\"table\">\n>(function Table({ className, ...props }, ref) {\n  return (\n    <div\n      data-slot=\"table-container\"\n      className=\"relative w-full overflow-x-auto\"\n    >\n      <table\n        ref={ref}\n        data-slot=\"table\"\n        className={cn(\"w-full caption-bottom text-sm\", className)}\n        {...props}\n      />\n    </div>\n  )\n})\nTable.displayName = \"Table\"\n\nconst TableHeader = React.forwardRef<\n  React.ComponentRef<\"thead\">,\n  React.ComponentProps<\"thead\">\n>(function TableHeader({ className, ...props }, ref) {\n  return (\n    <thead\n      ref={ref}\n      data-slot=\"table-header\"\n      className={cn(\"[&_tr]:border-b\", className)}\n      {...props}\n    />\n  )\n})\nTableHeader.displayName = \"TableHeader\"\n\nconst TableBody = React.forwardRef<\n  React.ComponentRef<\"tbody\">,\n  React.ComponentProps<\"tbody\">\n>(function TableBody({ className, ...props }, ref) {\n  return (\n    <tbody\n      ref={ref}\n      data-slot=\"table-body\"\n      className={cn(\"[&_tr:last-child]:border-0\", className)}\n      {...props}\n    />\n  )\n})\nTableBody.displayName = \"TableBody\"\n\nconst TableFooter = React.forwardRef<\n  React.ComponentRef<\"tfoot\">,\n  React.ComponentProps<\"tfoot\">\n>(function TableFooter({ className, ...props }, ref) {\n  return (\n    <tfoot\n      ref={ref}\n      data-slot=\"table-footer\"\n      className={cn(\n        \"border-t bg-muted/50 font-medium [&>tr]:last:border-b-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTableFooter.displayName = \"TableFooter\"\n\nconst TableRow = React.forwardRef<\n  React.ComponentRef<\"tr\">,\n  React.ComponentProps<\"tr\">\n>(function TableRow({ className, ...props }, ref) {\n  return (\n    <tr\n      ref={ref}\n      data-slot=\"table-row\"\n      className={cn(\n        \"border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTableRow.displayName = \"TableRow\"\n\nconst TableHead = React.forwardRef<\n  React.ComponentRef<\"th\">,\n  React.ComponentProps<\"th\">\n>(function TableHead({ className, ...props }, ref) {\n  return (\n    <th\n      ref={ref}\n      data-slot=\"table-head\"\n      className={cn(\n        \"h-10 px-2 text-start align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pe-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTableHead.displayName = \"TableHead\"\n\nconst TableCell = React.forwardRef<\n  React.ComponentRef<\"td\">,\n  React.ComponentProps<\"td\">\n>(function TableCell({ className, ...props }, ref) {\n  return (\n    <td\n      ref={ref}\n      data-slot=\"table-cell\"\n      className={cn(\n        \"p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pe-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTableCell.displayName = \"TableCell\"\n\nconst TableCaption = React.forwardRef<\n  React.ComponentRef<\"caption\">,\n  React.ComponentProps<\"caption\">\n>(function TableCaption({ className, ...props }, ref) {\n  return (\n    <caption\n      ref={ref}\n      data-slot=\"table-caption\"\n      className={cn(\"mt-4 text-sm text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nTableCaption.displayName = \"TableCaption\"\n\nexport {\n  Table,\n  TableHeader,\n  TableBody,\n  TableFooter,\n  TableHead,\n  TableRow,\n  TableCell,\n  TableCaption,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-efe9c741f180c4b2319254d36463aeb24a99af7291093c262665a6129c718b9d",
+    "api": [
+      {
+        "name": "Table",
+        "kind": "const",
+        "line": 7,
+        "signature": "const Table = React.forwardRef<React.ComponentRef<\"table\">, React.ComponentProps<\"table\">>(…)",
+        "propsType": "React.ComponentProps<\"table\">",
+        "usage": "<Table />"
+      },
+      {
+        "name": "TableBody",
+        "kind": "const",
+        "line": 42,
+        "signature": "const TableBody = React.forwardRef<React.ComponentRef<\"tbody\">, React.ComponentProps<\"tbody\">>(…)",
+        "propsType": "React.ComponentProps<\"tbody\">",
+        "usage": "<TableBody />"
+      },
+      {
+        "name": "TableCaption",
+        "kind": "const",
+        "line": 129,
+        "signature": "const TableCaption = React.forwardRef<React.ComponentRef<\"caption\">, React.ComponentProps<\"caption\">>(…)",
+        "propsType": "React.ComponentProps<\"caption\">",
+        "usage": "<TableCaption />"
+      },
+      {
+        "name": "TableCell",
+        "kind": "const",
+        "line": 111,
+        "signature": "const TableCell = React.forwardRef<React.ComponentRef<\"td\">, React.ComponentProps<\"td\">>(…)",
+        "propsType": "React.ComponentProps<\"td\">",
+        "usage": "<TableCell />"
+      },
+      {
+        "name": "TableFooter",
+        "kind": "const",
+        "line": 57,
+        "signature": "const TableFooter = React.forwardRef<React.ComponentRef<\"tfoot\">, React.ComponentProps<\"tfoot\">>(…)",
+        "propsType": "React.ComponentProps<\"tfoot\">",
+        "usage": "<TableFooter />"
+      },
+      {
+        "name": "TableHead",
+        "kind": "const",
+        "line": 93,
+        "signature": "const TableHead = React.forwardRef<React.ComponentRef<\"th\">, React.ComponentProps<\"th\">>(…)",
+        "propsType": "React.ComponentProps<\"th\">",
+        "usage": "<TableHead />"
+      },
+      {
+        "name": "TableHeader",
+        "kind": "const",
+        "line": 27,
+        "signature": "const TableHeader = React.forwardRef<React.ComponentRef<\"thead\">, React.ComponentProps<\"thead\">>(…)",
+        "propsType": "React.ComponentProps<\"thead\">",
+        "usage": "<TableHeader />"
+      },
+      {
+        "name": "TableRow",
+        "kind": "const",
+        "line": 75,
+        "signature": "const TableRow = React.forwardRef<React.ComponentRef<\"tr\">, React.ComponentProps<\"tr\">>(…)",
+        "propsType": "React.ComponentProps<\"tr\">",
+        "usage": "<TableRow />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/table",
+      "importStatement": "import { Table } from \"@/components/ui/table\"",
+      "primaryExport": "Table",
+      "example": "<Table />"
+    },
+    "ssr": false
+  }
+}

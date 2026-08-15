@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-before-unload",
+  "type": "registry:hook",
+  "title": "Use Before Unload",
+  "description": "Open-code aq-ui React hook for Use Before Unload.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-before-unload.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport function useBeforeUnload(enabled: boolean, message = \"\"): void {\n  React.useEffect(() => {\n    if (!enabled || typeof window === \"undefined\") return\n    const handler = (event: BeforeUnloadEvent) => {\n      event.preventDefault()\n      event.returnValue = message\n      return message\n    }\n    window.addEventListener(\"beforeunload\", handler)\n    return () => window.removeEventListener(\"beforeunload\", handler)\n  }, [enabled, message])\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-3264264a46b5e6b29abf6dbdf8aca1cd8adb54e438dd7c829a08677f7c28747a",
+    "api": [
+      {
+        "name": "useBeforeUnload",
+        "kind": "function",
+        "line": 5,
+        "signature": "function useBeforeUnload(enabled: boolean, message = \"\"): void",
+        "parameters": [
+          {
+            "name": "enabled",
+            "kind": "parameter",
+            "type": "boolean"
+          },
+          {
+            "name": "message",
+            "kind": "parameter",
+            "optional": true,
+            "default": "\"\""
+          }
+        ],
+        "returns": "void",
+        "usage": "const result = useBeforeUnload(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-before-unload",
+      "importStatement": "import { useBeforeUnload } from \"@/hooks/use-before-unload\"",
+      "primaryExport": "useBeforeUnload",
+      "example": "const result = useBeforeUnload(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-controllable-state",
+  "type": "registry:hook",
+  "title": "Use Controllable State",
+  "description": "Open-code aq-ui React hook for Use Controllable State.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-controllable-state.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\nexport type ControllableStateUpdater<T> = T | ((previous: T) => T)\n\nexport interface UseControllableStateOptions<T> {\n  value?: T\n  defaultValue: T | (() => T)\n  onChange?: (value: T) => void\n}\n\nexport function useControllableState<T>({\n  value,\n  defaultValue,\n  onChange,\n}: UseControllableStateOptions<T>): [\n  T,\n  (next: ControllableStateUpdater<T>) => void,\n] {\n  const [uncontrolledValue, setUncontrolledValue] =\n    React.useState<T>(defaultValue)\n  const controlled = value !== undefined\n  const currentValue = controlled ? value : uncontrolledValue\n  const currentValueRef = useLatest(currentValue)\n  const onChangeRef = useLatest(onChange)\n\n  const setValue = React.useCallback(\n    (next: ControllableStateUpdater<T>) => {\n      const resolved =\n        typeof next === \"function\"\n          ? (next as (previous: T) => T)(currentValueRef.current)\n          : next\n\n      if (Object.is(resolved, currentValueRef.current)) return\n      currentValueRef.current = resolved\n\n      if (!controlled) setUncontrolledValue(resolved)\n      onChangeRef.current?.(resolved)\n    },\n    [controlled, currentValueRef, onChangeRef]\n  )\n\n  return [currentValue, setValue]\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-7934ddb27014f731399cdf55c83e6ab76c59082f7169efba724adf3bf96bedd0",
+    "api": [
+      {
+        "name": "ControllableStateUpdater",
+        "kind": "type",
+        "line": 7,
+        "signature": "type ControllableStateUpdater<T> = T | ((previous: T) => T)"
+      },
+      {
+        "name": "useControllableState",
+        "kind": "function",
+        "line": 15,
+        "signature": "function useControllableState<T>({ value, defaultValue, onChange, }: UseControllableStateOptions<T>): [ T, (next: ControllableStateUpdater<T>) => void, ]",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UseControllableStateOptions<T>"
+          }
+        ],
+        "returns": "[ T, (next: ControllableStateUpdater<T>) => void, ]",
+        "usage": "const result = useControllableState(/* arguments */)"
+      },
+      {
+        "name": "UseControllableStateOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface UseControllableStateOptions<T>",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "T"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "type": "T | (() => T)"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: T) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-controllable-state",
+      "importStatement": "import { useControllableState } from \"@/hooks/use-controllable-state\"",
+      "primaryExport": "useControllableState",
+      "example": "const result = useControllableState(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

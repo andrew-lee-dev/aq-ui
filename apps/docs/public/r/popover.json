@@ -1,0 +1,82 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "popover",
+  "type": "registry:ui",
+  "title": "Popover",
+  "description": "Open-code aq-ui accessible component family for Popover.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/popover.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { Popover as PopoverPrimitive } from \"@base-ui/react/popover\"\n\nimport { cn } from \"@/lib/utils\"\n\nfunction Popover({ ...props }: PopoverPrimitive.Root.Props) {\n  return <PopoverPrimitive.Root data-slot=\"popover\" {...props} />\n}\n\nconst PopoverTrigger = React.forwardRef<\n  HTMLButtonElement,\n  PopoverPrimitive.Trigger.Props\n>(function PopoverTrigger({ ...props }, ref) {\n  return (\n    <PopoverPrimitive.Trigger\n      ref={ref}\n      data-slot=\"popover-trigger\"\n      {...props}\n    />\n  )\n})\nPopoverTrigger.displayName = \"PopoverTrigger\"\n\nconst PopoverContent = React.forwardRef<\n  React.ComponentRef<typeof PopoverPrimitive.Popup>,\n  PopoverPrimitive.Popup.Props &\n    Pick<\n      PopoverPrimitive.Positioner.Props,\n      \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\"\n    >\n>(function PopoverContent(\n  {\n    className,\n    align = \"center\",\n    alignOffset = 0,\n    side = \"bottom\",\n    sideOffset = 4,\n    ...props\n  },\n  ref\n) {\n  return (\n    <PopoverPrimitive.Portal>\n      <PopoverPrimitive.Positioner\n        align={align}\n        alignOffset={alignOffset}\n        side={side}\n        sideOffset={sideOffset}\n        className=\"isolate z-50\"\n      >\n        <PopoverPrimitive.Popup\n          ref={ref}\n          data-slot=\"popover-content\"\n          className={cn(\n            \"z-50 flex w-72 origin-(--transform-origin) flex-col gap-2.5 rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-start-2 data-[side=inline-start]:slide-in-from-end-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95\",\n            className\n          )}\n          {...props}\n        />\n      </PopoverPrimitive.Positioner>\n    </PopoverPrimitive.Portal>\n  )\n})\nPopoverContent.displayName = \"PopoverContent\"\n\nconst PopoverHeader = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function PopoverHeader({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"popover-header\"\n      className={cn(\"flex flex-col gap-0.5 text-sm\", className)}\n      {...props}\n    />\n  )\n})\nPopoverHeader.displayName = \"PopoverHeader\"\n\nconst PopoverTitle = React.forwardRef<\n  React.ComponentRef<typeof PopoverPrimitive.Title>,\n  PopoverPrimitive.Title.Props\n>(function PopoverTitle({ className, ...props }, ref) {\n  return (\n    <PopoverPrimitive.Title\n      ref={ref}\n      data-slot=\"popover-title\"\n      className={cn(\"font-medium\", className)}\n      {...props}\n    />\n  )\n})\nPopoverTitle.displayName = \"PopoverTitle\"\n\nconst PopoverDescription = React.forwardRef<\n  React.ComponentRef<typeof PopoverPrimitive.Description>,\n  PopoverPrimitive.Description.Props\n>(function PopoverDescription({ className, ...props }, ref) {\n  return (\n    <PopoverPrimitive.Description\n      ref={ref}\n      data-slot=\"popover-description\"\n      className={cn(\"text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nPopoverDescription.displayName = \"PopoverDescription\"\n\nexport {\n  Popover,\n  PopoverContent,\n  PopoverDescription,\n  PopoverHeader,\n  PopoverTitle,\n  PopoverTrigger,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-9b14e1d618b0fb6c94121d73be399cb91ad18bf19b1fae62dc0bc180692a97c6",
+    "api": [
+      {
+        "name": "Popover",
+        "kind": "function",
+        "line": 8,
+        "signature": "function Popover({ ...props }: PopoverPrimitive.Root.Props)",
+        "propsType": "PopoverPrimitive.Root.Props",
+        "usage": "<Popover />"
+      },
+      {
+        "name": "PopoverContent",
+        "kind": "const",
+        "line": 26,
+        "signature": "const PopoverContent = React.forwardRef<React.ComponentRef<typeof PopoverPrimitive.Popup>, PopoverPrimitive.Popup.Props & Pick< PopoverPrimitive.Positioner.Props, \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" >>(…)",
+        "propsType": "PopoverPrimitive.Popup.Props & Pick< PopoverPrimitive.Positioner.Props, \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" >",
+        "usage": "<PopoverContent />"
+      },
+      {
+        "name": "PopoverDescription",
+        "kind": "const",
+        "line": 98,
+        "signature": "const PopoverDescription = React.forwardRef<React.ComponentRef<typeof PopoverPrimitive.Description>, PopoverPrimitive.Description.Props>(…)",
+        "propsType": "PopoverPrimitive.Description.Props",
+        "usage": "<PopoverDescription />"
+      },
+      {
+        "name": "PopoverHeader",
+        "kind": "const",
+        "line": 68,
+        "signature": "const PopoverHeader = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<PopoverHeader />"
+      },
+      {
+        "name": "PopoverTitle",
+        "kind": "const",
+        "line": 83,
+        "signature": "const PopoverTitle = React.forwardRef<React.ComponentRef<typeof PopoverPrimitive.Title>, PopoverPrimitive.Title.Props>(…)",
+        "propsType": "PopoverPrimitive.Title.Props",
+        "usage": "<PopoverTitle />"
+      },
+      {
+        "name": "PopoverTrigger",
+        "kind": "const",
+        "line": 12,
+        "signature": "const PopoverTrigger = React.forwardRef<HTMLButtonElement, PopoverPrimitive.Trigger.Props>(…)",
+        "propsType": "PopoverPrimitive.Trigger.Props",
+        "usage": "<PopoverTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/popover",
+      "importStatement": "import { Popover } from \"@/components/ui/popover\"",
+      "primaryExport": "Popover",
+      "example": "<Popover />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-debounced-callback",
+  "type": "registry:hook",
+  "title": "Use Debounced Callback",
+  "description": "Open-code aq-ui React hook for Use Debounced Callback.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-debounced-callback.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\ntype AnyFunction = (...args: never[]) => unknown\n\nexport type DebouncedFunction<T extends AnyFunction> = ((\n  ...args: Parameters<T>\n) => void) & {\n  cancel: () => void\n  flush: () => ReturnType<T> | undefined\n  pending: () => boolean\n}\n\nexport function useDebouncedCallback<T extends AnyFunction>(\n  callback: T,\n  delay = 250\n): DebouncedFunction<T> {\n  const callbackRef = useLatest(callback)\n  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const argsRef = React.useRef<Parameters<T> | null>(null)\n\n  const cancel = React.useCallback(() => {\n    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n    timeoutRef.current = null\n    argsRef.current = null\n  }, [])\n\n  const flush = React.useCallback(() => {\n    if (timeoutRef.current === null || argsRef.current === null)\n      return undefined\n    clearTimeout(timeoutRef.current)\n    timeoutRef.current = null\n    const args = argsRef.current\n    argsRef.current = null\n    return callbackRef.current(...args) as ReturnType<T>\n  }, [callbackRef])\n\n  const schedule = React.useCallback(\n    (...args: Parameters<T>) => {\n      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n      argsRef.current = args\n      timeoutRef.current = setTimeout(() => {\n        timeoutRef.current = null\n        const pendingArgs = argsRef.current\n        argsRef.current = null\n        if (pendingArgs) callbackRef.current(...pendingArgs)\n      }, delay)\n    },\n    [callbackRef, delay]\n  )\n\n  const pending = React.useCallback(() => timeoutRef.current !== null, [])\n\n  // The augmented function only captures callbacks; it does not read refs here.\n  /* eslint-disable react-hooks/refs */\n  const debounced = React.useMemo(\n    () =>\n      Object.assign(schedule, {\n        cancel,\n        flush,\n        pending,\n      }) as DebouncedFunction<T>,\n    [cancel, flush, pending, schedule]\n  )\n  /* eslint-enable react-hooks/refs */\n\n  React.useEffect(() => cancel, [cancel])\n\n  return debounced\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-c966be264304c4300303eab1b67c9ca33874b21bef28280995891db47cccd8b3",
+    "api": [
+      {
+        "name": "DebouncedFunction",
+        "kind": "type",
+        "line": 9,
+        "signature": "type DebouncedFunction<T extends AnyFunction> = ((...args: Parameters<T>) => void) & { … }",
+        "members": [
+          {
+            "name": "cancel",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "flush",
+            "kind": "property",
+            "type": "() => ReturnType<T> | undefined"
+          },
+          {
+            "name": "pending",
+            "kind": "property",
+            "type": "() => boolean"
+          }
+        ]
+      },
+      {
+        "name": "useDebouncedCallback",
+        "kind": "function",
+        "line": 17,
+        "signature": "function useDebouncedCallback<T extends AnyFunction>(callback: T, delay = 250): DebouncedFunction<T>",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "T"
+          },
+          {
+            "name": "delay",
+            "kind": "parameter",
+            "optional": true,
+            "default": "250"
+          }
+        ],
+        "returns": "DebouncedFunction<T>",
+        "usage": "const result = useDebouncedCallback(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-debounced-callback",
+      "importStatement": "import { useDebouncedCallback } from \"@/hooks/use-debounced-callback\"",
+      "primaryExport": "useDebouncedCallback",
+      "example": "const result = useDebouncedCallback(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

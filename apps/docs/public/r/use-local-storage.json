@@ -1,0 +1,70 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-local-storage",
+  "type": "registry:hook",
+  "title": "Use Local Storage",
+  "description": "Open-code aq-ui React hook for Use Local Storage.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-storage"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-local-storage.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport {\n  useStorage,\n  type StorageOptions,\n  type StorageSetter,\n} from \"@/hooks/_storage\"\n\nexport type LocalStorageOptions<T> = StorageOptions<T>\nexport type LocalStorageSetter<T> = StorageSetter<T>\n\nexport function useLocalStorage<T>(\n  key: string,\n  initialValue: T | (() => T),\n  options?: LocalStorageOptions<T>\n): [T, LocalStorageSetter<T>, () => void] {\n  return useStorage(\"localStorage\", key, initialValue, options)\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-5e0af7f5599b9e77daa8c412680744d93fe54132d0e17878cac0dc80ab069a74",
+    "api": [
+      {
+        "name": "LocalStorageOptions",
+        "kind": "type",
+        "line": 9,
+        "signature": "type LocalStorageOptions<T> = StorageOptions<T>"
+      },
+      {
+        "name": "LocalStorageSetter",
+        "kind": "type",
+        "line": 10,
+        "signature": "type LocalStorageSetter<T> = StorageSetter<T>"
+      },
+      {
+        "name": "useLocalStorage",
+        "kind": "function",
+        "line": 12,
+        "signature": "function useLocalStorage<T>(key: string, initialValue: T | (() => T), options?: LocalStorageOptions<T>): [T, LocalStorageSetter<T>, () => void]",
+        "parameters": [
+          {
+            "name": "key",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "initialValue",
+            "kind": "parameter",
+            "type": "T | (() => T)"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "LocalStorageOptions<T>"
+          }
+        ],
+        "returns": "[T, LocalStorageSetter<T>, () => void]",
+        "usage": "const result = useLocalStorage(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-local-storage",
+      "importStatement": "import { useLocalStorage } from \"@/hooks/use-local-storage\"",
+      "primaryExport": "useLocalStorage",
+      "example": "const result = useLocalStorage(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

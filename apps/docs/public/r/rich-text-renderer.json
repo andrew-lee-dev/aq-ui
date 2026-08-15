@@ -1,0 +1,263 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rich-text-renderer",
+  "type": "registry:ui",
+  "title": "Rich Text Renderer",
+  "description": "Open-code aq-ui accessible component family for Rich Text Renderer.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "code-block",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/rich-text-renderer.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport {\n  CodeBlock,\n  type CodeBlockLanguage,\n} from \"@/components/ui/code-block\"\nimport { cn } from \"@/lib/utils\"\n\ninterface RichTextMark {\n  type: string\n  attrs?: Record<string, unknown>\n}\n\ninterface RichTextNode {\n  type?: string\n  attrs?: Record<string, unknown>\n  content?: RichTextNode[]\n  marks?: RichTextMark[]\n  text?: string\n}\n\ntype RichTextDocument = RichTextNode\n\ninterface RichTextNodeRendererContext {\n  key: React.Key\n  children: React.ReactNode\n}\n\ntype RichTextNodeRenderer = (\n  node: RichTextNode,\n  context: RichTextNodeRendererContext\n) => React.ReactNode\n\ninterface RichTextRendererProps extends Omit<\n  React.ComponentProps<\"div\">,\n  \"children\"\n> {\n  value: RichTextDocument\n  renderers?: Record<string, RichTextNodeRenderer>\n  unknownNodeFallback?: \"children\" | \"omit\"\n}\n\nfunction safeRichTextAssetUrl(value: string) {\n  const url = value.trim()\n  if (url.startsWith(\"/\") && !url.startsWith(\"//\")) return url\n\n  try {\n    const parsed = new URL(url)\n    return parsed.protocol === \"https:\" || parsed.protocol === \"http:\"\n      ? url\n      : null\n  } catch {\n    return null\n  }\n}\n\nfunction safeRichTextLinkUrl(value: string) {\n  const url = value.trim()\n  if (\n    url.startsWith(\"#\") ||\n    (url.startsWith(\"/\") && !url.startsWith(\"//\")) ||\n    url.startsWith(\"./\") ||\n    url.startsWith(\"../\")\n  ) {\n    return url\n  }\n\n  try {\n    const parsed = new URL(url)\n    return [\"https:\", \"http:\", \"mailto:\"].includes(parsed.protocol) ? url : null\n  } catch {\n    return null\n  }\n}\n\nfunction applyRichTextMarks(\n  value: React.ReactNode,\n  marks: RichTextNode[\"marks\"],\n  key: React.Key\n) {\n  return (marks ?? []).reduce<React.ReactNode>((content, mark, index) => {\n    const markKey = `${String(key)}-mark-${index}`\n\n    switch (mark.type) {\n      case \"bold\":\n        return <strong key={markKey}>{content}</strong>\n      case \"italic\":\n        return <em key={markKey}>{content}</em>\n      case \"strike\":\n        return <s key={markKey}>{content}</s>\n      case \"underline\":\n        return <u key={markKey}>{content}</u>\n      case \"code\":\n        return (\n          <code\n            key={markKey}\n            className=\"rounded bg-muted px-1.5 py-0.5 font-mono text-[0.875em]\"\n          >\n            {content}\n          </code>\n        )\n      case \"highlight\": {\n        const color =\n          typeof mark.attrs?.color === \"string\" ? mark.attrs.color : undefined\n        return (\n          <mark\n            key={markKey}\n            style={color ? { backgroundColor: color } : undefined}\n          >\n            {content}\n          </mark>\n        )\n      }\n      case \"link\": {\n        const href = safeRichTextLinkUrl(String(mark.attrs?.href ?? \"\"))\n        if (!href) return content\n        const target = mark.attrs?.target === \"_blank\" ? \"_blank\" : undefined\n        return (\n          <a\n            key={markKey}\n            href={href}\n            target={target}\n            rel={target ? \"noopener noreferrer\" : undefined}\n            className=\"font-medium text-primary underline underline-offset-4\"\n          >\n            {content}\n          </a>\n        )\n      }\n      default:\n        return content\n    }\n  }, value)\n}\n\nfunction renderRichTextNode(\n  node: RichTextNode,\n  key: React.Key,\n  renderers: Record<string, RichTextNodeRenderer>,\n  unknownNodeFallback: \"children\" | \"omit\"\n): React.ReactNode {\n  const children = node.content?.map((child, index) =>\n    renderRichTextNode(\n      child,\n      `${String(key)}-${index}`,\n      renderers,\n      unknownNodeFallback\n    )\n  )\n\n  if (node.type && renderers[node.type]) {\n    return renderers[node.type]?.(node, { key, children })\n  }\n\n  switch (node.type) {\n    case \"doc\":\n      return <React.Fragment key={key}>{children}</React.Fragment>\n    case \"text\":\n      return applyRichTextMarks(node.text ?? \"\", node.marks, key)\n    case \"paragraph\":\n      return (\n        <p key={key} className=\"my-4 min-h-6 leading-7\">\n          {children}\n        </p>\n      )\n    case \"heading\": {\n      const level = Math.min(6, Math.max(1, Number(node.attrs?.level ?? 2)))\n      const Heading = `h${level}` as keyof React.JSX.IntrinsicElements\n      return React.createElement(\n        Heading,\n        {\n          key,\n          className: cn(\n            \"mt-7 scroll-m-20 font-semibold tracking-tight\",\n            level === 1 && \"text-3xl\",\n            level === 2 && \"border-b pb-2 text-2xl\",\n            level === 3 && \"text-xl\",\n            level >= 4 && \"text-lg\"\n          ),\n        },\n        children\n      )\n    }\n    case \"blockquote\":\n      return (\n        <blockquote\n          key={key}\n          className=\"my-6 border-s-4 ps-4 text-muted-foreground italic\"\n        >\n          {children}\n        </blockquote>\n      )\n    case \"bulletList\":\n      return (\n        <ul key={key} className=\"my-4 ms-6 list-disc space-y-2\">\n          {children}\n        </ul>\n      )\n    case \"orderedList\":\n      return (\n        <ol key={key} className=\"my-4 ms-6 list-decimal space-y-2\">\n          {children}\n        </ol>\n      )\n    case \"listItem\":\n      return <li key={key}>{children}</li>\n    case \"taskList\":\n      return (\n        <ul key={key} className=\"my-4 list-none space-y-2 ps-0\">\n          {children}\n        </ul>\n      )\n    case \"taskItem\":\n      return (\n        <li\n          key={key}\n          className=\"flex items-start gap-2\"\n          data-checked={node.attrs?.checked ? \"\" : undefined}\n        >\n          <input\n            type=\"checkbox\"\n            checked={Boolean(node.attrs?.checked)}\n            readOnly\n            tabIndex={-1}\n            aria-hidden=\"true\"\n            className=\"mt-1 size-4 accent-primary\"\n          />\n          <div className=\"min-w-0 flex-1 [&>p]:my-0\">{children}</div>\n        </li>\n      )\n    case \"hardBreak\":\n      return <br key={key} />\n    case \"horizontalRule\":\n      return <hr key={key} className=\"my-8 border-border\" />\n    case \"codeBlock\":\n      return (\n        <CodeBlock\n          key={key}\n          code={node.content?.map((child) => child.text ?? \"\").join(\"\") ?? \"\"}\n          language={\n            String(node.attrs?.language ?? \"plaintext\") as CodeBlockLanguage\n          }\n        />\n      )\n    case \"image\": {\n      const src = safeRichTextAssetUrl(String(node.attrs?.src ?? \"\"))\n      if (!src) return null\n      return (\n        <img\n          key={key}\n          src={src}\n          alt={String(node.attrs?.alt ?? \"\")}\n          title={\n            typeof node.attrs?.title === \"string\" ? node.attrs.title : undefined\n          }\n          loading=\"lazy\"\n          className=\"my-6 h-auto max-w-full rounded-lg border\"\n        />\n      )\n    }\n    case \"attachment\": {\n      const href = safeRichTextAssetUrl(String(node.attrs?.url ?? \"\"))\n      if (!href) return null\n      return (\n        <a\n          key={key}\n          href={href}\n          target=\"_blank\"\n          rel=\"noopener noreferrer\"\n          className=\"inline-flex max-w-full items-center rounded-md border bg-muted/50 px-2 py-1 text-sm font-medium text-primary underline-offset-4 hover:underline\"\n        >\n          {String(node.attrs?.name ?? \"Attachment\")}\n        </a>\n      )\n    }\n    case \"mention\":\n      return (\n        <span\n          key={key}\n          data-mention-id={String(node.attrs?.id ?? \"\")}\n          className=\"rounded bg-primary/10 px-1 py-0.5 font-medium text-primary\"\n        >\n          @{String(node.attrs?.label ?? node.attrs?.id ?? \"mention\")}\n        </span>\n      )\n    case \"table\":\n      return (\n        <div key={key} className=\"my-6 w-full overflow-x-auto\">\n          <table className=\"w-full border-collapse text-sm\">\n            <tbody>{children}</tbody>\n          </table>\n        </div>\n      )\n    case \"tableRow\":\n      return <tr key={key}>{children}</tr>\n    case \"tableHeader\":\n      return (\n        <th\n          key={key}\n          className=\"border bg-muted/50 px-3 py-2 text-start font-semibold\"\n        >\n          {children}\n        </th>\n      )\n    case \"tableCell\":\n      return (\n        <td key={key} className=\"border px-3 py-2 align-top\">\n          {children}\n        </td>\n      )\n    default:\n      return unknownNodeFallback === \"children\" ? (\n        <React.Fragment key={key}>{children}</React.Fragment>\n      ) : null\n  }\n}\n\nfunction RichTextRenderer({\n  value,\n  renderers = {},\n  unknownNodeFallback = \"children\",\n  className,\n  ...props\n}: RichTextRendererProps) {\n  return (\n    <div\n      data-slot=\"rich-text-renderer\"\n      className={cn(\n        \"min-w-0 text-sm text-foreground [&>:first-child]:mt-0 [&>:last-child]:mb-0\",\n        className\n      )}\n      {...props}\n    >\n      {renderRichTextNode(value, \"root\", renderers, unknownNodeFallback)}\n    </div>\n  )\n}\n\nexport { RichTextRenderer, applyRichTextMarks, renderRichTextNode }\nexport type {\n  RichTextDocument,\n  RichTextMark,\n  RichTextNode,\n  RichTextNodeRenderer,\n  RichTextNodeRendererContext,\n  RichTextRendererProps,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-6ad740d0a16e1078b5859c59b4bcd43cc682de6f60d6db6b299ee2372e456ae6",
+    "api": [
+      {
+        "name": "applyRichTextMarks",
+        "kind": "function",
+        "line": 76,
+        "signature": "function applyRichTextMarks(value: React.ReactNode, marks: RichTextNode[\"marks\"], key: React.Key)",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "React.ReactNode"
+          },
+          {
+            "name": "marks",
+            "kind": "parameter",
+            "type": "RichTextNode[\"marks\"]"
+          },
+          {
+            "name": "key",
+            "kind": "parameter",
+            "type": "React.Key"
+          }
+        ],
+        "usage": "applyRichTextMarks(/* arguments */)"
+      },
+      {
+        "name": "renderRichTextNode",
+        "kind": "function",
+        "line": 136,
+        "signature": "function renderRichTextNode(node: RichTextNode, key: React.Key, renderers: Record<string, RichTextNodeRenderer>, unknownNodeFallback: \"children\" | \"omit\"): React.ReactNode",
+        "parameters": [
+          {
+            "name": "node",
+            "kind": "parameter",
+            "type": "RichTextNode"
+          },
+          {
+            "name": "key",
+            "kind": "parameter",
+            "type": "React.Key"
+          },
+          {
+            "name": "renderers",
+            "kind": "parameter",
+            "type": "Record<string, RichTextNodeRenderer>"
+          },
+          {
+            "name": "unknownNodeFallback",
+            "kind": "parameter",
+            "type": "\"children\" | \"omit\""
+          }
+        ],
+        "returns": "React.ReactNode",
+        "usage": "renderRichTextNode(/* arguments */)"
+      },
+      {
+        "name": "RichTextDocument",
+        "kind": "type",
+        "line": 22,
+        "signature": "type RichTextDocument = RichTextNode",
+        "members": [
+          {
+            "name": "type",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "attrs",
+            "kind": "property",
+            "optional": true,
+            "type": "Record<string, unknown>"
+          },
+          {
+            "name": "content",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextNode[]"
+          },
+          {
+            "name": "marks",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextMark[]"
+          },
+          {
+            "name": "text",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "RichTextMark",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface RichTextMark",
+        "members": [
+          {
+            "name": "type",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "attrs",
+            "kind": "property",
+            "optional": true,
+            "type": "Record<string, unknown>"
+          }
+        ]
+      },
+      {
+        "name": "RichTextNode",
+        "kind": "interface",
+        "line": 14,
+        "signature": "interface RichTextNode",
+        "members": [
+          {
+            "name": "type",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "attrs",
+            "kind": "property",
+            "optional": true,
+            "type": "Record<string, unknown>"
+          },
+          {
+            "name": "content",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextNode[]"
+          },
+          {
+            "name": "marks",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextMark[]"
+          },
+          {
+            "name": "text",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "RichTextNodeRenderer",
+        "kind": "type",
+        "line": 29,
+        "signature": "type RichTextNodeRenderer = (node: RichTextNode, context: RichTextNodeRendererContext) => React.ReactNode"
+      },
+      {
+        "name": "RichTextNodeRendererContext",
+        "kind": "interface",
+        "line": 24,
+        "signature": "interface RichTextNodeRendererContext",
+        "members": [
+          {
+            "name": "key",
+            "kind": "property",
+            "type": "React.Key"
+          },
+          {
+            "name": "children",
+            "kind": "property",
+            "type": "React.ReactNode"
+          }
+        ]
+      },
+      {
+        "name": "RichTextRenderer",
+        "kind": "function",
+        "line": 318,
+        "signature": "function RichTextRenderer({ value, renderers = {}, unknownNodeFallback = \"children\", className, ...props }: RichTextRendererProps)",
+        "propsType": "RichTextRendererProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "renderers",
+            "kind": "property",
+            "optional": true,
+            "type": "Record<string, RichTextNodeRenderer>",
+            "default": "{}"
+          },
+          {
+            "name": "unknownNodeFallback",
+            "kind": "property",
+            "optional": true,
+            "type": "\"children\" | \"omit\"",
+            "default": "\"children\""
+          }
+        ],
+        "usage": "<RichTextRenderer />"
+      },
+      {
+        "name": "RichTextRendererProps",
+        "kind": "interface",
+        "line": 34,
+        "signature": "interface RichTextRendererProps extends Omit< React.ComponentProps<\"div\">, \"children\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "renderers",
+            "kind": "property",
+            "optional": true,
+            "type": "Record<string, RichTextNodeRenderer>",
+            "default": "{}"
+          },
+          {
+            "name": "unknownNodeFallback",
+            "kind": "property",
+            "optional": true,
+            "type": "\"children\" | \"omit\"",
+            "default": "\"children\""
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/rich-text-renderer",
+      "importStatement": "import { RichTextRenderer } from \"@/components/ui/rich-text-renderer\"",
+      "primaryExport": "RichTextRenderer",
+      "example": "<RichTextRenderer />"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

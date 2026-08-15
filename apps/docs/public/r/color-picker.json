@@ -1,0 +1,174 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "color-picker",
+  "type": "registry:ui",
+  "title": "Color Picker",
+  "description": "Accessible color area, hue and alpha controls, swatch, field, and controlled color formats.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "react-aria-components@^1.12.3"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/color-picker.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport {\n  ColorArea,\n  ColorField,\n  ColorPicker as ColorPickerPrimitive,\n  ColorSlider,\n  ColorSwatch,\n  ColorThumb,\n  Input,\n  Label,\n  SliderOutput,\n  SliderTrack,\n  parseColor,\n  type Color,\n  type ColorFormat,\n} from \"react-aria-components\"\n\nimport { cn } from \"@/lib/utils\"\n\ntype SupportedColorFormat = Extract<\n  ColorFormat,\n  \"hex\" | \"hexa\" | \"rgb\" | \"rgba\" | \"hsl\" | \"hsla\" | \"hsb\" | \"hsba\"\n>\n\ninterface ColorPickerProps extends Omit<\n  React.ComponentPropsWithoutRef<\"div\">,\n  \"defaultValue\" | \"onChange\"\n> {\n  value?: string\n  defaultValue?: string\n  onValueChange?: (value: string, color: Color) => void\n  format?: SupportedColorFormat\n  showAlpha?: boolean\n  disabled?: boolean\n  label?: React.ReactNode\n  className?: string\n  name?: string\n}\n\nconst ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(\n  function ColorPicker(\n    {\n      value,\n      defaultValue = \"#3b82f6\",\n      onValueChange,\n      format = \"hex\",\n      showAlpha = false,\n      disabled,\n      label = \"Color\",\n      className,\n      name,\n      ...props\n    },\n    ref\n  ) {\n    const controlledColor = React.useMemo(\n      () => (value ? safeParseHsbColor(value) : undefined),\n      [value]\n    )\n    const initialColor = React.useMemo(\n      () =>\n        safeParseHsbColor(defaultValue) ??\n        parseColor(\"#3b82f6\").toFormat(\"hsb\"),\n      [defaultValue]\n    )\n    const [internalColor, setInternalColor] =\n      React.useState<Color>(initialColor)\n    const color = controlledColor ?? internalColor\n\n    const change = React.useCallback(\n      (next: Color) => {\n        if (value === undefined) setInternalColor(next)\n        onValueChange?.(\n          next.toString(showAlpha ? formatWithAlpha(format) : format),\n          next\n        )\n      },\n      [format, onValueChange, showAlpha, value]\n    )\n\n    return (\n      <ColorPickerPrimitive value={color} onChange={change}>\n        <div\n          ref={ref}\n          data-slot=\"color-picker\"\n          className={cn(\n            \"grid w-full max-w-sm gap-4 rounded-xl border bg-background p-4\",\n            className\n          )}\n          {...props}\n        >\n          {name ? (\n            <input\n              type=\"hidden\"\n              name={name}\n              value={color.toString(\n                showAlpha ? formatWithAlpha(format) : format\n              )}\n            />\n          ) : null}\n          <div className=\"flex items-center gap-3\">\n            <ColorSwatch\n              color={color}\n              className=\"size-9 shrink-0 rounded-lg border shadow-sm\"\n            />\n            <span className=\"font-medium\">{label}</span>\n            <output className=\"ms-auto font-mono text-sm text-muted-foreground\">\n              {color.toString(showAlpha ? formatWithAlpha(format) : format)}\n            </output>\n          </div>\n          <ColorArea\n            isDisabled={disabled}\n            colorSpace=\"hsb\"\n            xChannel=\"saturation\"\n            yChannel=\"brightness\"\n            className=\"relative h-44 w-full rounded-lg shadow-inner ring-offset-background outline-none data-[focus-visible]:ring-2 data-[focus-visible]:ring-ring data-[focus-visible]:ring-offset-2\"\n          >\n            <ColorThumb\n              className={({ isFocusVisible }) =>\n                cn(\n                  \"size-5 rounded-full border-2 border-white shadow-md\",\n                  isFocusVisible && \"ring-2 ring-ring ring-offset-2\"\n                )\n              }\n              style={({ color: thumbColor }) => ({\n                background: thumbColor.toString(\"css\"),\n              })}\n            />\n          </ColorArea>\n          <ColorChannelSlider channel=\"hue\" label=\"Hue\" disabled={disabled} />\n          {showAlpha ? (\n            <ColorChannelSlider\n              channel=\"alpha\"\n              label=\"Alpha\"\n              disabled={disabled}\n            />\n          ) : null}\n          <ColorField isDisabled={disabled} className=\"grid gap-1.5\">\n            <Label className=\"text-sm font-medium\">{label}</Label>\n            <Input className=\"h-9 w-full rounded-lg border border-input bg-transparent px-3 font-mono text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50\" />\n          </ColorField>\n        </div>\n      </ColorPickerPrimitive>\n    )\n  }\n)\nColorPicker.displayName = \"ColorPicker\"\n\nfunction ColorChannelSlider({\n  channel,\n  label,\n  disabled,\n}: {\n  channel: \"hue\" | \"alpha\"\n  label: string\n  disabled?: boolean\n}) {\n  return (\n    <ColorSlider\n      channel={channel}\n      isDisabled={disabled}\n      className=\"grid gap-1.5\"\n    >\n      <div className=\"flex items-center justify-between text-sm\">\n        <Label>{label}</Label>\n        <SliderOutput className=\"text-muted-foreground\" />\n      </div>\n      <SliderTrack className=\"relative h-4 w-full rounded-full shadow-inner ring-offset-background outline-none data-[focus-visible]:ring-2 data-[focus-visible]:ring-ring data-[focus-visible]:ring-offset-2\">\n        <ColorThumb\n          className={({ isFocusVisible }) =>\n            cn(\n              \"top-1/2 size-5 rounded-full border-2 border-white shadow-md\",\n              isFocusVisible && \"ring-2 ring-ring ring-offset-2\"\n            )\n          }\n          style={({ color }) => ({ background: color.toString(\"css\") })}\n        />\n      </SliderTrack>\n    </ColorSlider>\n  )\n}\n\nfunction safeParseColor(value: string) {\n  try {\n    return parseColor(value)\n  } catch {\n    return undefined\n  }\n}\n\nfunction safeParseHsbColor(value: string) {\n  return safeParseColor(value)?.toFormat(\"hsb\")\n}\n\nfunction formatWithAlpha(format: SupportedColorFormat): SupportedColorFormat {\n  if (format === \"hex\") return \"hexa\"\n  if (format === \"rgb\") return \"rgba\"\n  if (format === \"hsl\") return \"hsla\"\n  if (format === \"hsb\") return \"hsba\"\n  return format\n}\n\nexport { ColorPicker, type ColorPickerProps, type SupportedColorFormat }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-108ca4a38d9595b160b41baa9d992001e76e0074169adcb6eb7f5c90538d7910",
+    "api": [
+      {
+        "name": "ColorPicker",
+        "kind": "const",
+        "line": 42,
+        "signature": "const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(…)",
+        "propsType": "ColorPickerProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"#3b82f6\""
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string, color: Color) => void"
+          },
+          {
+            "name": "format",
+            "kind": "property",
+            "optional": true,
+            "type": "SupportedColorFormat",
+            "default": "\"hex\""
+          },
+          {
+            "name": "showAlpha",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "label",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode",
+            "default": "\"Color\""
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ],
+        "usage": "<ColorPicker />"
+      },
+      {
+        "name": "ColorPickerProps",
+        "kind": "interface",
+        "line": 27,
+        "signature": "interface ColorPickerProps extends Omit< React.ComponentPropsWithoutRef<\"div\">, \"defaultValue\" | \"onChange\" >",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"#3b82f6\""
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string, color: Color) => void"
+          },
+          {
+            "name": "format",
+            "kind": "property",
+            "optional": true,
+            "type": "SupportedColorFormat",
+            "default": "\"hex\""
+          },
+          {
+            "name": "showAlpha",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "label",
+            "kind": "property",
+            "optional": true,
+            "type": "React.ReactNode",
+            "default": "\"Color\""
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "SupportedColorFormat",
+        "kind": "type",
+        "line": 22,
+        "signature": "type SupportedColorFormat = Extract<ColorFormat, \"hex\" | \"hexa\" | \"rgb\" | \"rgba\" | \"hsl\" | \"hsla\" | \"hsb\" | \"hsba\">"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/color-picker",
+      "importStatement": "import { ColorPicker } from \"@/components/ui/color-picker\"",
+      "primaryExport": "ColorPicker",
+      "example": "<ColorPicker />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "stepper",
+  "type": "registry:ui",
+  "title": "Stepper",
+  "description": "Controlled or uncontrolled, linear-aware multi-step workflow with horizontal and vertical composition.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "lucide-react@^1.31.0"
+  ],
+  "registryDependencies": [
+    "button",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/stepper.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport { CheckIcon } from \"lucide-react\"\n\nimport { Button } from \"@/components/ui/button\"\nimport { cn } from \"@/lib/utils\"\n\ntype StepperOrientation = \"horizontal\" | \"vertical\"\n\ninterface StepperContextValue {\n  value?: string\n  setValue: (value: string) => void\n  orientation: StepperOrientation\n  linear: boolean\n  register: (value: string) => () => void\n  values: string[]\n}\n\nconst StepperContext = React.createContext<StepperContextValue | null>(null)\nconst StepperItemContext = React.createContext<{\n  value: string\n  disabled?: boolean\n  completed?: boolean\n} | null>(null)\n\ninterface StepperProps extends React.ComponentProps<\"div\"> {\n  value?: string\n  defaultValue?: string\n  onValueChange?: (value: string) => void\n  orientation?: StepperOrientation\n  linear?: boolean\n}\n\nconst Stepper = React.forwardRef<React.ComponentRef<\"div\">, StepperProps>(\n  function Stepper(\n    {\n      value,\n      defaultValue,\n      onValueChange,\n      orientation = \"horizontal\",\n      linear = false,\n      className,\n      children,\n      ...props\n    },\n    ref\n  ) {\n    const [internalValue, setInternalValue] = React.useState(defaultValue)\n    const [values, setValues] = React.useState<string[]>([])\n    const current = value ?? internalValue\n    const setValue = React.useCallback(\n      (next: string) => {\n        if (value === undefined) setInternalValue(next)\n        onValueChange?.(next)\n      },\n      [onValueChange, value]\n    )\n    const register = React.useCallback((item: string) => {\n      setValues((currentValues) =>\n        currentValues.includes(item) ? currentValues : [...currentValues, item]\n      )\n      return () =>\n        setValues((currentValues) =>\n          currentValues.filter((value) => value !== item)\n        )\n    }, [])\n\n    return (\n      <StepperContext.Provider\n        value={{\n          value: current,\n          setValue,\n          orientation,\n          linear,\n          register,\n          values,\n        }}\n      >\n        <div\n          ref={ref}\n          data-slot=\"stepper\"\n          data-orientation={orientation}\n          className={cn(\"flex flex-col gap-4\", className)}\n          {...props}\n        >\n          {children}\n        </div>\n      </StepperContext.Provider>\n    )\n  }\n)\nStepper.displayName = \"Stepper\"\n\nconst StepperList = React.forwardRef<\n  React.ComponentRef<\"ol\">,\n  React.ComponentProps<\"ol\">\n>(function StepperList({ className, ...props }, ref) {\n  const context = useStepperContext()\n  return (\n    <ol\n      ref={ref}\n      data-slot=\"stepper-list\"\n      data-orientation={context.orientation}\n      className={cn(\n        \"flex gap-2 data-[orientation=vertical]:flex-col\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nStepperList.displayName = \"StepperList\"\n\ninterface StepperItemProps extends React.ComponentProps<\"li\"> {\n  value: string\n  disabled?: boolean\n  completed?: boolean\n}\n\nconst StepperItem = React.forwardRef<\n  React.ComponentRef<\"li\">,\n  StepperItemProps\n>(function StepperItem(\n  { value, disabled, completed, className, children, ...props },\n  ref\n) {\n  const context = useStepperContext()\n  const { register } = context\n  React.useEffect(() => register(value), [register, value])\n  const active = context.value === value\n  const index = context.values.indexOf(value)\n  const currentIndex = context.value\n    ? context.values.indexOf(context.value)\n    : -1\n  const done = completed ?? (index >= 0 && currentIndex > index)\n  return (\n    <StepperItemContext.Provider value={{ value, disabled, completed: done }}>\n      <li\n        ref={ref}\n        data-slot=\"stepper-item\"\n        data-state={active ? \"active\" : done ? \"complete\" : \"inactive\"}\n        className={cn(\n          \"group/step relative flex flex-1 items-start gap-3 data-[orientation=vertical]:flex-none\",\n          className\n        )}\n        {...props}\n      >\n        {children}\n      </li>\n    </StepperItemContext.Provider>\n  )\n})\nStepperItem.displayName = \"StepperItem\"\n\nconst StepperTrigger = React.forwardRef<\n  React.ComponentRef<typeof Button>,\n  React.ComponentProps<typeof Button>\n>(function StepperTrigger({ className, children, ...props }, ref) {\n  const context = useStepperContext()\n  const item = useStepperItemContext()\n  const active = context.value === item.value\n  const currentIndex = context.value\n    ? context.values.indexOf(context.value)\n    : -1\n  const targetIndex = context.values.indexOf(item.value)\n  const blocked =\n    item.disabled || (context.linear && targetIndex > currentIndex + 1)\n  return (\n    <Button\n      ref={ref}\n      data-slot=\"stepper-trigger\"\n      data-state={active ? \"active\" : item.completed ? \"complete\" : \"inactive\"}\n      variant=\"ghost\"\n      className={cn(\n        \"h-auto justify-start gap-3 p-0 text-start hover:bg-transparent\",\n        className\n      )}\n      {...props}\n      disabled={blocked}\n      aria-current={active ? \"step\" : undefined}\n      onClick={(event) => {\n        props.onClick?.(event)\n        if (!event.defaultPrevented) context.setValue(item.value)\n      }}\n    >\n      {children}\n    </Button>\n  )\n})\nStepperTrigger.displayName = \"StepperTrigger\"\n\nconst StepperIndicator = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function StepperIndicator({ className, children, ...props }, ref) {\n  const context = useStepperContext()\n  const item = useStepperItemContext()\n  const index = context.values.indexOf(item.value)\n  return (\n    <span\n      ref={ref}\n      data-slot=\"stepper-indicator\"\n      data-state={\n        context.value === item.value\n          ? \"active\"\n          : item.completed\n            ? \"complete\"\n            : \"inactive\"\n      }\n      className={cn(\n        \"flex size-8 shrink-0 items-center justify-center rounded-full border bg-background text-sm font-medium group-data-[state=active]/step:border-primary group-data-[state=active]/step:bg-primary group-data-[state=active]/step:text-primary-foreground group-data-[state=complete]/step:border-primary group-data-[state=complete]/step:text-primary\",\n        className\n      )}\n      {...props}\n    >\n      {children ??\n        (item.completed ? <CheckIcon className=\"size-4\" /> : index + 1)}\n    </span>\n  )\n})\nStepperIndicator.displayName = \"StepperIndicator\"\n\nconst StepperTitle = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function StepperTitle({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      data-slot=\"stepper-title\"\n      className={cn(\"block font-medium\", className)}\n      {...props}\n    />\n  )\n})\nStepperTitle.displayName = \"StepperTitle\"\n\nconst StepperDescription = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function StepperDescription({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      data-slot=\"stepper-description\"\n      className={cn(\"block text-sm text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nStepperDescription.displayName = \"StepperDescription\"\n\nconst StepperSeparator = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function StepperSeparator({ className, ...props }, ref) {\n  const context = useStepperContext()\n  return (\n    <span\n      ref={ref}\n      aria-hidden\n      data-slot=\"stepper-separator\"\n      data-orientation={context.orientation}\n      className={cn(\n        \"mt-4 h-px flex-1 bg-border data-[orientation=vertical]:ms-4 data-[orientation=vertical]:mt-0 data-[orientation=vertical]:h-8 data-[orientation=vertical]:w-px data-[orientation=vertical]:flex-none\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nStepperSeparator.displayName = \"StepperSeparator\"\n\nconst StepperContent = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & { value: string }\n>(function StepperContent({ value, className, ...props }, ref) {\n  const context = useStepperContext()\n  if (context.value !== value) return null\n  return (\n    <div\n      ref={ref}\n      data-slot=\"stepper-content\"\n      data-state=\"active\"\n      className={cn(\"outline-none\", className)}\n      {...props}\n    />\n  )\n})\nStepperContent.displayName = \"StepperContent\"\n\nconst StepperPrevious = React.forwardRef<\n  React.ComponentRef<typeof Button>,\n  React.ComponentProps<typeof Button>\n>(function StepperPrevious({ className, ...props }, ref) {\n  const context = useStepperContext()\n  const index = context.value ? context.values.indexOf(context.value) : -1\n  return (\n    <Button\n      ref={ref}\n      type=\"button\"\n      variant=\"outline\"\n      className={className}\n      {...props}\n      disabled={index <= 0 || props.disabled}\n      onClick={(event) => {\n        props.onClick?.(event)\n        const previous = context.values[index - 1]\n        if (!event.defaultPrevented && previous) context.setValue(previous)\n      }}\n    />\n  )\n})\nStepperPrevious.displayName = \"StepperPrevious\"\n\nconst StepperNext = React.forwardRef<\n  React.ComponentRef<typeof Button>,\n  React.ComponentProps<typeof Button>\n>(function StepperNext({ className, ...props }, ref) {\n  const context = useStepperContext()\n  const index = context.value ? context.values.indexOf(context.value) : -1\n  return (\n    <Button\n      ref={ref}\n      type=\"button\"\n      className={className}\n      {...props}\n      disabled={\n        index < 0 || index >= context.values.length - 1 || props.disabled\n      }\n      onClick={(event) => {\n        props.onClick?.(event)\n        const next = context.values[index + 1]\n        if (!event.defaultPrevented && next) context.setValue(next)\n      }}\n    />\n  )\n})\nStepperNext.displayName = \"StepperNext\"\n\nfunction useStepperContext() {\n  const context = React.useContext(StepperContext)\n  if (!context)\n    throw new Error(\"Stepper components must be used within <Stepper>.\")\n  return context\n}\n\nfunction useStepperItemContext() {\n  const context = React.useContext(StepperItemContext)\n  if (!context)\n    throw new Error(\"Stepper item parts must be used within <StepperItem>.\")\n  return context\n}\n\nexport {\n  Stepper,\n  StepperContent,\n  StepperDescription,\n  StepperIndicator,\n  StepperItem,\n  StepperList,\n  StepperNext,\n  StepperPrevious,\n  StepperSeparator,\n  StepperTitle,\n  StepperTrigger,\n  type StepperProps,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-4174e7ab7f2cbe4a5919dd34ae1b8e1001b033812482f8ad96e61c573d61ca1f",
+    "api": [
+      {
+        "name": "Stepper",
+        "kind": "const",
+        "line": 35,
+        "signature": "const Stepper = React.forwardRef<React.ComponentRef<\"div\">, StepperProps>(…)",
+        "propsType": "StepperProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "orientation",
+            "kind": "property",
+            "optional": true,
+            "type": "StepperOrientation",
+            "default": "\"horizontal\""
+          },
+          {
+            "name": "linear",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "usage": "<Stepper />"
+      },
+      {
+        "name": "StepperContent",
+        "kind": "const",
+        "line": 275,
+        "signature": "const StepperContent = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { value: string }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { value: string }",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          }
+        ],
+        "usage": "<StepperContent />"
+      },
+      {
+        "name": "StepperDescription",
+        "kind": "const",
+        "line": 239,
+        "signature": "const StepperDescription = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<StepperDescription />"
+      },
+      {
+        "name": "StepperIndicator",
+        "kind": "const",
+        "line": 193,
+        "signature": "const StepperIndicator = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<StepperIndicator />"
+      },
+      {
+        "name": "StepperItem",
+        "kind": "const",
+        "line": 121,
+        "signature": "const StepperItem = React.forwardRef<React.ComponentRef<\"li\">, StepperItemProps>(…)",
+        "propsType": "StepperItemProps",
+        "props": [
+          {
+            "name": "value",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          },
+          {
+            "name": "completed",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ],
+        "usage": "<StepperItem />"
+      },
+      {
+        "name": "StepperList",
+        "kind": "const",
+        "line": 95,
+        "signature": "const StepperList = React.forwardRef<React.ComponentRef<\"ol\">, React.ComponentProps<\"ol\">>(…)",
+        "propsType": "React.ComponentProps<\"ol\">",
+        "usage": "<StepperList />"
+      },
+      {
+        "name": "StepperNext",
+        "kind": "const",
+        "line": 317,
+        "signature": "const StepperNext = React.forwardRef<React.ComponentRef<typeof Button>, React.ComponentProps<typeof Button>>(…)",
+        "propsType": "React.ComponentProps<typeof Button>",
+        "usage": "<StepperNext />"
+      },
+      {
+        "name": "StepperPrevious",
+        "kind": "const",
+        "line": 293,
+        "signature": "const StepperPrevious = React.forwardRef<React.ComponentRef<typeof Button>, React.ComponentProps<typeof Button>>(…)",
+        "propsType": "React.ComponentProps<typeof Button>",
+        "usage": "<StepperPrevious />"
+      },
+      {
+        "name": "StepperProps",
+        "kind": "interface",
+        "line": 27,
+        "signature": "interface StepperProps extends React.ComponentProps<\"div\">",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(value: string) => void"
+          },
+          {
+            "name": "orientation",
+            "kind": "property",
+            "optional": true,
+            "type": "StepperOrientation",
+            "default": "\"horizontal\""
+          },
+          {
+            "name": "linear",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      },
+      {
+        "name": "StepperSeparator",
+        "kind": "const",
+        "line": 254,
+        "signature": "const StepperSeparator = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<StepperSeparator />"
+      },
+      {
+        "name": "StepperTitle",
+        "kind": "const",
+        "line": 224,
+        "signature": "const StepperTitle = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<StepperTitle />"
+      },
+      {
+        "name": "StepperTrigger",
+        "kind": "const",
+        "line": 156,
+        "signature": "const StepperTrigger = React.forwardRef<React.ComponentRef<typeof Button>, React.ComponentProps<typeof Button>>(…)",
+        "propsType": "React.ComponentProps<typeof Button>",
+        "usage": "<StepperTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/stepper",
+      "importStatement": "import { Stepper } from \"@/components/ui/stepper\"",
+      "primaryExport": "Stepper",
+      "example": "<Stepper />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-throttled-value",
+  "type": "registry:hook",
+  "title": "Use Throttled Value",
+  "description": "Open-code aq-ui React hook for Use Throttled Value.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-throttled-value.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport function useThrottledValue<T>(value: T, interval = 250): T {\n  const [throttled, setThrottled] = React.useState(value)\n  const lastUpdatedRef = React.useRef(0)\n\n  React.useEffect(() => {\n    const elapsed = Date.now() - lastUpdatedRef.current\n\n    if (elapsed >= interval) {\n      lastUpdatedRef.current = Date.now()\n      setThrottled(value)\n      return\n    }\n\n    const timeout = window.setTimeout(() => {\n      lastUpdatedRef.current = Date.now()\n      setThrottled(value)\n    }, interval - elapsed)\n\n    return () => window.clearTimeout(timeout)\n  }, [interval, value])\n\n  return throttled\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-2913afa71827a97b7402659556152d1755d4182ba7f6f9688b2d8a605266fa0e",
+    "api": [
+      {
+        "name": "useThrottledValue",
+        "kind": "function",
+        "line": 5,
+        "signature": "function useThrottledValue<T>(value: T, interval = 250): T",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "T"
+          },
+          {
+            "name": "interval",
+            "kind": "parameter",
+            "optional": true,
+            "default": "250"
+          }
+        ],
+        "returns": "T",
+        "usage": "const result = useThrottledValue(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-throttled-value",
+      "importStatement": "import { useThrottledValue } from \"@/hooks/use-throttled-value\"",
+      "primaryExport": "useThrottledValue",
+      "example": "const result = useThrottledValue(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

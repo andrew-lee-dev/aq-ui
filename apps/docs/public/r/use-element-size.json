@@ -1,0 +1,73 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-element-size",
+  "type": "registry:hook",
+  "title": "Use Element Size",
+  "description": "Open-code aq-ui React hook for Use Element Size.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-resize-observer"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-element-size.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport type { Target } from \"@/hooks/_target\"\nimport { useResizeObserver } from \"@/hooks/use-resize-observer\"\n\nexport interface ElementSize {\n  width: number\n  height: number\n}\n\nexport function useElementSize<T extends Element>(\n  target: Target<T>,\n  initialSize: ElementSize = { width: 0, height: 0 }\n): ElementSize {\n  const { entry } = useResizeObserver(target)\n  if (!entry) return initialSize\n  return {\n    width: entry.contentRect.width,\n    height: entry.contentRect.height,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-98f7a954c883cea611aa13eb69c2796043959097a61ba72e7b32ec90eb89c0b3",
+    "api": [
+      {
+        "name": "ElementSize",
+        "kind": "interface",
+        "line": 6,
+        "signature": "interface ElementSize",
+        "members": [
+          {
+            "name": "width",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "height",
+            "kind": "property",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "name": "useElementSize",
+        "kind": "function",
+        "line": 11,
+        "signature": "function useElementSize<T extends Element>(target: Target<T>, initialSize: ElementSize = { width: 0, height: 0 }): ElementSize",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T>"
+          },
+          {
+            "name": "initialSize",
+            "kind": "parameter",
+            "optional": true,
+            "type": "ElementSize",
+            "default": "{ width: 0, height: 0 }"
+          }
+        ],
+        "returns": "ElementSize",
+        "usage": "const result = useElementSize(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-element-size",
+      "importStatement": "import { useElementSize } from \"@/hooks/use-element-size\"",
+      "primaryExport": "useElementSize",
+      "example": "const result = useElementSize(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

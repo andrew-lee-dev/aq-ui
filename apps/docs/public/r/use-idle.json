@@ -1,0 +1,97 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-idle",
+  "type": "registry:hook",
+  "title": "Use Idle",
+  "description": "Open-code aq-ui React hook for Use Idle.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-idle.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseIdleOptions {\n  timeout?: number\n  initialState?: boolean\n  enabled?: boolean\n  events?: Array<keyof WindowEventMap>\n  onIdle?: () => void\n  onActive?: () => void\n}\n\nconst DEFAULT_IDLE_EVENTS: Array<keyof WindowEventMap> = [\n  \"mousemove\",\n  \"mousedown\",\n  \"keydown\",\n  \"touchstart\",\n  \"scroll\",\n]\n\nexport function useIdle({\n  timeout = 60_000,\n  initialState = false,\n  enabled = true,\n  events = DEFAULT_IDLE_EVENTS,\n  onIdle,\n  onActive,\n}: UseIdleOptions = {}): boolean {\n  const [idle, setIdle] = React.useState(initialState)\n  const idleRef = React.useRef(initialState)\n  const onIdleStable = useStableCallback(onIdle)\n  const onActiveStable = useStableCallback(onActive)\n  const eventsKey = events.join(\"\\u0000\")\n\n  React.useEffect(() => {\n    if (!enabled || typeof window === \"undefined\") return\n    let timer: ReturnType<typeof setTimeout>\n    const eventNames = eventsKey.split(\"\\u0000\").filter(Boolean) as Array<\n      keyof WindowEventMap\n    >\n\n    const schedule = () => {\n      clearTimeout(timer)\n      if (idleRef.current) {\n        idleRef.current = false\n        setIdle(false)\n        onActiveStable()\n      }\n      timer = setTimeout(\n        () => {\n          idleRef.current = true\n          setIdle(true)\n          onIdleStable()\n        },\n        Math.max(0, timeout)\n      )\n    }\n\n    eventNames.forEach((event) =>\n      window.addEventListener(event, schedule, { passive: true })\n    )\n    schedule()\n\n    return () => {\n      clearTimeout(timer)\n      eventNames.forEach((event) => window.removeEventListener(event, schedule))\n    }\n  }, [enabled, eventsKey, onActiveStable, onIdleStable, timeout])\n\n  return idle\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-33455f2b1ba44df309cd5bb6cee2168e03e202b22f35fcd8c740cf6e300b0109",
+    "api": [
+      {
+        "name": "useIdle",
+        "kind": "function",
+        "line": 24,
+        "signature": "function useIdle({ timeout = 60_000, initialState = false, enabled = true, events = DEFAULT_IDLE_EVENTS, onIdle, onActive, }: UseIdleOptions = {}): boolean",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseIdleOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useIdle(/* arguments */)"
+      },
+      {
+        "name": "UseIdleOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseIdleOptions",
+        "members": [
+          {
+            "name": "timeout",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "60_000"
+          },
+          {
+            "name": "initialState",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "events",
+            "kind": "property",
+            "optional": true,
+            "type": "Array<keyof WindowEventMap>",
+            "default": "DEFAULT_IDLE_EVENTS"
+          },
+          {
+            "name": "onIdle",
+            "kind": "property",
+            "optional": true,
+            "type": "() => void"
+          },
+          {
+            "name": "onActive",
+            "kind": "property",
+            "optional": true,
+            "type": "() => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-idle",
+      "importStatement": "import { useIdle } from \"@/hooks/use-idle\"",
+      "primaryExport": "useIdle",
+      "example": "const result = useIdle(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

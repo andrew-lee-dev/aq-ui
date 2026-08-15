@@ -1,0 +1,106 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-history-state",
+  "type": "registry:hook",
+  "title": "Use History State",
+  "description": "Open-code aq-ui React hook for Use History State.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-history-state.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport type HistoryStateUpdater<T> = T | ((current: T) => T)\n\nexport interface UseHistoryStateOptions {\n  capacity?: number\n}\n\nexport interface HistoryStateControls<T> {\n  back: () => void\n  forward: () => void\n  reset: (value?: T) => void\n  canUndo: boolean\n  canRedo: boolean\n}\n\ninterface HistorySnapshot<T> {\n  entries: T[]\n  index: number\n}\n\nexport function useHistoryState<T>(\n  initialValue: T | (() => T),\n  { capacity = 100 }: UseHistoryStateOptions = {}\n): [T, (value: HistoryStateUpdater<T>) => void, HistoryStateControls<T>] {\n  const [initial] = React.useState<T>(() =>\n    typeof initialValue === \"function\"\n      ? (initialValue as () => T)()\n      : initialValue\n  )\n  const initialRef = React.useRef(initial)\n  const [history, setHistory] = React.useState<HistorySnapshot<T>>(() => ({\n    entries: [initial],\n    index: 0,\n  }))\n\n  const setValue = React.useCallback(\n    (updater: HistoryStateUpdater<T>) => {\n      setHistory((current) => {\n        const previous = current.entries[current.index] as T\n        const next =\n          typeof updater === \"function\"\n            ? (updater as (value: T) => T)(previous)\n            : updater\n        if (Object.is(previous, next)) return current\n        const entries = [...current.entries.slice(0, current.index + 1), next]\n        const bounded = entries.slice(-Math.max(1, capacity))\n        return { entries: bounded, index: bounded.length - 1 }\n      })\n    },\n    [capacity]\n  )\n\n  const back = React.useCallback(() => {\n    setHistory((current) => ({\n      ...current,\n      index: Math.max(0, current.index - 1),\n    }))\n  }, [])\n\n  const forward = React.useCallback(() => {\n    setHistory((current) => ({\n      ...current,\n      index: Math.min(current.entries.length - 1, current.index + 1),\n    }))\n  }, [])\n\n  const reset = React.useCallback((value?: T) => {\n    const next = value === undefined ? (initialRef.current as T) : value\n    setHistory({ entries: [next], index: 0 })\n  }, [])\n\n  return [\n    history.entries[history.index] as T,\n    setValue,\n    {\n      back,\n      forward,\n      reset,\n      canUndo: history.index > 0,\n      canRedo: history.index < history.entries.length - 1,\n    },\n  ]\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-7e933999c3aeb3b1015cc7dd82ccf7fc0f8430d450a703d2e4321bcfea3b5e5a",
+    "api": [
+      {
+        "name": "HistoryStateControls",
+        "kind": "interface",
+        "line": 11,
+        "signature": "interface HistoryStateControls<T>",
+        "members": [
+          {
+            "name": "back",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "forward",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "(value?: T) => void"
+          },
+          {
+            "name": "canUndo",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "canRedo",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "HistoryStateUpdater",
+        "kind": "type",
+        "line": 5,
+        "signature": "type HistoryStateUpdater<T> = T | ((current: T) => T)"
+      },
+      {
+        "name": "useHistoryState",
+        "kind": "function",
+        "line": 24,
+        "signature": "function useHistoryState<T>(initialValue: T | (() => T), { capacity = 100 }: UseHistoryStateOptions = {}): [T, (value: HistoryStateUpdater<T>) => void, HistoryStateControls<T>]",
+        "parameters": [
+          {
+            "name": "initialValue",
+            "kind": "parameter",
+            "type": "T | (() => T)"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseHistoryStateOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "[T, (value: HistoryStateUpdater<T>) => void, HistoryStateControls<T>]",
+        "usage": "const result = useHistoryState(/* arguments */)"
+      },
+      {
+        "name": "UseHistoryStateOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UseHistoryStateOptions",
+        "members": [
+          {
+            "name": "capacity",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "100"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-history-state",
+      "importStatement": "import { useHistoryState } from \"@/hooks/use-history-state\"",
+      "primaryExport": "useHistoryState",
+      "example": "const result = useHistoryState(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,417 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-tree-view",
+  "type": "registry:hook",
+  "title": "Use Tree View",
+  "description": "Open-code aq-ui React hook for Use Tree View.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-controllable-state",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-tree-view.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useControllableState } from \"@/hooks/use-controllable-state\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface TreeViewItem {\n  id: string\n  label: string\n  children?: TreeViewItem[]\n  disabled?: boolean\n}\n\nexport interface FlatTreeViewItem<T> {\n  item: T\n  id: string\n  level: number\n  parentId?: string\n  position: number\n  setSize: number\n  hasChildren: boolean\n}\n\nexport interface TreeViewMoveEvent {\n  sourceId: string\n  targetId: string\n  position: \"inside\"\n}\n\nexport interface UseTreeViewOptions<T extends TreeViewItem> {\n  items: T[]\n  selectedIds?: string[]\n  defaultSelectedIds?: string[]\n  onSelectedIdsChange?: (ids: string[]) => void\n  expandedIds?: string[]\n  defaultExpandedIds?: string[]\n  onExpandedIdsChange?: (ids: string[]) => void\n  multiple?: boolean\n  direction?: \"ltr\" | \"rtl\"\n  draggable?: boolean\n  onMove?: (event: TreeViewMoveEvent) => void\n  getId?: (item: T) => string\n  getTextValue?: (item: T) => string\n  getChildren?: (item: T) => T[] | undefined\n  isDisabled?: (item: T) => boolean\n}\n\nexport interface TreeViewItemProps<T extends HTMLElement> {\n  ref: (element: T | null) => void\n  role: \"treeitem\"\n  tabIndex: 0 | -1\n  \"aria-level\": number\n  \"aria-posinset\": number\n  \"aria-setsize\": number\n  \"aria-expanded\": boolean | undefined\n  \"aria-selected\": boolean\n  \"aria-disabled\": boolean | undefined\n  draggable: boolean\n  onFocus: () => void\n  onClick: (event: React.MouseEvent<T>) => void\n  onDoubleClick: () => void\n  onDragStart: (event: React.DragEvent<T>) => void\n  onDragOver: (event: React.DragEvent<T>) => void\n  onDrop: (event: React.DragEvent<T>) => void\n  onDragEnd: () => void\n}\n\nexport interface TreeViewController<T extends TreeViewItem> {\n  flatItems: FlatTreeViewItem<T>[]\n  selectedIds: string[]\n  expandedIds: string[]\n  focusedId: string | undefined\n  draggedId: string | undefined\n  setSelectedIds: (ids: string[]) => void\n  setExpandedIds: (ids: string[]) => void\n  select: (id: string, additive?: boolean) => void\n  toggleExpanded: (id: string, force?: boolean) => void\n  focusId: (id: string) => void\n  focusIndex: (index: number) => void\n  onKeyDown: React.KeyboardEventHandler<HTMLElement>\n  getItemProps: <TElement extends HTMLElement>(\n    id: string\n  ) => TreeViewItemProps<TElement>\n}\n\nfunction defaultGetId<T extends TreeViewItem>(item: T) {\n  return item.id\n}\n\nfunction defaultGetText<T extends TreeViewItem>(item: T) {\n  return item.label\n}\n\nfunction defaultGetChildren<T extends TreeViewItem>(item: T) {\n  return item.children as T[] | undefined\n}\n\nfunction defaultIsDisabled<T extends TreeViewItem>(item: T) {\n  return Boolean(item.disabled)\n}\n\nfunction flattenTree<T extends TreeViewItem>(\n  items: T[],\n  expanded: Set<string>,\n  getId: (item: T) => string,\n  getChildren: (item: T) => T[] | undefined,\n  level = 1,\n  parentId?: string,\n  ancestors = new Set<string>()\n): FlatTreeViewItem<T>[] {\n  const result: FlatTreeViewItem<T>[] = []\n\n  items.forEach((item, index) => {\n    const id = getId(item)\n    const children = getChildren(item) ?? []\n    result.push({\n      item,\n      id,\n      level,\n      parentId,\n      position: index + 1,\n      setSize: items.length,\n      hasChildren: children.length > 0,\n    })\n\n    if (children.length > 0 && expanded.has(id) && !ancestors.has(id)) {\n      const nextAncestors = new Set(ancestors)\n      nextAncestors.add(id)\n      result.push(\n        ...flattenTree(\n          children,\n          expanded,\n          getId,\n          getChildren,\n          level + 1,\n          id,\n          nextAncestors\n        )\n      )\n    }\n  })\n\n  return result\n}\n\nconst EMPTY_IDS: string[] = []\n\nexport function useTreeView<T extends TreeViewItem>({\n  items,\n  selectedIds: selectedIdsProp,\n  defaultSelectedIds = EMPTY_IDS,\n  onSelectedIdsChange,\n  expandedIds: expandedIdsProp,\n  defaultExpandedIds = EMPTY_IDS,\n  onExpandedIdsChange,\n  multiple = false,\n  direction = \"ltr\",\n  draggable = false,\n  onMove,\n  getId = defaultGetId,\n  getTextValue = defaultGetText,\n  getChildren = defaultGetChildren,\n  isDisabled = defaultIsDisabled,\n}: UseTreeViewOptions<T>): TreeViewController<T> {\n  const [selectedIds, setSelectedIds] = useControllableState({\n    value: selectedIdsProp,\n    defaultValue: defaultSelectedIds,\n    onChange: onSelectedIdsChange,\n  })\n  const [expandedIds, setExpandedIds] = useControllableState({\n    value: expandedIdsProp,\n    defaultValue: defaultExpandedIds,\n    onChange: onExpandedIdsChange,\n  })\n  const [internalFocusedId, setFocusedId] = React.useState<string>()\n  const [draggedId, setDraggedId] = React.useState<string>()\n  const itemRefs = React.useRef(new Map<string, HTMLElement>())\n  const typeaheadRef = React.useRef(\"\")\n  const typeaheadTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(\n    null\n  )\n  const onMoveStable = useStableCallback(onMove)\n  const expandedSet = React.useMemo(() => new Set(expandedIds), [expandedIds])\n  const flatItems = React.useMemo(\n    () => flattenTree(items, expandedSet, getId, getChildren),\n    [expandedSet, getChildren, getId, items]\n  )\n  const focusedId = flatItems.some((entry) => entry.id === internalFocusedId)\n    ? internalFocusedId\n    : flatItems[0]?.id\n\n  const toggleExpanded = React.useCallback(\n    (id: string, force?: boolean) => {\n      const next = new Set(expandedIds)\n      const shouldExpand = force ?? !next.has(id)\n      if (shouldExpand) next.add(id)\n      else next.delete(id)\n      setExpandedIds(Array.from(next))\n    },\n    [expandedIds, setExpandedIds]\n  )\n\n  const select = React.useCallback(\n    (id: string, additive = false) => {\n      const entry = flatItems.find((candidate) => candidate.id === id)\n      if (!entry || isDisabled(entry.item)) return\n      if (!multiple) {\n        setSelectedIds([id])\n      } else if (additive) {\n        setSelectedIds(\n          selectedIds.includes(id)\n            ? selectedIds.filter((selectedId) => selectedId !== id)\n            : [...selectedIds, id]\n        )\n      } else {\n        setSelectedIds(selectedIds.includes(id) ? [] : [id])\n      }\n    },\n    [flatItems, isDisabled, multiple, selectedIds, setSelectedIds]\n  )\n\n  const focusId = React.useCallback((id: string) => {\n    setFocusedId(id)\n    requestAnimationFrame(() => itemRefs.current.get(id)?.focus())\n  }, [])\n\n  const focusIndex = React.useCallback(\n    (index: number) => {\n      const entry =\n        flatItems[Math.max(0, Math.min(flatItems.length - 1, index))]\n      if (entry) focusId(entry.id)\n    },\n    [flatItems, focusId]\n  )\n\n  const onKeyDown = React.useCallback<React.KeyboardEventHandler<HTMLElement>>(\n    (event) => {\n      const currentIndex = flatItems.findIndex(\n        (entry) => entry.id === focusedId\n      )\n      const current = flatItems[currentIndex]\n      if (!current) return\n\n      const expandKey = direction === \"rtl\" ? \"ArrowLeft\" : \"ArrowRight\"\n      const collapseKey = direction === \"rtl\" ? \"ArrowRight\" : \"ArrowLeft\"\n\n      if (event.key === \"ArrowDown\") {\n        event.preventDefault()\n        focusIndex(currentIndex + 1)\n        return\n      }\n      if (event.key === \"ArrowUp\") {\n        event.preventDefault()\n        focusIndex(currentIndex - 1)\n        return\n      }\n      if (event.key === \"Home\") {\n        event.preventDefault()\n        focusIndex(0)\n        return\n      }\n      if (event.key === \"End\") {\n        event.preventDefault()\n        focusIndex(flatItems.length - 1)\n        return\n      }\n      if (event.key === expandKey) {\n        event.preventDefault()\n        if (current.hasChildren && !expandedSet.has(current.id)) {\n          toggleExpanded(current.id, true)\n        } else if (flatItems[currentIndex + 1]?.parentId === current.id) {\n          focusIndex(currentIndex + 1)\n        }\n        return\n      }\n      if (event.key === collapseKey) {\n        event.preventDefault()\n        if (current.hasChildren && expandedSet.has(current.id)) {\n          toggleExpanded(current.id, false)\n        } else if (current.parentId) {\n          const parentIndex = flatItems.findIndex(\n            (entry) => entry.id === current.parentId\n          )\n          focusIndex(parentIndex)\n        }\n        return\n      }\n      if (event.key === \"Enter\" || event.key === \" \") {\n        event.preventDefault()\n        select(current.id, event.metaKey || event.ctrlKey)\n        return\n      }\n      if (\n        event.key.length === 1 &&\n        !event.metaKey &&\n        !event.ctrlKey &&\n        !event.altKey\n      ) {\n        if (typeaheadTimerRef.current !== null) {\n          clearTimeout(typeaheadTimerRef.current)\n        }\n        typeaheadRef.current += event.key.toLocaleLowerCase()\n        typeaheadTimerRef.current = setTimeout(() => {\n          typeaheadRef.current = \"\"\n        }, 500)\n        const ordered = [\n          ...flatItems.slice(currentIndex + 1),\n          ...flatItems.slice(0, currentIndex + 1),\n        ]\n        const match = ordered.find((entry) =>\n          getTextValue(entry.item)\n            .trim()\n            .toLocaleLowerCase()\n            .startsWith(typeaheadRef.current)\n        )\n        if (match) {\n          event.preventDefault()\n          focusId(match.id)\n        }\n      }\n    },\n    [\n      direction,\n      expandedSet,\n      flatItems,\n      focusId,\n      focusedId,\n      focusIndex,\n      getTextValue,\n      select,\n      toggleExpanded,\n    ]\n  )\n\n  React.useEffect(\n    () => () => {\n      if (typeaheadTimerRef.current !== null) {\n        clearTimeout(typeaheadTimerRef.current)\n      }\n    },\n    []\n  )\n\n  const getItemProps = React.useCallback(\n    <TElement extends HTMLElement>(id: string): TreeViewItemProps<TElement> => {\n      const entry = flatItems.find((candidate) => candidate.id === id)\n      if (!entry) {\n        throw new Error(\"Unknown tree item: \" + id)\n      }\n      const disabled = isDisabled(entry.item)\n      return {\n        ref(element) {\n          if (element) itemRefs.current.set(id, element)\n          else itemRefs.current.delete(id)\n        },\n        role: \"treeitem\",\n        tabIndex: focusedId === id ? 0 : -1,\n        \"aria-level\": entry.level,\n        \"aria-posinset\": entry.position,\n        \"aria-setsize\": entry.setSize,\n        \"aria-expanded\": entry.hasChildren ? expandedSet.has(id) : undefined,\n        \"aria-selected\": selectedIds.includes(id),\n        \"aria-disabled\": disabled || undefined,\n        draggable: draggable && !disabled,\n        onFocus: () => setFocusedId(id),\n        onClick: (event) => select(id, event.metaKey || event.ctrlKey),\n        onDoubleClick: () => {\n          if (entry.hasChildren) toggleExpanded(id)\n        },\n        onDragStart: (event) => {\n          if (!draggable || disabled) return\n          setDraggedId(id)\n          event.dataTransfer.effectAllowed = \"move\"\n          event.dataTransfer.setData(\"text/plain\", id)\n        },\n        onDragOver: (event) => {\n          if (draggable && draggedId && draggedId !== id) {\n            event.preventDefault()\n            event.dataTransfer.dropEffect = \"move\"\n          }\n        },\n        onDrop: (event) => {\n          if (!draggable) return\n          event.preventDefault()\n          const sourceId = draggedId || event.dataTransfer.getData(\"text/plain\")\n          if (sourceId && sourceId !== id) {\n            onMoveStable({ sourceId, targetId: id, position: \"inside\" })\n          }\n          setDraggedId(undefined)\n        },\n        onDragEnd: () => setDraggedId(undefined),\n      }\n    },\n    [\n      draggable,\n      draggedId,\n      expandedSet,\n      flatItems,\n      focusedId,\n      isDisabled,\n      onMoveStable,\n      select,\n      selectedIds,\n      toggleExpanded,\n    ]\n  )\n\n  return {\n    flatItems,\n    selectedIds,\n    expandedIds,\n    focusedId,\n    draggedId,\n    setSelectedIds,\n    setExpandedIds,\n    select,\n    toggleExpanded,\n    focusId,\n    focusIndex,\n    onKeyDown,\n    getItemProps,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-74fff8e41580d844c63b66fc8d1da68144aa7ceaf0831650755b4b2decb8fd06",
+    "api": [
+      {
+        "name": "FlatTreeViewItem",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface FlatTreeViewItem<T>",
+        "members": [
+          {
+            "name": "item",
+            "kind": "property",
+            "type": "T"
+          },
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "level",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "parentId",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "position",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "setSize",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "hasChildren",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "TreeViewController",
+        "kind": "interface",
+        "line": 69,
+        "signature": "interface TreeViewController<T extends TreeViewItem>",
+        "members": [
+          {
+            "name": "flatItems",
+            "kind": "property",
+            "type": "FlatTreeViewItem<T>[]"
+          },
+          {
+            "name": "selectedIds",
+            "kind": "property",
+            "type": "string[]"
+          },
+          {
+            "name": "expandedIds",
+            "kind": "property",
+            "type": "string[]"
+          },
+          {
+            "name": "focusedId",
+            "kind": "property",
+            "type": "string | undefined"
+          },
+          {
+            "name": "draggedId",
+            "kind": "property",
+            "type": "string | undefined"
+          },
+          {
+            "name": "setSelectedIds",
+            "kind": "property",
+            "type": "(ids: string[]) => void"
+          },
+          {
+            "name": "setExpandedIds",
+            "kind": "property",
+            "type": "(ids: string[]) => void"
+          },
+          {
+            "name": "select",
+            "kind": "property",
+            "type": "(id: string, additive?: boolean) => void"
+          },
+          {
+            "name": "toggleExpanded",
+            "kind": "property",
+            "type": "(id: string, force?: boolean) => void"
+          },
+          {
+            "name": "focusId",
+            "kind": "property",
+            "type": "(id: string) => void"
+          },
+          {
+            "name": "focusIndex",
+            "kind": "property",
+            "type": "(index: number) => void"
+          },
+          {
+            "name": "onKeyDown",
+            "kind": "property",
+            "type": "React.KeyboardEventHandler<HTMLElement>"
+          },
+          {
+            "name": "getItemProps",
+            "kind": "property",
+            "type": "<TElement extends HTMLElement>( id: string ) => TreeViewItemProps<TElement>"
+          }
+        ]
+      },
+      {
+        "name": "TreeViewItem",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface TreeViewItem",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "children",
+            "kind": "property",
+            "optional": true,
+            "type": "TreeViewItem[]"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "TreeViewItemProps",
+        "kind": "interface",
+        "line": 49,
+        "signature": "interface TreeViewItemProps<T extends HTMLElement>",
+        "members": [
+          {
+            "name": "ref",
+            "kind": "property",
+            "type": "(element: T | null) => void"
+          },
+          {
+            "name": "role",
+            "kind": "property",
+            "type": "\"treeitem\""
+          },
+          {
+            "name": "tabIndex",
+            "kind": "property",
+            "type": "0 | -1"
+          },
+          {
+            "name": "aria-level",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "aria-posinset",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "aria-setsize",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "aria-expanded",
+            "kind": "property",
+            "type": "boolean | undefined"
+          },
+          {
+            "name": "aria-selected",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "aria-disabled",
+            "kind": "property",
+            "type": "boolean | undefined"
+          },
+          {
+            "name": "draggable",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "onFocus",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "onClick",
+            "kind": "property",
+            "type": "(event: React.MouseEvent<T>) => void"
+          },
+          {
+            "name": "onDoubleClick",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "onDragStart",
+            "kind": "property",
+            "type": "(event: React.DragEvent<T>) => void"
+          },
+          {
+            "name": "onDragOver",
+            "kind": "property",
+            "type": "(event: React.DragEvent<T>) => void"
+          },
+          {
+            "name": "onDrop",
+            "kind": "property",
+            "type": "(event: React.DragEvent<T>) => void"
+          },
+          {
+            "name": "onDragEnd",
+            "kind": "property",
+            "type": "() => void"
+          }
+        ]
+      },
+      {
+        "name": "TreeViewMoveEvent",
+        "kind": "interface",
+        "line": 25,
+        "signature": "interface TreeViewMoveEvent",
+        "members": [
+          {
+            "name": "sourceId",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "targetId",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "position",
+            "kind": "property",
+            "type": "\"inside\""
+          }
+        ]
+      },
+      {
+        "name": "useTreeView",
+        "kind": "function",
+        "line": 149,
+        "signature": "function useTreeView<T extends TreeViewItem>({ items, selectedIds: selectedIdsProp, defaultSelectedIds = EMPTY_IDS, onSelectedIdsChange, expandedIds: expandedIdsProp, defaultExpandedIds = EMPTY_IDS, onExpandedIdsChange, multiple = false, direction = \"ltr\", draggable = false, onMove,…): TreeViewController<T>",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "type": "UseTreeViewOptions<T>"
+          }
+        ],
+        "returns": "TreeViewController<T>",
+        "usage": "const result = useTreeView(/* arguments */)"
+      },
+      {
+        "name": "UseTreeViewOptions",
+        "kind": "interface",
+        "line": 31,
+        "signature": "interface UseTreeViewOptions<T extends TreeViewItem>",
+        "members": [
+          {
+            "name": "items",
+            "kind": "property",
+            "type": "T[]"
+          },
+          {
+            "name": "selectedIds",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]"
+          },
+          {
+            "name": "defaultSelectedIds",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]",
+            "default": "EMPTY_IDS"
+          },
+          {
+            "name": "onSelectedIdsChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(ids: string[]) => void"
+          },
+          {
+            "name": "expandedIds",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]"
+          },
+          {
+            "name": "defaultExpandedIds",
+            "kind": "property",
+            "optional": true,
+            "type": "string[]",
+            "default": "EMPTY_IDS"
+          },
+          {
+            "name": "onExpandedIdsChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(ids: string[]) => void"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "direction",
+            "kind": "property",
+            "optional": true,
+            "type": "\"ltr\" | \"rtl\"",
+            "default": "\"ltr\""
+          },
+          {
+            "name": "draggable",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onMove",
+            "kind": "property",
+            "optional": true,
+            "type": "(event: TreeViewMoveEvent) => void"
+          },
+          {
+            "name": "getId",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: T) => string",
+            "default": "defaultGetId"
+          },
+          {
+            "name": "getTextValue",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: T) => string",
+            "default": "defaultGetText"
+          },
+          {
+            "name": "getChildren",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: T) => T[] | undefined",
+            "default": "defaultGetChildren"
+          },
+          {
+            "name": "isDisabled",
+            "kind": "property",
+            "optional": true,
+            "type": "(item: T) => boolean",
+            "default": "defaultIsDisabled"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-tree-view",
+      "importStatement": "import { useTreeView } from \"@/hooks/use-tree-view\"",
+      "primaryExport": "useTreeView",
+      "example": "const result = useTreeView(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

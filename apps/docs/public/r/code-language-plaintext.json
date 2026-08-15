@@ -1,0 +1,38 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-plaintext",
+  "type": "registry:lib",
+  "title": "Code Language Plaintext",
+  "description": "Open-code aq-ui shared library for Code Language Plaintext.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "code-language-registry"
+  ],
+  "files": [
+    {
+      "path": "lib/code-language-plaintext.ts",
+      "type": "registry:lib",
+      "content": "import { registerCodeLanguageLoader } from \"@/lib/code-language-registry\"\n\nregisterCodeLanguageLoader(\"plaintext\", async () => [])\n\nconst codeLanguagePlaintext = \"plaintext\" as const\n\nexport { codeLanguagePlaintext }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-99654631c842b105c08f0e317f130c0deee109a5a4f9d82bea3bc92b70fd7117",
+    "api": [
+      {
+        "name": "codeLanguagePlaintext",
+        "kind": "const",
+        "line": 5,
+        "signature": "const codeLanguagePlaintext = \"plaintext\" as const"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-plaintext",
+      "importStatement": "import { codeLanguagePlaintext } from \"@/lib/code-language-plaintext\"",
+      "primaryExport": "codeLanguagePlaintext"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

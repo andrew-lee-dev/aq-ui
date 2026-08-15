@@ -1,0 +1,37 @@
+import { CodeBlock } from "@aq-ui/registry/components/code-block"
+
+export const metadata = {
+  title: "Registry authoring",
+  description:
+    "How aq-ui source and generated registry artifacts stay in sync.",
+}
+
+<main className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+
+# Registry authoring
+
+The TypeScript, TSX, and CSS files in `packages/registry/src` are the source of truth. Public registry records, API metadata, integrity hashes, and the documentation catalog are generated from those files.
+
+## Add or update an item
+
+- Keep registry IDs and filenames in kebab-case.
+- Export React components in PascalCase and hooks in camelCase.
+- Declare internal imports through the aq-ui aliases so the generator can build an exact dependency graph.
+- Add tests, docs or stories, and public types with the implementation.
+
+<CodeBlock
+  language="bash"
+  code={`pnpm registry:build
+pnpm registry:check
+pnpm schema:check`}
+  filename="quality-gates.sh"
+  copyButton
+/>
+
+Generated JSON under `apps/docs/public/r` and the root `registry.json` must never be edited manually. CI checks both drift and the official shadcn registry schemas.
+
+## Verify consumer behavior
+
+Run `pnpm check` before opening a pull request. It validates formatting, lint, types, registry contracts, npm packaging, React 18 consumer installation, Vite and React Router bundling, Next.js static export, and Storybook.
+
+</main>

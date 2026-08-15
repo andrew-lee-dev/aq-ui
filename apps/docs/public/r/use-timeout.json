@@ -1,0 +1,97 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-timeout",
+  "type": "registry:hook",
+  "title": "Use Timeout",
+  "description": "Open-code aq-ui React hook for Use Timeout.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-timeout.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\nexport interface TimerControls {\n  clear: () => void\n  reset: () => void\n  isActive: boolean\n}\n\nexport interface UseTimeoutOptions {\n  autoStart?: boolean\n}\n\nexport function useTimeout(\n  callback: () => void,\n  delay: number | null,\n  { autoStart = true }: UseTimeoutOptions = {}\n): TimerControls {\n  const callbackRef = useLatest(callback)\n  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const [isActive, setIsActive] = React.useState(false)\n\n  const clear = React.useCallback(() => {\n    if (timerRef.current !== null) clearTimeout(timerRef.current)\n    timerRef.current = null\n    setIsActive(false)\n  }, [])\n\n  const reset = React.useCallback(() => {\n    if (timerRef.current !== null) clearTimeout(timerRef.current)\n    if (delay === null) {\n      timerRef.current = null\n      setIsActive(false)\n      return\n    }\n    setIsActive(true)\n    timerRef.current = setTimeout(\n      () => {\n        timerRef.current = null\n        setIsActive(false)\n        callbackRef.current()\n      },\n      Math.max(0, delay)\n    )\n  }, [callbackRef, delay])\n\n  React.useEffect(() => {\n    // Starting the external timer also exposes its active state.\n    // eslint-disable-next-line react-hooks/set-state-in-effect\n    if (autoStart) reset()\n    return clear\n  }, [autoStart, clear, reset])\n\n  return { clear, reset, isActive }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-f3f5f4cc941aabcc8003fbda1c9949d2a039bc7bda0e802106e20479d6469326",
+    "api": [
+      {
+        "name": "TimerControls",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface TimerControls",
+        "members": [
+          {
+            "name": "clear",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "isActive",
+            "kind": "property",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "useTimeout",
+        "kind": "function",
+        "line": 17,
+        "signature": "function useTimeout(callback: () => void, delay: number | null, { autoStart = true }: UseTimeoutOptions = {}): TimerControls",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "() => void"
+          },
+          {
+            "name": "delay",
+            "kind": "parameter",
+            "type": "number | null"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseTimeoutOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "TimerControls",
+        "usage": "const result = useTimeout(/* arguments */)"
+      },
+      {
+        "name": "UseTimeoutOptions",
+        "kind": "interface",
+        "line": 13,
+        "signature": "interface UseTimeoutOptions",
+        "members": [
+          {
+            "name": "autoStart",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-timeout",
+      "importStatement": "import { useTimeout } from \"@/hooks/use-timeout\"",
+      "primaryExport": "useTimeout",
+      "example": "const result = useTimeout(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

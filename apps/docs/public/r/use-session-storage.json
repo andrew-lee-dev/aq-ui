@@ -1,0 +1,70 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-session-storage",
+  "type": "registry:hook",
+  "title": "Use Session Storage",
+  "description": "Open-code aq-ui React hook for Use Session Storage.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-storage"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-session-storage.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport {\n  useStorage,\n  type StorageOptions,\n  type StorageSetter,\n} from \"@/hooks/_storage\"\n\nexport type SessionStorageOptions<T> = StorageOptions<T>\nexport type SessionStorageSetter<T> = StorageSetter<T>\n\nexport function useSessionStorage<T>(\n  key: string,\n  initialValue: T | (() => T),\n  options?: SessionStorageOptions<T>\n): [T, SessionStorageSetter<T>, () => void] {\n  return useStorage(\"sessionStorage\", key, initialValue, options)\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-be14cf240e35fd164258418ad9cdeb97c4c7819afa3e416d5de93d917fa9d59e",
+    "api": [
+      {
+        "name": "SessionStorageOptions",
+        "kind": "type",
+        "line": 9,
+        "signature": "type SessionStorageOptions<T> = StorageOptions<T>"
+      },
+      {
+        "name": "SessionStorageSetter",
+        "kind": "type",
+        "line": 10,
+        "signature": "type SessionStorageSetter<T> = StorageSetter<T>"
+      },
+      {
+        "name": "useSessionStorage",
+        "kind": "function",
+        "line": 12,
+        "signature": "function useSessionStorage<T>(key: string, initialValue: T | (() => T), options?: SessionStorageOptions<T>): [T, SessionStorageSetter<T>, () => void]",
+        "parameters": [
+          {
+            "name": "key",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "initialValue",
+            "kind": "parameter",
+            "type": "T | (() => T)"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "SessionStorageOptions<T>"
+          }
+        ],
+        "returns": "[T, SessionStorageSetter<T>, () => void]",
+        "usage": "const result = useSessionStorage(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-session-storage",
+      "importStatement": "import { useSessionStorage } from \"@/hooks/use-session-storage\"",
+      "primaryExport": "useSessionStorage",
+      "example": "const result = useSessionStorage(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-scroll-lock",
+  "type": "registry:hook",
+  "title": "Use Scroll Lock",
+  "description": "Open-code aq-ui React hook for Use Scroll Lock.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-isomorphic-layout-effect"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-scroll-lock.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\n\ninterface LockRecord {\n  count: number\n  overflow: string\n  paddingInlineEnd: string\n}\n\nconst lockRecords = new WeakMap<HTMLElement, LockRecord>()\n\nexport function useScrollLock(\n  enabled = true,\n  target?: Target<HTMLElement>\n): void {\n  useIsomorphicLayoutEffect(() => {\n    if (!enabled || typeof document === \"undefined\") return\n    const element = resolveTarget(target) ?? document.body\n    let record = lockRecords.get(element)\n\n    if (!record) {\n      record = {\n        count: 0,\n        overflow: element.style.overflow,\n        paddingInlineEnd: element.style.paddingInlineEnd,\n      }\n      lockRecords.set(element, record)\n      const scrollbarWidth =\n        element === document.body\n          ? window.innerWidth - document.documentElement.clientWidth\n          : element.offsetWidth - element.clientWidth\n      const computedPadding = Number.parseFloat(\n        getComputedStyle(element).paddingInlineEnd\n      )\n      element.style.overflow = \"hidden\"\n      if (scrollbarWidth > 0) {\n        element.style.paddingInlineEnd =\n          (Number.isFinite(computedPadding) ? computedPadding : 0) +\n          scrollbarWidth +\n          \"px\"\n      }\n    }\n    record.count += 1\n\n    return () => {\n      const current = lockRecords.get(element)\n      if (!current) return\n      current.count -= 1\n      if (current.count === 0) {\n        element.style.overflow = current.overflow\n        element.style.paddingInlineEnd = current.paddingInlineEnd\n        lockRecords.delete(element)\n      }\n    }\n  }, [enabled, target])\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-40122fba54c22ff0fac158f25d49eb0f584947675498844ecc1459845ecf3b7f",
+    "api": [
+      {
+        "name": "useScrollLock",
+        "kind": "function",
+        "line": 14,
+        "signature": "function useScrollLock(enabled = true, target?: Target<HTMLElement>): void",
+        "parameters": [
+          {
+            "name": "enabled",
+            "kind": "parameter",
+            "optional": true,
+            "default": "true"
+          },
+          {
+            "name": "target",
+            "kind": "parameter",
+            "optional": true,
+            "type": "Target<HTMLElement>"
+          }
+        ],
+        "returns": "void",
+        "usage": "const result = useScrollLock(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-scroll-lock",
+      "importStatement": "import { useScrollLock } from \"@/hooks/use-scroll-lock\"",
+      "primaryExport": "useScrollLock",
+      "example": "const result = useScrollLock(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

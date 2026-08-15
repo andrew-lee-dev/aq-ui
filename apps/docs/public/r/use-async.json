@@ -1,0 +1,148 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-async",
+  "type": "registry:hook",
+  "title": "Use Async",
+  "description": "Open-code aq-ui React hook for Use Async.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-async.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\nexport type AsyncStatus = \"idle\" | \"pending\" | \"success\" | \"error\"\n\nexport interface AsyncState<T> {\n  status: AsyncStatus\n  data: T | undefined\n  error: unknown\n}\n\nexport interface UseAsyncOptions<T, TArgs extends unknown[]> {\n  initialData?: T\n  immediate?: boolean\n  initialArgs?: TArgs\n}\n\nexport interface AsyncControls<\n  T,\n  TArgs extends unknown[],\n> extends AsyncState<T> {\n  execute: (...args: TArgs) => Promise<T | undefined>\n  cancel: () => void\n  reset: () => void\n}\n\nexport function useAsync<T, TArgs extends unknown[] = []>(\n  task: (signal: AbortSignal, ...args: TArgs) => Promise<T>,\n  {\n    initialData,\n    immediate = false,\n    initialArgs,\n  }: UseAsyncOptions<T, TArgs> = {}\n): AsyncControls<T, TArgs> {\n  const taskRef = useLatest(task)\n  const initialArgsRef = useLatest(initialArgs)\n  const initialDataRef = React.useRef(initialData)\n  const controllerRef = React.useRef<AbortController | null>(null)\n  const invocationRef = React.useRef(0)\n  const mountedRef = React.useRef(true)\n  const [state, setState] = React.useState<AsyncState<T>>({\n    status: \"idle\",\n    data: initialData,\n    error: undefined,\n  })\n\n  const cancel = React.useCallback(() => {\n    invocationRef.current += 1\n    controllerRef.current?.abort()\n    controllerRef.current = null\n    if (mountedRef.current) {\n      setState((current) => ({\n        ...current,\n        status: current.status === \"pending\" ? \"idle\" : current.status,\n      }))\n    }\n  }, [])\n\n  const reset = React.useCallback(() => {\n    cancel()\n    setState({\n      status: \"idle\",\n      data: initialDataRef.current,\n      error: undefined,\n    })\n  }, [cancel])\n\n  const execute = React.useCallback(\n    async (...args: TArgs): Promise<T | undefined> => {\n      controllerRef.current?.abort()\n      const controller = new AbortController()\n      controllerRef.current = controller\n      const invocation = ++invocationRef.current\n      setState((current) => ({\n        status: \"pending\",\n        data: current.data,\n        error: undefined,\n      }))\n\n      try {\n        const data = await taskRef.current(controller.signal, ...args)\n        if (\n          mountedRef.current &&\n          invocationRef.current === invocation &&\n          !controller.signal.aborted\n        ) {\n          setState({ status: \"success\", data, error: undefined })\n        }\n        return controller.signal.aborted ? undefined : data\n      } catch (error) {\n        if (\n          mountedRef.current &&\n          invocationRef.current === invocation &&\n          !controller.signal.aborted\n        ) {\n          setState((current) => ({ ...current, status: \"error\", error }))\n        }\n        if (!controller.signal.aborted) throw error\n        return undefined\n      } finally {\n        if (controllerRef.current === controller) controllerRef.current = null\n      }\n    },\n    [taskRef]\n  )\n\n  React.useEffect(() => {\n    mountedRef.current = true\n    if (immediate) {\n      void execute(...(initialArgsRef.current ?? ([] as unknown as TArgs)))\n    }\n    return () => {\n      mountedRef.current = false\n      controllerRef.current?.abort()\n    }\n  }, [execute, immediate, initialArgsRef])\n\n  return { ...state, execute, cancel, reset }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-98df134af386fc995f3b646383a3a90cd0eba14a6219ef1bbb0f98948ba340af",
+    "api": [
+      {
+        "name": "AsyncControls",
+        "kind": "interface",
+        "line": 21,
+        "signature": "interface AsyncControls<T, TArgs extends unknown[]> extends AsyncState<T>",
+        "members": [
+          {
+            "name": "execute",
+            "kind": "property",
+            "type": "(...args: TArgs) => Promise<T | undefined>"
+          },
+          {
+            "name": "cancel",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "reset",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "status",
+            "kind": "property",
+            "type": "AsyncStatus"
+          },
+          {
+            "name": "data",
+            "kind": "property",
+            "type": "T | undefined"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "type": "unknown"
+          }
+        ]
+      },
+      {
+        "name": "AsyncState",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface AsyncState<T>",
+        "members": [
+          {
+            "name": "status",
+            "kind": "property",
+            "type": "AsyncStatus"
+          },
+          {
+            "name": "data",
+            "kind": "property",
+            "type": "T | undefined"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "type": "unknown"
+          }
+        ]
+      },
+      {
+        "name": "AsyncStatus",
+        "kind": "type",
+        "line": 7,
+        "signature": "type AsyncStatus = \"idle\" | \"pending\" | \"success\" | \"error\""
+      },
+      {
+        "name": "useAsync",
+        "kind": "function",
+        "line": 30,
+        "signature": "function useAsync<T, TArgs extends unknown[] = []>(task: (signal: AbortSignal, ...args: TArgs) => Promise<T>, { initialData, immediate = false, initialArgs, }: UseAsyncOptions<T, TArgs> = {}): AsyncControls<T, TArgs>",
+        "parameters": [
+          {
+            "name": "task",
+            "kind": "parameter",
+            "type": "(signal: AbortSignal, ...args: TArgs) => Promise<T>"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseAsyncOptions<T, TArgs>",
+            "default": "{}"
+          }
+        ],
+        "returns": "AsyncControls<T, TArgs>",
+        "usage": "const result = useAsync(/* arguments */)"
+      },
+      {
+        "name": "UseAsyncOptions",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface UseAsyncOptions<T, TArgs extends unknown[]>",
+        "members": [
+          {
+            "name": "initialData",
+            "kind": "property",
+            "optional": true,
+            "type": "T"
+          },
+          {
+            "name": "immediate",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "initialArgs",
+            "kind": "property",
+            "optional": true,
+            "type": "TArgs"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-async",
+      "importStatement": "import { useAsync } from \"@/hooks/use-async\"",
+      "primaryExport": "useAsync",
+      "example": "const result = useAsync(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

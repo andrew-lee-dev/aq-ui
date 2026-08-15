@@ -1,0 +1,52 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hook-target",
+  "type": "registry:hook",
+  "title": "Target",
+  "description": "Open-code aq-ui React hook for _target.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/_target.ts",
+      "type": "registry:hook",
+      "content": "import type * as React from \"react\"\n\nexport type Target<T extends EventTarget> =\n  T | null | React.RefObject<T | null> | (() => T | null)\n\nexport function resolveTarget<T extends EventTarget>(\n  target: Target<T> | undefined\n): T | null {\n  if (typeof target === \"function\") return target()\n  if (target && \"current\" in target) return target.current\n  return target ?? null\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-62b33eb37e8a3333b8a9e31c089dc502840db54c5b6176263d7a0958bbc1c3c4",
+    "api": [
+      {
+        "name": "resolveTarget",
+        "kind": "function",
+        "line": 6,
+        "signature": "function resolveTarget<T extends EventTarget>(target: Target<T> | undefined): T | null",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<T> | undefined"
+          }
+        ],
+        "returns": "T | null",
+        "usage": "resolveTarget(/* arguments */)"
+      },
+      {
+        "name": "Target",
+        "kind": "type",
+        "line": 3,
+        "signature": "type Target<T extends EventTarget> = T | null | React.RefObject<T | null> | (() => T | null)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/_target",
+      "importStatement": "import { resolveTarget } from \"@/hooks/_target\"",
+      "primaryExport": "resolveTarget",
+      "example": "resolveTarget(/* arguments */)"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

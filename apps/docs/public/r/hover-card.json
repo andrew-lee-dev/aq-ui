@@ -1,0 +1,58 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hover-card",
+  "type": "registry:ui",
+  "title": "Hover Card",
+  "description": "Open-code aq-ui accessible component family for Hover Card.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/hover-card.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { PreviewCard as PreviewCardPrimitive } from \"@base-ui/react/preview-card\"\n\nimport { cn } from \"@/lib/utils\"\n\nfunction HoverCard({ ...props }: PreviewCardPrimitive.Root.Props) {\n  return <PreviewCardPrimitive.Root data-slot=\"hover-card\" {...props} />\n}\n\nconst HoverCardTrigger = React.forwardRef<\n  HTMLAnchorElement,\n  PreviewCardPrimitive.Trigger.Props\n>(function HoverCardTrigger({ ...props }, ref) {\n  return (\n    <PreviewCardPrimitive.Trigger\n      ref={ref}\n      data-slot=\"hover-card-trigger\"\n      {...props}\n    />\n  )\n})\nHoverCardTrigger.displayName = \"HoverCardTrigger\"\n\nconst HoverCardContent = React.forwardRef<\n  React.ComponentRef<typeof PreviewCardPrimitive.Popup>,\n  PreviewCardPrimitive.Popup.Props &\n    Pick<\n      PreviewCardPrimitive.Positioner.Props,\n      \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\"\n    >\n>(function HoverCardContent(\n  {\n    className,\n    side = \"bottom\",\n    sideOffset = 4,\n    align = \"center\",\n    alignOffset = 4,\n    ...props\n  },\n  ref\n) {\n  return (\n    <PreviewCardPrimitive.Portal data-slot=\"hover-card-portal\">\n      <PreviewCardPrimitive.Positioner\n        align={align}\n        alignOffset={alignOffset}\n        side={side}\n        sideOffset={sideOffset}\n        className=\"isolate z-50\"\n      >\n        <PreviewCardPrimitive.Popup\n          ref={ref}\n          data-slot=\"hover-card-content\"\n          className={cn(\n            \"z-50 w-64 origin-(--transform-origin) rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-start-2 data-[side=inline-start]:slide-in-from-end-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95\",\n            className\n          )}\n          {...props}\n        />\n      </PreviewCardPrimitive.Positioner>\n    </PreviewCardPrimitive.Portal>\n  )\n})\nHoverCardContent.displayName = \"HoverCardContent\"\n\nexport { HoverCard, HoverCardTrigger, HoverCardContent }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-564824b3391bda915d9f8a3a5086709e27165dae3ec6464fdc2d02dcb6a289fe",
+    "api": [
+      {
+        "name": "HoverCard",
+        "kind": "function",
+        "line": 9,
+        "signature": "function HoverCard({ ...props }: PreviewCardPrimitive.Root.Props)",
+        "propsType": "PreviewCardPrimitive.Root.Props",
+        "usage": "<HoverCard />"
+      },
+      {
+        "name": "HoverCardContent",
+        "kind": "const",
+        "line": 27,
+        "signature": "const HoverCardContent = React.forwardRef<React.ComponentRef<typeof PreviewCardPrimitive.Popup>, PreviewCardPrimitive.Popup.Props & Pick< PreviewCardPrimitive.Positioner.Props, \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" >>(…)",
+        "propsType": "PreviewCardPrimitive.Popup.Props & Pick< PreviewCardPrimitive.Positioner.Props, \"align\" | \"alignOffset\" | \"side\" | \"sideOffset\" >",
+        "usage": "<HoverCardContent />"
+      },
+      {
+        "name": "HoverCardTrigger",
+        "kind": "const",
+        "line": 13,
+        "signature": "const HoverCardTrigger = React.forwardRef<HTMLAnchorElement, PreviewCardPrimitive.Trigger.Props>(…)",
+        "propsType": "PreviewCardPrimitive.Trigger.Props",
+        "usage": "<HoverCardTrigger />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/hover-card",
+      "importStatement": "import { HoverCard } from \"@/components/ui/hover-card\"",
+      "primaryExport": "HoverCard",
+      "example": "<HoverCard />"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "code-language-registry",
+  "type": "registry:lib",
+  "title": "Code Language Registry",
+  "description": "Open-code aq-ui shared library for Code Language Registry.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@codemirror/state@^6.7.1"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "lib/code-language-registry.ts",
+      "type": "registry:lib",
+      "content": "import type { Extension } from \"@codemirror/state\"\n\ntype BuiltInCodeLanguage =\n  | \"plaintext\"\n  | \"javascript\"\n  | \"typescript\"\n  | \"jsx\"\n  | \"tsx\"\n  | \"json\"\n  | \"html\"\n  | \"css\"\n  | \"markdown\"\n  | \"yaml\"\n  | \"sql\"\n\ntype CodeLanguage = BuiltInCodeLanguage | (string & {})\ntype CodeLanguageLoader = () => Promise<Extension>\n\nconst languageLoaders = new Map<string, CodeLanguageLoader>()\n\nfunction normalizeCodeLanguage(language: CodeLanguage | undefined) {\n  const normalized = (language ?? \"plaintext\").trim().toLowerCase()\n\n  const aliases: Record<string, BuiltInCodeLanguage> = {\n    text: \"plaintext\",\n    txt: \"plaintext\",\n    plain: \"plaintext\",\n    js: \"javascript\",\n    mjs: \"javascript\",\n    cjs: \"javascript\",\n    ts: \"typescript\",\n    mts: \"typescript\",\n    cts: \"typescript\",\n    jsonc: \"json\",\n    htm: \"html\",\n    md: \"markdown\",\n    mdx: \"markdown\",\n    yml: \"yaml\",\n  }\n\n  return aliases[normalized] ?? normalized\n}\n\nfunction registerCodeLanguageLoader(\n  name: CodeLanguage,\n  loader: CodeLanguageLoader\n) {\n  const normalized = normalizeCodeLanguage(name)\n\n  if (!normalized) {\n    throw new Error(\"A code language must have a non-empty name.\")\n  }\n\n  languageLoaders.set(normalized, loader)\n}\n\nfunction registerCodeLanguage(name: string, loader: CodeLanguageLoader) {\n  const normalized = normalizeCodeLanguage(name)\n\n  if (!normalized || normalized === \"plaintext\") {\n    throw new Error(\"A custom code language must have a non-empty unique name.\")\n  }\n\n  languageLoaders.set(normalized, loader)\n}\n\nasync function loadCodeLanguage(language: CodeLanguage = \"plaintext\") {\n  const normalized = normalizeCodeLanguage(language)\n  const loader = languageLoaders.get(normalized)\n\n  if (!loader) {\n    throw new Error(\n      `Code language \"${language}\" is not installed. Add its code-language-${normalized} registry item or register a custom loader.`\n    )\n  }\n\n  return loader()\n}\n\nexport {\n  loadCodeLanguage,\n  normalizeCodeLanguage,\n  registerCodeLanguage,\n  registerCodeLanguageLoader,\n}\nexport type { BuiltInCodeLanguage, CodeLanguage, CodeLanguageLoader }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-429fc3473637fb27525bb215a87cb96dc0441fc1c585c727d757a6284cf1668a",
+    "api": [
+      {
+        "name": "BuiltInCodeLanguage",
+        "kind": "type",
+        "line": 3,
+        "signature": "type BuiltInCodeLanguage = \"plaintext\" | \"javascript\" | \"typescript\" | \"jsx\" | \"tsx\" | \"json\" | \"html\" | \"css\" | \"markdown\" | \"yaml\" | \"sql\""
+      },
+      {
+        "name": "CodeLanguage",
+        "kind": "type",
+        "line": 16,
+        "signature": "type CodeLanguage = BuiltInCodeLanguage | (string & { … })"
+      },
+      {
+        "name": "CodeLanguageLoader",
+        "kind": "type",
+        "line": 17,
+        "signature": "type CodeLanguageLoader = () => Promise<Extension>"
+      },
+      {
+        "name": "loadCodeLanguage",
+        "kind": "function",
+        "line": 67,
+        "signature": "async function loadCodeLanguage(language: CodeLanguage = \"plaintext\")",
+        "parameters": [
+          {
+            "name": "language",
+            "kind": "parameter",
+            "optional": true,
+            "type": "CodeLanguage",
+            "default": "\"plaintext\""
+          }
+        ],
+        "usage": "loadCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "normalizeCodeLanguage",
+        "kind": "function",
+        "line": 21,
+        "signature": "function normalizeCodeLanguage(language: CodeLanguage | undefined)",
+        "parameters": [
+          {
+            "name": "language",
+            "kind": "parameter",
+            "type": "CodeLanguage | undefined"
+          }
+        ],
+        "usage": "normalizeCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "registerCodeLanguage",
+        "kind": "function",
+        "line": 57,
+        "signature": "function registerCodeLanguage(name: string, loader: CodeLanguageLoader)",
+        "parameters": [
+          {
+            "name": "name",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "loader",
+            "kind": "parameter",
+            "type": "CodeLanguageLoader"
+          }
+        ],
+        "usage": "registerCodeLanguage(/* arguments */)"
+      },
+      {
+        "name": "registerCodeLanguageLoader",
+        "kind": "function",
+        "line": 44,
+        "signature": "function registerCodeLanguageLoader(name: CodeLanguage, loader: CodeLanguageLoader)",
+        "parameters": [
+          {
+            "name": "name",
+            "kind": "parameter",
+            "type": "CodeLanguage"
+          },
+          {
+            "name": "loader",
+            "kind": "parameter",
+            "type": "CodeLanguageLoader"
+          }
+        ],
+        "usage": "registerCodeLanguageLoader(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/lib/code-language-registry",
+      "importStatement": "import { loadCodeLanguage } from \"@/lib/code-language-registry\"",
+      "primaryExport": "loadCodeLanguage",
+      "example": "loadCodeLanguage(/* arguments */)"
+    },
+    "internal": true,
+    "ssr": true
+  }
+}

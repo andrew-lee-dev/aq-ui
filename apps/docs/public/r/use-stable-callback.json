@@ -1,0 +1,47 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-stable-callback",
+  "type": "registry:hook",
+  "title": "Use Stable Callback",
+  "description": "Open-code aq-ui React hook for Use Stable Callback.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-stable-callback.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\ntype AnyFunction = (...args: never[]) => unknown\n\nexport function useStableCallback<T extends AnyFunction>(\n  callback: T | undefined\n): (...args: Parameters<T>) => ReturnType<T> | undefined {\n  const callbackRef = useLatest(callback)\n\n  return React.useCallback(\n    (...args: Parameters<T>) => {\n      return callbackRef.current?.(...args) as ReturnType<T> | undefined\n    },\n    [callbackRef]\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-9603129d38df74df9686686c51f2499a7d1fc2fa80a52c710a052228995c4e99",
+    "api": [
+      {
+        "name": "useStableCallback",
+        "kind": "function",
+        "line": 9,
+        "signature": "function useStableCallback<T extends AnyFunction>(callback: T | undefined): (...args: Parameters<T>) => ReturnType<T> | undefined",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "T | undefined"
+          }
+        ],
+        "returns": "(...args: Parameters<T>) => ReturnType<T> | undefined",
+        "usage": "const result = useStableCallback(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-stable-callback",
+      "importStatement": "import { useStableCallback } from \"@/hooks/use-stable-callback\"",
+      "primaryExport": "useStableCallback",
+      "example": "const result = useStableCallback(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

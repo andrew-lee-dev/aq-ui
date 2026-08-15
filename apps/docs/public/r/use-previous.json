@@ -1,0 +1,45 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-previous",
+  "type": "registry:hook",
+  "title": "Use Previous",
+  "description": "Open-code aq-ui React hook for Use Previous.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-previous.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport function usePrevious<T>(value: T): T | undefined {\n  const ref = React.useRef<T | undefined>(undefined)\n\n  React.useEffect(() => {\n    ref.current = value\n  }, [value])\n\n  // Reading the committed value during render is the purpose of this hook.\n  // eslint-disable-next-line react-hooks/refs\n  return ref.current\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-c9866c92020940f6fa4f4cacb6f07324f42b207c9b4c5f9875e2c1b1f9b7f719",
+    "api": [
+      {
+        "name": "usePrevious",
+        "kind": "function",
+        "line": 5,
+        "signature": "function usePrevious<T>(value: T): T | undefined",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "T"
+          }
+        ],
+        "returns": "T | undefined",
+        "usage": "const result = usePrevious(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-previous",
+      "importStatement": "import { usePrevious } from \"@/hooks/use-previous\"",
+      "primaryExport": "usePrevious",
+      "example": "const result = usePrevious(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-permission",
+  "type": "registry:hook",
+  "title": "Use Permission",
+  "description": "Open-code aq-ui React hook for Use Permission.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-permission.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport type PermissionStatusValue =\n  PermissionState | \"unsupported\" | \"unavailable\"\n\nexport interface PermissionResult {\n  state: PermissionStatusValue\n  supported: boolean\n  error: unknown\n}\n\nexport function usePermission(\n  descriptor: PermissionDescriptor\n): PermissionResult {\n  const [state, setState] = React.useState<PermissionStatusValue>(\"unavailable\")\n  const [error, setError] = React.useState<unknown>()\n  const descriptorKey = JSON.stringify(descriptor)\n\n  React.useEffect(() => {\n    if (typeof navigator === \"undefined\" || !navigator.permissions) {\n      return\n    }\n\n    let active = true\n    let permissionStatus: PermissionStatus | undefined\n    let update: (() => void) | undefined\n\n    void navigator.permissions\n      .query(descriptor)\n      .then((status) => {\n        if (!active) return\n        permissionStatus = status\n        update = () => setState(status.state)\n        update()\n        status.addEventListener(\"change\", update)\n      })\n      .catch((permissionError: unknown) => {\n        if (!active) return\n        setError(permissionError)\n        setState(\"unavailable\")\n      })\n\n    return () => {\n      active = false\n      if (permissionStatus && update) {\n        permissionStatus.removeEventListener(\"change\", update)\n      }\n    }\n    // The serialized descriptor intentionally controls re-subscription.\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [descriptorKey])\n\n  return {\n    state,\n    supported:\n      typeof navigator !== \"undefined\" && Boolean(navigator.permissions),\n    error,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-4e0cc1eb9ada692510a70cee3fe9ca7b43b88dd9ce52f25c4943e076f40d2cb0",
+    "api": [
+      {
+        "name": "PermissionResult",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface PermissionResult",
+        "members": [
+          {
+            "name": "state",
+            "kind": "property",
+            "type": "PermissionStatusValue"
+          },
+          {
+            "name": "supported",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "type": "unknown"
+          }
+        ]
+      },
+      {
+        "name": "PermissionStatusValue",
+        "kind": "type",
+        "line": 5,
+        "signature": "type PermissionStatusValue = PermissionState | \"unsupported\" | \"unavailable\""
+      },
+      {
+        "name": "usePermission",
+        "kind": "function",
+        "line": 14,
+        "signature": "function usePermission(descriptor: PermissionDescriptor): PermissionResult",
+        "parameters": [
+          {
+            "name": "descriptor",
+            "kind": "parameter",
+            "type": "PermissionDescriptor"
+          }
+        ],
+        "returns": "PermissionResult",
+        "usage": "const result = usePermission(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-permission",
+      "importStatement": "import { usePermission } from \"@/hooks/use-permission\"",
+      "primaryExport": "usePermission",
+      "example": "const result = usePermission(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

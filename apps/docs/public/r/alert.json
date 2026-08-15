@@ -1,0 +1,66 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "alert",
+  "type": "registry:ui",
+  "title": "Alert",
+  "description": "Open-code aq-ui accessible component family for Alert.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/alert.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst alertVariants = cva(\n  \"group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-start text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pe-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-card text-card-foreground\",\n        destructive:\n          \"bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  }\n)\n\nconst Alert = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & VariantProps<typeof alertVariants>\n>(function Alert({ className, variant, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"alert\"\n      role=\"alert\"\n      className={cn(alertVariants({ variant }), className)}\n      {...props}\n    />\n  )\n})\nAlert.displayName = \"Alert\"\n\nconst AlertTitle = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function AlertTitle({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"alert-title\"\n      className={cn(\n        \"font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAlertTitle.displayName = \"AlertTitle\"\n\nconst AlertDescription = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function AlertDescription({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"alert-description\"\n      className={cn(\n        \"text-sm text-balance text-muted-foreground md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nAlertDescription.displayName = \"AlertDescription\"\n\nconst AlertAction = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function AlertAction({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"alert-action\"\n      className={cn(\"absolute end-2 top-2\", className)}\n      {...props}\n    />\n  )\n})\nAlertAction.displayName = \"AlertAction\"\n\nexport { Alert, AlertTitle, AlertDescription, AlertAction }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-e175ea5914ef8a946416987d91d55c9b1d991279c704a041f71748c7e89802c0",
+    "api": [
+      {
+        "name": "Alert",
+        "kind": "const",
+        "line": 22,
+        "signature": "const Alert = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & VariantProps<typeof alertVariants>>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & VariantProps<typeof alertVariants>",
+        "usage": "<Alert />"
+      },
+      {
+        "name": "AlertAction",
+        "kind": "const",
+        "line": 74,
+        "signature": "const AlertAction = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<AlertAction />"
+      },
+      {
+        "name": "AlertDescription",
+        "kind": "const",
+        "line": 56,
+        "signature": "const AlertDescription = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<AlertDescription />"
+      },
+      {
+        "name": "AlertTitle",
+        "kind": "const",
+        "line": 38,
+        "signature": "const AlertTitle = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<AlertTitle />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/alert",
+      "importStatement": "import { Alert } from \"@/components/ui/alert\"",
+      "primaryExport": "Alert",
+      "example": "<Alert />"
+    },
+    "ssr": true
+  }
+}

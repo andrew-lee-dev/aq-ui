@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "label",
+  "type": "registry:ui",
+  "title": "Label",
+  "description": "Open-code aq-ui accessible component family for Label.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/label.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Label = React.forwardRef<\n  React.ComponentRef<\"label\">,\n  React.ComponentProps<\"label\">\n>(function Label({ className, ...props }, ref) {\n  return (\n    <label\n      ref={ref}\n      data-slot=\"label\"\n      className={cn(\n        \"flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nLabel.displayName = \"Label\"\n\nexport { Label }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-b2366a5bf88286293468d7793d0294175665eb6d5895ad47c19377fa5a065ef1",
+    "api": [
+      {
+        "name": "Label",
+        "kind": "const",
+        "line": 7,
+        "signature": "const Label = React.forwardRef<React.ComponentRef<\"label\">, React.ComponentProps<\"label\">>(…)",
+        "propsType": "React.ComponentProps<\"label\">",
+        "usage": "<Label />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/label",
+      "importStatement": "import { Label } from \"@/components/ui/label\"",
+      "primaryExport": "Label",
+      "example": "<Label />"
+    },
+    "ssr": false
+  }
+}

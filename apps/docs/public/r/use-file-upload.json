@@ -1,0 +1,313 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-file-upload",
+  "type": "registry:hook",
+  "title": "Use File Upload",
+  "description": "Open-code aq-ui React hook for Use File Upload.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "upload",
+    "use-latest",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-file-upload.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport type {\n  EditorAssetUploadAdapter,\n  UploadedAsset,\n} from \"@/lib/upload\"\nimport { useLatest } from \"@/hooks/use-latest\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport type FileUploadStatus =\n  \"idle\" | \"uploading\" | \"complete\" | \"error\" | \"canceled\"\n\nexport interface FileUploadEntry {\n  id: string\n  file: File\n  progress: number\n  status: FileUploadStatus\n  asset?: UploadedAsset\n  error?: string\n}\n\nexport interface FileUploadRejection {\n  file: File\n  reason: \"type\" | \"size\" | \"max-files\" | \"multiple\"\n  message: string\n}\n\nexport interface UseFileUploadOptions {\n  value?: File[]\n  defaultValue?: File[]\n  onValueChange?: (files: File[]) => void\n  uploadAdapter?: EditorAssetUploadAdapter\n  autoUpload?: boolean\n  accept?: string | string[]\n  multiple?: boolean\n  maxFiles?: number\n  maxSize?: number\n  disabled?: boolean\n  onReject?: (rejections: FileUploadRejection[]) => void\n  onUploadComplete?: (assets: UploadedAsset[]) => void\n}\n\nexport interface FileUploadControls {\n  inputRef: { current: HTMLInputElement | null }\n  entries: FileUploadEntry[]\n  files: File[]\n  rejections: FileUploadRejection[]\n  isDragging: boolean\n  isUploading: boolean\n  addFiles: (files: Iterable<File>) => FileUploadRejection[]\n  remove: (id: string) => void\n  clear: () => void\n  upload: (id: string) => Promise<UploadedAsset | undefined>\n  uploadAll: () => Promise<UploadedAsset[]>\n  retry: (id: string) => Promise<UploadedAsset | undefined>\n  cancel: (id: string) => void\n  cancelAll: () => void\n  open: () => void\n  inputProps: React.InputHTMLAttributes<HTMLInputElement>\n  rootProps: {\n    onDragEnter: React.DragEventHandler<HTMLElement>\n    onDragOver: React.DragEventHandler<HTMLElement>\n    onDragLeave: React.DragEventHandler<HTMLElement>\n    onDrop: React.DragEventHandler<HTMLElement>\n  }\n}\n\nconst EMPTY_FILES: File[] = []\n\nexport function createFileUploadId(file: File) {\n  return [file.name, file.size, file.lastModified, file.type].join(\":\")\n}\n\nfunction normalizeAccept(accept: string | string[] | undefined) {\n  if (!accept) return []\n  return (Array.isArray(accept) ? accept : accept.split(\",\"))\n    .map((value) => value.trim().toLowerCase())\n    .filter(Boolean)\n}\n\nfunction matchesAccept(file: File, patterns: string[]) {\n  if (!patterns.length) return true\n  const name = file.name.toLowerCase()\n  const type = file.type.toLowerCase()\n  return patterns.some((pattern) => {\n    if (pattern.startsWith(\".\")) return name.endsWith(pattern)\n    if (pattern.endsWith(\"/*\")) return type.startsWith(pattern.slice(0, -1))\n    return type === pattern\n  })\n}\n\nfunction createEntry(file: File): FileUploadEntry {\n  return {\n    id: createFileUploadId(file),\n    file,\n    progress: 0,\n    status: \"idle\",\n  }\n}\n\nexport function useFileUpload({\n  value,\n  defaultValue = EMPTY_FILES,\n  onValueChange,\n  uploadAdapter,\n  autoUpload = true,\n  accept,\n  multiple = true,\n  maxFiles = Number.POSITIVE_INFINITY,\n  maxSize = Number.POSITIVE_INFINITY,\n  disabled = false,\n  onReject,\n  onUploadComplete,\n}: UseFileUploadOptions = {}): FileUploadControls {\n  const controlled = value !== undefined\n  const inputRef = React.useRef<HTMLInputElement>(null)\n  const controllersRef = React.useRef(new Map<string, AbortController>())\n  const dragDepthRef = React.useRef(0)\n  const [isDragging, setIsDragging] = React.useState(false)\n  const [rejections, setRejections] = React.useState<FileUploadRejection[]>([])\n  const [internalEntries, setInternalEntries] = React.useState<\n    FileUploadEntry[]\n  >(() => defaultValue.map(createEntry))\n  const patterns = React.useMemo(() => normalizeAccept(accept), [accept])\n  const entries = React.useMemo(\n    () =>\n      controlled\n        ? value.map(\n            (file) =>\n              internalEntries.find(\n                (entry) => entry.id === createFileUploadId(file)\n              ) ?? createEntry(file)\n          )\n        : internalEntries,\n    [controlled, internalEntries, value]\n  )\n  const entriesRef = useLatest(entries)\n  const onValueChangeStable = useStableCallback(onValueChange)\n  const onRejectStable = useStableCallback(onReject)\n  const onUploadCompleteStable = useStableCallback(onUploadComplete)\n\n  const commit = React.useCallback(\n    (\n      updater: (current: FileUploadEntry[]) => FileUploadEntry[],\n      notifyValueChange = false\n    ) => {\n      const next = updater(entriesRef.current)\n      entriesRef.current = next\n      setInternalEntries(next)\n      if (notifyValueChange) {\n        onValueChangeStable(next.map((entry) => entry.file))\n      }\n      return next\n    },\n    [entriesRef, onValueChangeStable]\n  )\n\n  const cancel = React.useCallback(\n    (id: string) => {\n      controllersRef.current.get(id)?.abort()\n      controllersRef.current.delete(id)\n      commit((current) =>\n        current.map((entry) =>\n          entry.id === id && entry.status === \"uploading\"\n            ? { ...entry, status: \"canceled\", error: undefined }\n            : entry\n        )\n      )\n    },\n    [commit]\n  )\n\n  const upload = React.useCallback(\n    async (id: string): Promise<UploadedAsset | undefined> => {\n      if (!uploadAdapter || disabled) return undefined\n      const entry = entriesRef.current.find((item) => item.id === id)\n      if (!entry) return undefined\n\n      controllersRef.current.get(id)?.abort()\n      const controller = new AbortController()\n      controllersRef.current.set(id, controller)\n      commit((current) =>\n        current.map((item) =>\n          item.id === id\n            ? {\n                ...item,\n                status: \"uploading\",\n                progress: 0,\n                error: undefined,\n              }\n            : item\n        )\n      )\n\n      try {\n        const asset = await uploadAdapter.upload(entry.file, {\n          signal: controller.signal,\n          onProgress(progress) {\n            if (controller.signal.aborted) return\n            commit((current) =>\n              current.map((item) =>\n                item.id === id\n                  ? {\n                      ...item,\n                      progress: Math.min(100, Math.max(0, progress)),\n                    }\n                  : item\n              )\n            )\n          },\n        })\n        if (controller.signal.aborted) return undefined\n\n        const next = commit((current) =>\n          current.map((item) =>\n            item.id === id\n              ? { ...item, status: \"complete\", progress: 100, asset }\n              : item\n          )\n        )\n        if (\n          next.length > 0 &&\n          next.every((item) => item.status === \"complete\" && item.asset)\n        ) {\n          onUploadCompleteStable(\n            next.flatMap((item) => (item.asset ? [item.asset] : []))\n          )\n        }\n        return asset\n      } catch (error) {\n        if (!controller.signal.aborted) {\n          commit((current) =>\n            current.map((item) =>\n              item.id === id\n                ? {\n                    ...item,\n                    status: \"error\",\n                    error:\n                      error instanceof Error ? error.message : \"Upload failed\",\n                  }\n                : item\n            )\n          )\n        }\n        return undefined\n      } finally {\n        if (controllersRef.current.get(id) === controller) {\n          controllersRef.current.delete(id)\n        }\n      }\n    },\n    [commit, disabled, entriesRef, onUploadCompleteStable, uploadAdapter]\n  )\n\n  const addFiles = React.useCallback(\n    (incoming: Iterable<File>) => {\n      if (disabled) return []\n      const current = entriesRef.current\n      const known = new Set(current.map((entry) => entry.id))\n      const accepted: FileUploadEntry[] = []\n      const rejected: FileUploadRejection[] = []\n\n      Array.from(incoming).forEach((file) => {\n        const id = createFileUploadId(file)\n        if (!multiple && current.length + accepted.length > 0) {\n          rejected.push({\n            file,\n            reason: \"multiple\",\n            message: \"Only one file is allowed\",\n          })\n        } else if (current.length + accepted.length >= maxFiles) {\n          rejected.push({\n            file,\n            reason: \"max-files\",\n            message: \"The maximum file count has been reached\",\n          })\n        } else if (file.size > maxSize) {\n          rejected.push({\n            file,\n            reason: \"size\",\n            message: \"The file exceeds the maximum size\",\n          })\n        } else if (!matchesAccept(file, patterns)) {\n          rejected.push({\n            file,\n            reason: \"type\",\n            message: \"The file type is not accepted\",\n          })\n        } else if (!known.has(id)) {\n          known.add(id)\n          accepted.push(createEntry(file))\n        }\n      })\n\n      if (accepted.length) {\n        commit(\n          (existing) =>\n            multiple ? [...existing, ...accepted] : accepted.slice(0, 1),\n          true\n        )\n        if (autoUpload && uploadAdapter) {\n          queueMicrotask(() => {\n            accepted.forEach((entry) => void upload(entry.id))\n          })\n        }\n      }\n      setRejections(rejected)\n      if (rejected.length) onRejectStable(rejected)\n      return rejected\n    },\n    [\n      autoUpload,\n      commit,\n      disabled,\n      entriesRef,\n      maxFiles,\n      maxSize,\n      multiple,\n      onRejectStable,\n      patterns,\n      upload,\n      uploadAdapter,\n    ]\n  )\n\n  const remove = React.useCallback(\n    (id: string) => {\n      controllersRef.current.get(id)?.abort()\n      controllersRef.current.delete(id)\n      commit((current) => current.filter((entry) => entry.id !== id), true)\n    },\n    [commit]\n  )\n\n  const cancelAll = React.useCallback(() => {\n    Array.from(controllersRef.current.keys()).forEach(cancel)\n  }, [cancel])\n\n  const clear = React.useCallback(() => {\n    cancelAll()\n    commit(() => [], true)\n    setRejections([])\n  }, [cancelAll, commit])\n\n  const uploadAll = React.useCallback(async () => {\n    const pending = entriesRef.current.filter(\n      (entry) =>\n        entry.status === \"idle\" ||\n        entry.status === \"error\" ||\n        entry.status === \"canceled\"\n    )\n    const assets = await Promise.all(pending.map((entry) => upload(entry.id)))\n    return assets.filter((asset): asset is UploadedAsset => Boolean(asset))\n  }, [entriesRef, upload])\n\n  React.useEffect(() => {\n    const controllers = controllersRef.current\n    return () => controllers.forEach((controller) => controller.abort())\n  }, [])\n\n  const inputProps = React.useMemo<React.InputHTMLAttributes<HTMLInputElement>>(\n    () => ({\n      type: \"file\",\n      accept: Array.isArray(accept) ? accept.join(\",\") : accept,\n      multiple,\n      disabled,\n      onChange(event) {\n        addFiles(Array.from(event.currentTarget.files ?? []))\n        event.currentTarget.value = \"\"\n      },\n    }),\n    [accept, addFiles, disabled, multiple]\n  )\n\n  const rootProps = React.useMemo(\n    () => ({\n      onDragEnter(event: React.DragEvent<HTMLElement>) {\n        if (disabled) return\n        event.preventDefault()\n        dragDepthRef.current += 1\n        if (event.dataTransfer.types.includes(\"Files\")) setIsDragging(true)\n      },\n      onDragOver(event: React.DragEvent<HTMLElement>) {\n        if (disabled) return\n        event.preventDefault()\n        event.dataTransfer.dropEffect = \"copy\"\n      },\n      onDragLeave(event: React.DragEvent<HTMLElement>) {\n        if (disabled) return\n        event.preventDefault()\n        dragDepthRef.current = Math.max(0, dragDepthRef.current - 1)\n        if (dragDepthRef.current === 0) setIsDragging(false)\n      },\n      onDrop(event: React.DragEvent<HTMLElement>) {\n        if (disabled) return\n        event.preventDefault()\n        dragDepthRef.current = 0\n        setIsDragging(false)\n        addFiles(Array.from(event.dataTransfer.files))\n      },\n    }),\n    [addFiles, disabled]\n  )\n\n  return {\n    inputRef,\n    entries,\n    files: entries.map((entry) => entry.file),\n    rejections,\n    isDragging,\n    isUploading: entries.some((entry) => entry.status === \"uploading\"),\n    addFiles,\n    remove,\n    clear,\n    upload,\n    uploadAll,\n    retry: upload,\n    cancel,\n    cancelAll,\n    open: () => {\n      if (!disabled) inputRef.current?.click()\n    },\n    inputProps,\n    rootProps,\n  }\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-e4ef6fe57560012043d44022c80e1c0b6d71fd48c9074e1a7a8cc3cfa70f90f0",
+    "api": [
+      {
+        "name": "createFileUploadId",
+        "kind": "function",
+        "line": 72,
+        "signature": "function createFileUploadId(file: File)",
+        "parameters": [
+          {
+            "name": "file",
+            "kind": "parameter",
+            "type": "File"
+          }
+        ],
+        "usage": "createFileUploadId(/* arguments */)"
+      },
+      {
+        "name": "FileUploadControls",
+        "kind": "interface",
+        "line": 45,
+        "signature": "interface FileUploadControls",
+        "members": [
+          {
+            "name": "inputRef",
+            "kind": "property",
+            "type": "{ current: HTMLInputElement | null }"
+          },
+          {
+            "name": "entries",
+            "kind": "property",
+            "type": "FileUploadEntry[]"
+          },
+          {
+            "name": "files",
+            "kind": "property",
+            "type": "File[]"
+          },
+          {
+            "name": "rejections",
+            "kind": "property",
+            "type": "FileUploadRejection[]"
+          },
+          {
+            "name": "isDragging",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "isUploading",
+            "kind": "property",
+            "type": "boolean"
+          },
+          {
+            "name": "addFiles",
+            "kind": "property",
+            "type": "(files: Iterable<File>) => FileUploadRejection[]"
+          },
+          {
+            "name": "remove",
+            "kind": "property",
+            "type": "(id: string) => void"
+          },
+          {
+            "name": "clear",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "upload",
+            "kind": "property",
+            "type": "(id: string) => Promise<UploadedAsset | undefined>"
+          },
+          {
+            "name": "uploadAll",
+            "kind": "property",
+            "type": "() => Promise<UploadedAsset[]>"
+          },
+          {
+            "name": "retry",
+            "kind": "property",
+            "type": "(id: string) => Promise<UploadedAsset | undefined>"
+          },
+          {
+            "name": "cancel",
+            "kind": "property",
+            "type": "(id: string) => void"
+          },
+          {
+            "name": "cancelAll",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "open",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "inputProps",
+            "kind": "property",
+            "type": "React.InputHTMLAttributes<HTMLInputElement>"
+          },
+          {
+            "name": "rootProps",
+            "kind": "property",
+            "type": "{ onDragEnter: React.DragEventHandler<HTMLElement> onDragOver: React.DragEventHandler<HTMLElement> onDragLeave: React.DragEventHandler<HTMLElement> onDrop: React.DragEventHandler<HTMLElement> }"
+          }
+        ]
+      },
+      {
+        "name": "FileUploadEntry",
+        "kind": "interface",
+        "line": 15,
+        "signature": "interface FileUploadEntry",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "kind": "property",
+            "type": "File"
+          },
+          {
+            "name": "progress",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "status",
+            "kind": "property",
+            "type": "FileUploadStatus"
+          },
+          {
+            "name": "asset",
+            "kind": "property",
+            "optional": true,
+            "type": "UploadedAsset"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "FileUploadRejection",
+        "kind": "interface",
+        "line": 24,
+        "signature": "interface FileUploadRejection",
+        "members": [
+          {
+            "name": "file",
+            "kind": "property",
+            "type": "File"
+          },
+          {
+            "name": "reason",
+            "kind": "property",
+            "type": "\"type\" | \"size\" | \"max-files\" | \"multiple\""
+          },
+          {
+            "name": "message",
+            "kind": "property",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "FileUploadStatus",
+        "kind": "type",
+        "line": 12,
+        "signature": "type FileUploadStatus = \"idle\" | \"uploading\" | \"complete\" | \"error\" | \"canceled\""
+      },
+      {
+        "name": "useFileUpload",
+        "kind": "function",
+        "line": 103,
+        "signature": "function useFileUpload({ value, defaultValue = EMPTY_FILES, onValueChange, uploadAdapter, autoUpload = true, accept, multiple = true, maxFiles = Number.POSITIVE_INFINITY, maxSize = Number.POSITIVE_INFINITY, disabled = false, onReject, onUploadComplete, }: UseFil…): FileUploadControls",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseFileUploadOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "FileUploadControls",
+        "usage": "const result = useFileUpload(/* arguments */)"
+      },
+      {
+        "name": "UseFileUploadOptions",
+        "kind": "interface",
+        "line": 30,
+        "signature": "interface UseFileUploadOptions",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "File[]"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "File[]",
+            "default": "EMPTY_FILES"
+          },
+          {
+            "name": "onValueChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(files: File[]) => void"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "autoUpload",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "accept",
+            "kind": "property",
+            "optional": true,
+            "type": "string | string[]"
+          },
+          {
+            "name": "multiple",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "maxFiles",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "maxSize",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "onReject",
+            "kind": "property",
+            "optional": true,
+            "type": "(rejections: FileUploadRejection[]) => void"
+          },
+          {
+            "name": "onUploadComplete",
+            "kind": "property",
+            "optional": true,
+            "type": "(assets: UploadedAsset[]) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-file-upload",
+      "importStatement": "import { useFileUpload } from \"@/hooks/use-file-upload\"",
+      "primaryExport": "useFileUpload",
+      "example": "const result = useFileUpload(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

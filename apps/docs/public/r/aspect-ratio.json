@@ -1,0 +1,47 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "aspect-ratio",
+  "type": "registry:ui",
+  "title": "Aspect Ratio",
+  "description": "Open-code aq-ui accessible component family for Aspect Ratio.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/aspect-ratio.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { cn } from \"@/lib/utils\"\n\nconst AspectRatio = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & { ratio: number }\n>(function AspectRatio({ ratio, className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"aspect-ratio\"\n      style={\n        {\n          \"--ratio\": ratio,\n        } as React.CSSProperties\n      }\n      className={cn(\"relative aspect-(--ratio)\", className)}\n      {...props}\n    />\n  )\n})\nAspectRatio.displayName = \"AspectRatio\"\n\nexport { AspectRatio }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-8a3bec6ce2a6fddbd5d2cf224a9bc74a4df756c2d3e46cffad162770795d0607",
+    "api": [
+      {
+        "name": "AspectRatio",
+        "kind": "const",
+        "line": 4,
+        "signature": "const AspectRatio = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & { ratio: number }>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & { ratio: number }",
+        "props": [
+          {
+            "name": "ratio",
+            "kind": "property",
+            "type": "number"
+          }
+        ],
+        "usage": "<AspectRatio />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/aspect-ratio",
+      "importStatement": "import { AspectRatio } from \"@/components/ui/aspect-ratio\"",
+      "primaryExport": "AspectRatio",
+      "example": "<AspectRatio />"
+    },
+    "ssr": true
+  }
+}

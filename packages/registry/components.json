@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "aq-neutral",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@aq-ui/registry/components",
+    "utils": "@aq-ui/registry/lib/utils",
+    "hooks": "@aq-ui/registry/hooks",
+    "lib": "@aq-ui/registry/lib",
+    "ui": "@aq-ui/registry/components"
+  },
+  "rtl": true,
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {
+    "@aq-ui": "https://aq-ui.github.io/aq-ui/r/{name}.json"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-page-visibility",
+  "type": "registry:hook",
+  "title": "Use Page Visibility",
+  "description": "Open-code aq-ui React hook for Use Page Visibility.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-page-visibility.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nconst visibilityListeners = new Set<() => void>()\nlet visibilityListening = false\n\nfunction notifyVisibility() {\n  visibilityListeners.forEach((listener) => listener())\n}\n\nfunction subscribe(listener: () => void) {\n  visibilityListeners.add(listener)\n  if (!visibilityListening && typeof document !== \"undefined\") {\n    document.addEventListener(\"visibilitychange\", notifyVisibility)\n    visibilityListening = true\n  }\n  return () => {\n    visibilityListeners.delete(listener)\n    if (\n      visibilityListeners.size === 0 &&\n      visibilityListening &&\n      typeof document !== \"undefined\"\n    ) {\n      document.removeEventListener(\"visibilitychange\", notifyVisibility)\n      visibilityListening = false\n    }\n  }\n}\n\nfunction getSnapshot(): DocumentVisibilityState {\n  return typeof document === \"undefined\" ? \"visible\" : document.visibilityState\n}\n\nexport function usePageVisibility(\n  defaultValue: DocumentVisibilityState = \"visible\"\n): DocumentVisibilityState {\n  return React.useSyncExternalStore(subscribe, getSnapshot, () => defaultValue)\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-b0bacb2e18c895e3b65bbc947025cd3784bdf65119eb80f9ca38e3e221689e4d",
+    "api": [
+      {
+        "name": "usePageVisibility",
+        "kind": "function",
+        "line": 35,
+        "signature": "function usePageVisibility(defaultValue: DocumentVisibilityState = \"visible\"): DocumentVisibilityState",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "type": "DocumentVisibilityState",
+            "default": "\"visible\""
+          }
+        ],
+        "returns": "DocumentVisibilityState",
+        "usage": "const result = usePageVisibility(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-page-visibility",
+      "importStatement": "import { usePageVisibility } from \"@/hooks/use-page-visibility\"",
+      "primaryExport": "usePageVisibility",
+      "example": "const result = usePageVisibility(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

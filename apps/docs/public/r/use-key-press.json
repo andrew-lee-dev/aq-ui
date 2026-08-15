@@ -1,0 +1,88 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-key-press",
+  "type": "registry:hook",
+  "title": "Use Key Press",
+  "description": "Open-code aq-ui React hook for Use Key Press.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-key-press.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\n\nexport type KeyMatcher = string | string[] | ((event: KeyboardEvent) => boolean)\n\nexport interface UseKeyPressOptions {\n  enabled?: boolean\n  preventDefault?: boolean\n}\n\nfunction matchesKey(matcher: KeyMatcher, event: KeyboardEvent) {\n  if (typeof matcher === \"function\") return matcher(event)\n  return (Array.isArray(matcher) ? matcher : [matcher]).includes(event.key)\n}\n\nexport function useKeyPress(\n  matcher: KeyMatcher,\n  target?: Target<EventTarget>,\n  { enabled = true, preventDefault = false }: UseKeyPressOptions = {}\n): boolean {\n  const [pressed, setPressed] = React.useState(false)\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const eventTarget =\n      resolveTarget(target) ?? (typeof window === \"undefined\" ? null : window)\n    if (!eventTarget) return\n\n    const keydown: EventListener = (event) => {\n      if (!(event instanceof KeyboardEvent) || !matchesKey(matcher, event)) {\n        return\n      }\n      if (preventDefault) event.preventDefault()\n      setPressed(true)\n    }\n    const keyup: EventListener = (event) => {\n      if (event instanceof KeyboardEvent && matchesKey(matcher, event)) {\n        setPressed(false)\n      }\n    }\n    const blur = () => setPressed(false)\n\n    eventTarget.addEventListener(\"keydown\", keydown)\n    eventTarget.addEventListener(\"keyup\", keyup)\n    window.addEventListener(\"blur\", blur)\n    return () => {\n      eventTarget.removeEventListener(\"keydown\", keydown)\n      eventTarget.removeEventListener(\"keyup\", keyup)\n      window.removeEventListener(\"blur\", blur)\n    }\n  }, [enabled, matcher, preventDefault, target])\n\n  return pressed\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-5583c400a5505ff3ca260953adf53158d004de3f168dad9a49b335cc682ed238",
+    "api": [
+      {
+        "name": "KeyMatcher",
+        "kind": "type",
+        "line": 7,
+        "signature": "type KeyMatcher = string | string[] | ((event: KeyboardEvent) => boolean)"
+      },
+      {
+        "name": "useKeyPress",
+        "kind": "function",
+        "line": 19,
+        "signature": "function useKeyPress(matcher: KeyMatcher, target?: Target<EventTarget>, { enabled = true, preventDefault = false }: UseKeyPressOptions = {}): boolean",
+        "parameters": [
+          {
+            "name": "matcher",
+            "kind": "parameter",
+            "type": "KeyMatcher"
+          },
+          {
+            "name": "target",
+            "kind": "parameter",
+            "optional": true,
+            "type": "Target<EventTarget>"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseKeyPressOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "boolean",
+        "usage": "const result = useKeyPress(/* arguments */)"
+      },
+      {
+        "name": "UseKeyPressOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface UseKeyPressOptions",
+        "members": [
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "preventDefault",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-key-press",
+      "importStatement": "import { useKeyPress } from \"@/hooks/use-key-press\"",
+      "primaryExport": "useKeyPress",
+      "example": "const result = useKeyPress(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

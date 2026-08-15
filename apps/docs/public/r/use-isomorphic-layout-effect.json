@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-isomorphic-layout-effect",
+  "type": "registry:hook",
+  "title": "Use Isomorphic Layout Effect",
+  "description": "Open-code aq-ui React hook for Use Isomorphic Layout Effect.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-isomorphic-layout-effect.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport const useIsomorphicLayoutEffect =\n  typeof window === \"undefined\" ? React.useEffect : React.useLayoutEffect\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-3db824d34a4829da9144b4525555f873c1040958dba8b9eae561b44b521c01d0",
+    "api": [
+      {
+        "name": "useIsomorphicLayoutEffect",
+        "kind": "const",
+        "line": 5,
+        "signature": "const useIsomorphicLayoutEffect = typeof window === \"undefined\" ? React.useEffect : React.useLayoutEffect",
+        "usage": "const result = useIsomorphicLayoutEffect(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-isomorphic-layout-effect",
+      "importStatement": "import { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"",
+      "primaryExport": "useIsomorphicLayoutEffect",
+      "example": "const result = useIsomorphicLayoutEffect(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

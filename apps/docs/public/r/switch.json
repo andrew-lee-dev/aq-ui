@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "switch",
+  "type": "registry:ui",
+  "title": "Switch",
+  "description": "Open-code aq-ui accessible component family for Switch.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/switch.tsx",
+      "type": "registry:ui",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { Switch as SwitchPrimitive } from \"@base-ui/react/switch\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Switch = React.forwardRef<\n  React.ComponentRef<typeof SwitchPrimitive.Root>,\n  SwitchPrimitive.Root.Props & {\n    size?: \"sm\" | \"default\"\n  }\n>(function Switch({ className, size = \"default\", ...props }, ref) {\n  return (\n    <SwitchPrimitive.Root\n      ref={ref}\n      data-slot=\"switch\"\n      data-size={size}\n      className={cn(\n        \"peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent transition-all outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-[18.4px] data-[size=default]:w-[32px] data-[size=sm]:h-[14px] data-[size=sm]:w-[24px] dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-50\",\n        className\n      )}\n      {...props}\n    >\n      <SwitchPrimitive.Thumb\n        data-slot=\"switch-thumb\"\n        className=\"pointer-events-none block rounded-full bg-background ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 group-data-[size=default]/switch:data-checked:translate-x-[calc(100%-2px)] group-data-[size=sm]/switch:data-checked:translate-x-[calc(100%-2px)] rtl:group-data-[size=default]/switch:data-checked:-translate-x-[calc(100%-2px)] rtl:group-data-[size=sm]/switch:data-checked:-translate-x-[calc(100%-2px)] dark:data-checked:bg-primary-foreground group-data-[size=default]/switch:data-unchecked:translate-x-0 group-data-[size=sm]/switch:data-unchecked:translate-x-0 rtl:group-data-[size=default]/switch:data-unchecked:-translate-x-0 rtl:group-data-[size=sm]/switch:data-unchecked:-translate-x-0 dark:data-unchecked:bg-foreground\"\n      />\n    </SwitchPrimitive.Root>\n  )\n})\nSwitch.displayName = \"Switch\"\n\nexport { Switch }\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-6bdf9d94aa59965a48fd50f4ab9f21a866d02a4ffca57ff04b343b08a279b1d6",
+    "api": [
+      {
+        "name": "Switch",
+        "kind": "const",
+        "line": 9,
+        "signature": "const Switch = React.forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, SwitchPrimitive.Root.Props & { size?: \"sm\" | \"default\" }>(…)",
+        "propsType": "SwitchPrimitive.Root.Props & { size?: \"sm\" | \"default\" }",
+        "props": [
+          {
+            "name": "size",
+            "kind": "property",
+            "optional": true,
+            "type": "\"sm\" | \"default\"",
+            "default": "\"default\""
+          }
+        ],
+        "usage": "<Switch />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/switch",
+      "importStatement": "import { Switch } from \"@/components/ui/switch\"",
+      "primaryExport": "Switch",
+      "example": "<Switch />"
+    },
+    "ssr": false
+  }
+}

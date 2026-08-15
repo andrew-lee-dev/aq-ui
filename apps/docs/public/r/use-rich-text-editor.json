@@ -1,0 +1,362 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-rich-text-editor",
+  "type": "registry:hook",
+  "title": "Use Rich Text Editor",
+  "description": "Open-code aq-ui React hook for Use Rich Text Editor.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@tiptap/core@^3.30.1",
+    "@tiptap/extension-code-block-lowlight@^3.30.1",
+    "@tiptap/extension-file-handler@^3.30.1",
+    "@tiptap/extension-highlight@^3.30.1",
+    "@tiptap/extension-image@^3.30.1",
+    "@tiptap/extension-list@^3.30.1",
+    "@tiptap/extension-mention@^3.30.1",
+    "@tiptap/extension-table@^3.30.1",
+    "@tiptap/extension-text-align@^3.30.1",
+    "@tiptap/extensions@^3.30.1",
+    "@tiptap/react@^3.30.1",
+    "@tiptap/starter-kit@^3.30.1"
+  ],
+  "registryDependencies": [
+    "code-highlighter",
+    "upload"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-rich-text-editor.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport {\n  mergeAttributes,\n  Node,\n  type AnyExtension,\n  type Editor,\n  type JSONContent,\n} from \"@tiptap/core\"\nimport CodeBlockLowlight from \"@tiptap/extension-code-block-lowlight\"\nimport FileHandler from \"@tiptap/extension-file-handler\"\nimport Highlight from \"@tiptap/extension-highlight\"\nimport Image from \"@tiptap/extension-image\"\nimport { TaskItem, TaskList } from \"@tiptap/extension-list\"\nimport Mention from \"@tiptap/extension-mention\"\nimport { TableKit } from \"@tiptap/extension-table\"\nimport TextAlign from \"@tiptap/extension-text-align\"\nimport { CharacterCount, Placeholder } from \"@tiptap/extensions\"\nimport { useEditor, useEditorState } from \"@tiptap/react\"\nimport StarterKit from \"@tiptap/starter-kit\"\n\nimport { codeLowlight } from \"@/lib/code-highlighter\"\nimport type {\n  EditorAssetUploadAdapter,\n  UploadedAsset,\n} from \"@/lib/upload\"\n\ntype RichTextDocument = JSONContent\n\nconst emptyTiptapExtensions: readonly AnyExtension[] = []\nconst emptyExtensionNames: readonly string[] = []\n\ninterface RichTextMentionItem {\n  id: string\n  label: string\n  description?: string\n  avatarUrl?: string\n  [key: string]: unknown\n}\n\ntype RichTextMentionProvider = (\n  query: string,\n  context: { signal: AbortSignal }\n) => Promise<readonly RichTextMentionItem[]> | readonly RichTextMentionItem[]\n\ntype RichTextUploadStatus = \"uploading\" | \"error\" | \"done\" | \"cancelled\"\n\ninterface RichTextUpload {\n  id: string\n  file: File\n  position?: number\n  progress: number\n  status: RichTextUploadStatus\n  error?: Error\n  asset?: UploadedAsset\n}\n\ninterface CreateRichTextExtensionsOptions {\n  placeholder?: string\n  maxLength?: number\n  extensions?: readonly AnyExtension[]\n  overrideExtensionNames?: readonly string[]\n  onFiles?: (editor: Editor, files: readonly File[], position?: number) => void\n  onDuplicateExtension?: (name: string) => void\n}\n\nconst attachmentNode = Node.create({\n  name: \"attachment\",\n  group: \"inline\",\n  inline: true,\n  atom: true,\n  selectable: true,\n\n  addAttributes() {\n    return {\n      url: {\n        default: null,\n        parseHTML: (element) => element.getAttribute(\"href\"),\n        renderHTML: () => ({}),\n      },\n      name: {\n        default: \"Attachment\",\n        parseHTML: (element) => element.textContent ?? \"Attachment\",\n        renderHTML: () => ({}),\n      },\n      mimeType: {\n        default: null,\n        parseHTML: (element) => element.getAttribute(\"data-mime-type\"),\n        renderHTML: () => ({}),\n      },\n      size: {\n        default: null,\n        parseHTML: (element) => {\n          const value = element.getAttribute(\"data-size\")\n          return value ? Number(value) : null\n        },\n        renderHTML: () => ({}),\n      },\n    }\n  },\n\n  parseHTML() {\n    return [{ tag: \"a[data-aq-attachment]\" }]\n  },\n\n  renderHTML({ node, HTMLAttributes }) {\n    const href = safeEditorAssetUrl(String(node.attrs.url ?? \"\")) ?? \"#\"\n    return [\n      \"a\",\n      mergeAttributes(HTMLAttributes, {\n        href,\n        \"data-aq-attachment\": \"\",\n        \"data-mime-type\": node.attrs.mimeType || undefined,\n        \"data-size\": node.attrs.size || undefined,\n        rel: \"noopener noreferrer\",\n        target: \"_blank\",\n      }),\n      String(node.attrs.name ?? \"Attachment\"),\n    ]\n  },\n})\n\nconst starterExtensionNames = new Set([\n  \"blockquote\",\n  \"bold\",\n  \"bulletList\",\n  \"code\",\n  \"codeBlock\",\n  \"document\",\n  \"dropCursor\",\n  \"gapCursor\",\n  \"hardBreak\",\n  \"heading\",\n  \"horizontalRule\",\n  \"italic\",\n  \"link\",\n  \"listItem\",\n  \"listKeymap\",\n  \"orderedList\",\n  \"paragraph\",\n  \"strike\",\n  \"text\",\n  \"trailingNode\",\n  \"underline\",\n  \"undoRedo\",\n])\n\nfunction createRichTextExtensions({\n  placeholder = \"Write something…\",\n  maxLength,\n  extensions = emptyTiptapExtensions,\n  overrideExtensionNames = emptyExtensionNames,\n  onFiles,\n  onDuplicateExtension,\n}: CreateRichTextExtensionsOptions = {}) {\n  const overrides = new Set(overrideExtensionNames)\n  const customNames = new Set<string>()\n  const customExtensions: AnyExtension[] = []\n\n  for (const extension of extensions) {\n    if (customNames.has(extension.name)) {\n      onDuplicateExtension?.(extension.name)\n      console.warn(\n        `[aq-ui] Duplicate Tiptap extension \"${extension.name}\" was ignored.`\n      )\n      continue\n    }\n\n    const conflictsWithPreset =\n      starterExtensionNames.has(extension.name) ||\n      [\n        \"attachment\",\n        \"characterCount\",\n        \"fileHandler\",\n        \"highlight\",\n        \"image\",\n        \"mention\",\n        \"placeholder\",\n        \"table\",\n        \"tableCell\",\n        \"tableHeader\",\n        \"tableRow\",\n        \"taskItem\",\n        \"taskList\",\n        \"textAlign\",\n      ].includes(extension.name)\n\n    if (conflictsWithPreset && !overrides.has(extension.name)) {\n      onDuplicateExtension?.(extension.name)\n      console.warn(\n        `[aq-ui] Tiptap extension \"${extension.name}\" already exists in the preset. ` +\n          \"Add its name to overrideExtensionNames to replace it.\"\n      )\n      continue\n    }\n\n    customNames.add(extension.name)\n    customExtensions.push(extension)\n  }\n\n  const starterKit = StarterKit.configure({\n    blockquote: overrides.has(\"blockquote\") ? false : undefined,\n    bold: overrides.has(\"bold\") ? false : undefined,\n    bulletList: overrides.has(\"bulletList\") ? false : undefined,\n    code: overrides.has(\"code\") ? false : undefined,\n    codeBlock: false,\n    document: overrides.has(\"document\") ? false : undefined,\n    hardBreak: overrides.has(\"hardBreak\") ? false : undefined,\n    heading: overrides.has(\"heading\") ? false : { levels: [1, 2, 3, 4, 5, 6] },\n    horizontalRule: overrides.has(\"horizontalRule\") ? false : undefined,\n    italic: overrides.has(\"italic\") ? false : undefined,\n    link: overrides.has(\"link\")\n      ? false\n      : {\n          openOnClick: false,\n          autolink: true,\n          defaultProtocol: \"https\",\n          protocols: [\"http\", \"https\", \"mailto\"],\n          HTMLAttributes: { rel: \"noopener noreferrer\" },\n        },\n    listItem: overrides.has(\"listItem\") ? false : undefined,\n    orderedList: overrides.has(\"orderedList\") ? false : undefined,\n    paragraph: overrides.has(\"paragraph\") ? false : undefined,\n    strike: overrides.has(\"strike\") ? false : undefined,\n    text: overrides.has(\"text\") ? false : undefined,\n    underline: overrides.has(\"underline\") ? false : undefined,\n    undoRedo: overrides.has(\"undoRedo\") ? false : undefined,\n  })\n\n  const preset: AnyExtension[] = [\n    starterKit,\n    CodeBlockLowlight.configure({ lowlight: codeLowlight }),\n    Highlight.configure({ multicolor: true }),\n    TextAlign.configure({ types: [\"heading\", \"paragraph\"] }),\n    TaskList,\n    TaskItem.configure({ nested: true }),\n    TableKit.configure({\n      table: {\n        resizable: true,\n        HTMLAttributes: { class: \"aq-rich-text-table\" },\n      },\n      tableCell: { HTMLAttributes: { class: \"aq-rich-text-table-cell\" } },\n      tableHeader: { HTMLAttributes: { class: \"aq-rich-text-table-header\" } },\n    }),\n    Image.configure({ allowBase64: false }),\n    attachmentNode,\n    Mention.configure({\n      HTMLAttributes: { class: \"aq-rich-text-mention\" },\n      renderText({ node }) {\n        return `@${String(node.attrs.label ?? node.attrs.id ?? \"mention\")}`\n      },\n    }),\n    Placeholder.configure({ placeholder }),\n    CharacterCount.configure({ limit: maxLength }),\n    FileHandler.configure({\n      onDrop(editor, files, position) {\n        onFiles?.(editor, files, position)\n      },\n      onPaste(editor, files) {\n        onFiles?.(editor, files)\n      },\n    }),\n  ]\n\n  const filteredPreset = preset.filter((extension) => {\n    if (extension.name === \"starterKit\") return true\n    return !overrides.has(extension.name)\n  })\n\n  return [...filteredPreset, ...customExtensions]\n}\n\nfunction safeEditorAssetUrl(value: string) {\n  const url = value.trim()\n  if (!url) return null\n  if (url.startsWith(\"/\") && !url.startsWith(\"//\")) return url\n\n  try {\n    const parsed = new URL(url)\n    return parsed.protocol === \"https:\" || parsed.protocol === \"http:\"\n      ? url\n      : null\n  } catch {\n    return null\n  }\n}\n\nfunction safeEditorLinkUrl(value: string) {\n  const url = value.trim()\n  if (!url) return null\n  if (\n    url.startsWith(\"#\") ||\n    (url.startsWith(\"/\") && !url.startsWith(\"//\")) ||\n    url.startsWith(\"./\") ||\n    url.startsWith(\"../\")\n  ) {\n    return url\n  }\n\n  try {\n    const parsed = new URL(url)\n    return [\"https:\", \"http:\", \"mailto:\"].includes(parsed.protocol) ? url : null\n  } catch {\n    return null\n  }\n}\n\ninterface UseRichTextEditorOptions {\n  value?: RichTextDocument\n  defaultValue?: RichTextDocument\n  onChange?: (document: RichTextDocument) => void\n  readOnly?: boolean\n  disabled?: boolean\n  placeholder?: string\n  maxLength?: number\n  autofocus?: boolean\n  extensions?: readonly AnyExtension[]\n  overrideExtensionNames?: readonly string[]\n  uploadAdapter?: EditorAssetUploadAdapter\n  mentionProvider?: RichTextMentionProvider\n  onReady?: (editor: Editor) => void\n  onDuplicateExtension?: (name: string) => void\n}\n\nconst emptyRichTextDocument: RichTextDocument = {\n  type: \"doc\",\n  content: [{ type: \"paragraph\" }],\n}\n\nfunction useRichTextEditor({\n  value,\n  defaultValue = emptyRichTextDocument,\n  onChange,\n  readOnly = false,\n  disabled = false,\n  placeholder,\n  maxLength,\n  autofocus = false,\n  extensions = emptyTiptapExtensions,\n  overrideExtensionNames = emptyExtensionNames,\n  uploadAdapter,\n  mentionProvider,\n  onReady,\n  onDuplicateExtension,\n}: UseRichTextEditorOptions = {}) {\n  const initialContent = React.useRef(value ?? defaultValue)\n  const editorRef = React.useRef<Editor | null>(null)\n  const onChangeRef = React.useRef(onChange)\n  const uploadAdapterRef = React.useRef(uploadAdapter)\n  const mentionProviderRef = React.useRef(mentionProvider)\n  const uploadsRef = React.useRef(new Map<string, AbortController>())\n  const [uploads, setUploads] = React.useState<RichTextUpload[]>([])\n\n  React.useEffect(() => {\n    onChangeRef.current = onChange\n    uploadAdapterRef.current = uploadAdapter\n    mentionProviderRef.current = mentionProvider\n  })\n\n  const uploadFiles = React.useCallback(\n    async (\n      files: readonly File[],\n      position?: number,\n      targetEditor = editorRef.current\n    ) => {\n      const adapter = uploadAdapterRef.current\n      if (!adapter || !targetEditor || files.length === 0) return\n\n      for (const file of files) {\n        const id =\n          globalThis.crypto?.randomUUID?.() ??\n          `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`\n        const abortController = new AbortController()\n        uploadsRef.current.set(id, abortController)\n        setUploads((current) => [\n          ...current,\n          { id, file, position, progress: 0, status: \"uploading\" },\n        ])\n\n        try {\n          const asset = await adapter.upload(file, {\n            signal: abortController.signal,\n            onProgress(progress) {\n              if (abortController.signal.aborted) return\n              setUploads((current) =>\n                current.map((upload) =>\n                  upload.id === id\n                    ? {\n                        ...upload,\n                        progress: Math.min(100, Math.max(0, progress)),\n                      }\n                    : upload\n                )\n              )\n            },\n          })\n\n          if (abortController.signal.aborted) {\n            setUploads((current) =>\n              current.map((upload) =>\n                upload.id === id\n                  ? {\n                      ...upload,\n                      status: \"cancelled\",\n                      error: undefined,\n                    }\n                  : upload\n              )\n            )\n            continue\n          }\n          const url = safeEditorAssetUrl(asset.url)\n          if (!url)\n            throw new Error(\"The upload adapter returned an unsafe URL.\")\n\n          const content = (asset.mimeType ?? file.type).startsWith(\"image/\")\n            ? {\n                type: \"image\",\n                attrs: {\n                  src: url,\n                  alt: asset.alt ?? asset.name ?? file.name,\n                  title: asset.name ?? file.name,\n                },\n              }\n            : {\n                type: \"attachment\",\n                attrs: {\n                  url,\n                  name: asset.name ?? file.name,\n                  mimeType: asset.mimeType ?? file.type,\n                  size: asset.size ?? file.size,\n                },\n              }\n\n          const chain = targetEditor.chain().focus()\n          if (typeof position === \"number\") {\n            chain.insertContentAt(position, content).run()\n          } else {\n            chain.insertContent(content).run()\n          }\n          setUploads((current) =>\n            current.map((upload) =>\n              upload.id === id\n                ? { ...upload, progress: 100, status: \"done\", asset }\n                : upload\n            )\n          )\n        } catch (reason) {\n          setUploads((current) =>\n            current.map((upload) =>\n              upload.id === id\n                ? {\n                    ...upload,\n                    status: abortController.signal.aborted\n                      ? \"cancelled\"\n                      : \"error\",\n                    error: abortController.signal.aborted\n                      ? undefined\n                      : reason instanceof Error\n                        ? reason\n                        : new Error(\"Upload failed.\"),\n                  }\n                : upload\n            )\n          )\n        } finally {\n          uploadsRef.current.delete(id)\n        }\n      }\n    },\n    []\n  )\n\n  const richTextExtensions = React.useMemo(\n    () =>\n      createRichTextExtensions({\n        placeholder,\n        maxLength,\n        extensions,\n        overrideExtensionNames,\n        onDuplicateExtension,\n        onFiles(editor, files, position) {\n          void uploadFiles(files, position, editor)\n        },\n      }),\n    [\n      extensions,\n      maxLength,\n      onDuplicateExtension,\n      overrideExtensionNames,\n      placeholder,\n      uploadFiles,\n    ]\n  )\n\n  const editor = useEditor({\n    extensions: richTextExtensions,\n    content: initialContent.current,\n    editable: !(readOnly || disabled),\n    autofocus,\n    immediatelyRender: false,\n    shouldRerenderOnTransaction: false,\n    editorProps: {\n      attributes: {\n        role: \"textbox\",\n        \"aria-multiline\": \"true\",\n        \"aria-label\": \"Rich text editor\",\n        class: \"aq-rich-text-prosemirror\",\n      },\n    },\n    onCreate({ editor: nextEditor }) {\n      editorRef.current = nextEditor\n    },\n    onUpdate({ editor: nextEditor }) {\n      onChangeRef.current?.(nextEditor.getJSON())\n    },\n    onDestroy() {\n      editorRef.current = null\n    },\n  })\n\n  React.useEffect(() => {\n    editorRef.current = editor\n    if (editor) onReady?.(editor)\n  }, [editor, onReady])\n\n  React.useEffect(() => {\n    editor?.setEditable(!(readOnly || disabled))\n    if (editor) {\n      editor.view.dom.setAttribute(\"aria-disabled\", disabled ? \"true\" : \"false\")\n      editor.view.dom.setAttribute(\n        \"aria-readonly\",\n        readOnly || disabled ? \"true\" : \"false\"\n      )\n    }\n  }, [disabled, editor, readOnly])\n\n  React.useEffect(() => {\n    if (!editor || value === undefined) return\n    if (JSON.stringify(editor.getJSON()) === JSON.stringify(value)) return\n    const { from, to } = editor.state.selection\n    editor.commands.setContent(value, { emitUpdate: false })\n    const maxPosition = editor.state.doc.content.size\n    editor.commands.setTextSelection({\n      from: Math.min(from, maxPosition),\n      to: Math.min(to, maxPosition),\n    })\n  }, [editor, value])\n\n  React.useEffect(() => {\n    const activeUploads = uploadsRef.current\n    return () => {\n      activeUploads.forEach((controller) => controller.abort())\n      activeUploads.clear()\n    }\n  }, [])\n\n  const editorState = useEditorState({\n    editor,\n    selector: ({ editor: currentEditor }) => ({\n      characters: currentEditor?.storage.characterCount?.characters?.() ?? 0,\n      words: currentEditor?.storage.characterCount?.words?.() ?? 0,\n      canUndo: currentEditor?.can().chain().focus().undo().run() ?? false,\n      canRedo: currentEditor?.can().chain().focus().redo().run() ?? false,\n    }),\n  })\n\n  const cancelUpload = React.useCallback((id: string) => {\n    uploadsRef.current.get(id)?.abort()\n    setUploads((current) =>\n      current.map((upload) =>\n        upload.id === id\n          ? { ...upload, status: \"cancelled\", error: undefined }\n          : upload\n      )\n    )\n  }, [])\n\n  const retryUpload = React.useCallback(\n    (id: string) => {\n      const upload = uploads.find((item) => item.id === id)\n      if (!upload || upload.status !== \"error\") return\n      setUploads((current) => current.filter((item) => item.id !== id))\n      void uploadFiles([upload.file], upload.position)\n    },\n    [uploadFiles, uploads]\n  )\n\n  const dismissUpload = React.useCallback((id: string) => {\n    uploadsRef.current.get(id)?.abort()\n    setUploads((current) => current.filter((upload) => upload.id !== id))\n  }, [])\n\n  return {\n    editor,\n    editorState,\n    uploads,\n    uploadFiles,\n    cancelUpload,\n    retryUpload,\n    dismissUpload,\n    mentionProvider: mentionProviderRef.current,\n  }\n}\n\nexport {\n  attachmentNode,\n  createRichTextExtensions,\n  emptyRichTextDocument,\n  safeEditorAssetUrl,\n  safeEditorLinkUrl,\n  useRichTextEditor,\n}\nexport type {\n  CreateRichTextExtensionsOptions,\n  RichTextDocument,\n  RichTextMentionItem,\n  RichTextMentionProvider,\n  RichTextUpload,\n  RichTextUploadStatus,\n  UseRichTextEditorOptions,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-f719481c266964de6aae96a874e4254ec73b1ed550c827f88220f5d72e38d2ff",
+    "api": [
+      {
+        "name": "attachmentNode",
+        "kind": "const",
+        "line": 68,
+        "signature": "const attachmentNode = Node.create(…)"
+      },
+      {
+        "name": "createRichTextExtensions",
+        "kind": "function",
+        "line": 149,
+        "signature": "function createRichTextExtensions({ placeholder = \"Write something…\", maxLength, extensions = emptyTiptapExtensions, overrideExtensionNames = emptyExtensionNames, onFiles, onDuplicateExtension, }: CreateRichTextExtensionsOptions = {})",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "CreateRichTextExtensionsOptions",
+            "default": "{}"
+          }
+        ],
+        "usage": "createRichTextExtensions(/* arguments */)"
+      },
+      {
+        "name": "CreateRichTextExtensionsOptions",
+        "kind": "interface",
+        "line": 59,
+        "signature": "interface CreateRichTextExtensionsOptions",
+        "members": [
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string",
+            "default": "\"Write something…\""
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly AnyExtension[]",
+            "default": "emptyTiptapExtensions"
+          },
+          {
+            "name": "overrideExtensionNames",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly string[]",
+            "default": "emptyExtensionNames"
+          },
+          {
+            "name": "onFiles",
+            "kind": "property",
+            "optional": true,
+            "type": "(editor: Editor, files: readonly File[], position?: number) => void"
+          },
+          {
+            "name": "onDuplicateExtension",
+            "kind": "property",
+            "optional": true,
+            "type": "(name: string) => void"
+          }
+        ]
+      },
+      {
+        "name": "emptyRichTextDocument",
+        "kind": "const",
+        "line": 326,
+        "signature": "const emptyRichTextDocument: RichTextDocument"
+      },
+      {
+        "name": "RichTextDocument",
+        "kind": "type",
+        "line": 29,
+        "signature": "type RichTextDocument = JSONContent"
+      },
+      {
+        "name": "RichTextMentionItem",
+        "kind": "interface",
+        "line": 34,
+        "signature": "interface RichTextMentionItem",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "avatarUrl",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "key",
+            "kind": "index",
+            "type": "[key: string]: unknown"
+          }
+        ]
+      },
+      {
+        "name": "RichTextMentionProvider",
+        "kind": "type",
+        "line": 42,
+        "signature": "type RichTextMentionProvider = (query: string, context: { signal: AbortSignal; }) => Promise<readonly RichTextMentionItem[]> | readonly RichTextMentionItem[]"
+      },
+      {
+        "name": "RichTextUpload",
+        "kind": "interface",
+        "line": 49,
+        "signature": "interface RichTextUpload",
+        "members": [
+          {
+            "name": "id",
+            "kind": "property",
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "kind": "property",
+            "type": "File"
+          },
+          {
+            "name": "position",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "progress",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "status",
+            "kind": "property",
+            "type": "RichTextUploadStatus"
+          },
+          {
+            "name": "error",
+            "kind": "property",
+            "optional": true,
+            "type": "Error"
+          },
+          {
+            "name": "asset",
+            "kind": "property",
+            "optional": true,
+            "type": "UploadedAsset"
+          }
+        ]
+      },
+      {
+        "name": "RichTextUploadStatus",
+        "kind": "type",
+        "line": 47,
+        "signature": "type RichTextUploadStatus = \"uploading\" | \"error\" | \"done\" | \"cancelled\""
+      },
+      {
+        "name": "safeEditorAssetUrl",
+        "kind": "function",
+        "line": 274,
+        "signature": "function safeEditorAssetUrl(value: string)",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "string"
+          }
+        ],
+        "usage": "safeEditorAssetUrl(/* arguments */)"
+      },
+      {
+        "name": "safeEditorLinkUrl",
+        "kind": "function",
+        "line": 289,
+        "signature": "function safeEditorLinkUrl(value: string)",
+        "parameters": [
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "string"
+          }
+        ],
+        "usage": "safeEditorLinkUrl(/* arguments */)"
+      },
+      {
+        "name": "useRichTextEditor",
+        "kind": "function",
+        "line": 331,
+        "signature": "function useRichTextEditor({ value, defaultValue = emptyRichTextDocument, onChange, readOnly = false, disabled = false, placeholder, maxLength, autofocus = false, extensions = emptyTiptapExtensions, overrideExtensionNames = emptyExtensionNames, uploadAdapter, mentio…)",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseRichTextEditorOptions",
+            "default": "{}"
+          }
+        ],
+        "usage": "const result = useRichTextEditor(/* arguments */)"
+      },
+      {
+        "name": "UseRichTextEditorOptions",
+        "kind": "interface",
+        "line": 309,
+        "signature": "interface UseRichTextEditorOptions",
+        "members": [
+          {
+            "name": "value",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextDocument"
+          },
+          {
+            "name": "defaultValue",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextDocument",
+            "default": "emptyRichTextDocument"
+          },
+          {
+            "name": "onChange",
+            "kind": "property",
+            "optional": true,
+            "type": "(document: RichTextDocument) => void"
+          },
+          {
+            "name": "readOnly",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "disabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "placeholder",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "maxLength",
+            "kind": "property",
+            "optional": true,
+            "type": "number"
+          },
+          {
+            "name": "autofocus",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "extensions",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly AnyExtension[]",
+            "default": "emptyTiptapExtensions"
+          },
+          {
+            "name": "overrideExtensionNames",
+            "kind": "property",
+            "optional": true,
+            "type": "readonly string[]",
+            "default": "emptyExtensionNames"
+          },
+          {
+            "name": "uploadAdapter",
+            "kind": "property",
+            "optional": true,
+            "type": "EditorAssetUploadAdapter"
+          },
+          {
+            "name": "mentionProvider",
+            "kind": "property",
+            "optional": true,
+            "type": "RichTextMentionProvider"
+          },
+          {
+            "name": "onReady",
+            "kind": "property",
+            "optional": true,
+            "type": "(editor: Editor) => void"
+          },
+          {
+            "name": "onDuplicateExtension",
+            "kind": "property",
+            "optional": true,
+            "type": "(name: string) => void"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-rich-text-editor",
+      "importStatement": "import { useRichTextEditor } from \"@/hooks/use-rich-text-editor\"",
+      "primaryExport": "useRichTextEditor",
+      "example": "const result = useRichTextEditor(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

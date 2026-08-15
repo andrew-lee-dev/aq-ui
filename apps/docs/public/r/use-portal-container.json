@@ -1,0 +1,88 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-portal-container",
+  "type": "registry:hook",
+  "title": "Use Portal Container",
+  "description": "Open-code aq-ui React hook for Use Portal Container.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-portal-container.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\n\nexport interface UsePortalContainerOptions {\n  parent?: Target<HTMLElement>\n  id?: string\n  className?: string\n  attributes?: Record<string, string>\n  enabled?: boolean\n}\n\nexport function usePortalContainer({\n  parent,\n  id,\n  className,\n  attributes,\n  enabled = true,\n}: UsePortalContainerOptions = {}): HTMLElement | null {\n  const [container, setContainer] = React.useState<HTMLElement | null>(null)\n  const attributesKey = JSON.stringify(attributes)\n\n  React.useEffect(() => {\n    if (!enabled || typeof document === \"undefined\") {\n      // The state mirrors ownership of the external portal node.\n      // eslint-disable-next-line react-hooks/set-state-in-effect\n      setContainer(null)\n      return\n    }\n    const host = resolveTarget(parent) ?? document.body\n    const element = document.createElement(\"div\")\n    element.dataset.slot = \"portal-container\"\n    if (id) element.id = id\n    if (className) element.className = className\n    Object.entries(attributes ?? {}).forEach(([name, value]) => {\n      element.setAttribute(name, value)\n    })\n    host.append(element)\n    setContainer(element)\n\n    return () => {\n      element.remove()\n      setContainer((current) => (current === element ? null : current))\n    }\n    // Serialized attributes intentionally control container recreation.\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [attributesKey, className, enabled, id, parent])\n\n  return container\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-59bde294e410c46db77329c59f9dfab4d6232e396e283dacb8a804bf0ac6ba17",
+    "api": [
+      {
+        "name": "usePortalContainer",
+        "kind": "function",
+        "line": 15,
+        "signature": "function usePortalContainer({ parent, id, className, attributes, enabled = true, }: UsePortalContainerOptions = {}): HTMLElement | null",
+        "parameters": [
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UsePortalContainerOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "HTMLElement | null",
+        "usage": "const result = usePortalContainer(/* arguments */)"
+      },
+      {
+        "name": "UsePortalContainerOptions",
+        "kind": "interface",
+        "line": 7,
+        "signature": "interface UsePortalContainerOptions",
+        "members": [
+          {
+            "name": "parent",
+            "kind": "property",
+            "optional": true,
+            "type": "Target<HTMLElement>"
+          },
+          {
+            "name": "id",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "className",
+            "kind": "property",
+            "optional": true,
+            "type": "string"
+          },
+          {
+            "name": "attributes",
+            "kind": "property",
+            "optional": true,
+            "type": "Record<string, string>"
+          },
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-portal-container",
+      "importStatement": "import { usePortalContainer } from \"@/hooks/use-portal-container\"",
+      "primaryExport": "usePortalContainer",
+      "example": "const result = usePortalContainer(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

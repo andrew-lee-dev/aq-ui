@@ -1,0 +1,65 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-window-size",
+  "type": "registry:hook",
+  "title": "Use Window Size",
+  "description": "Open-code aq-ui React hook for Use Window Size.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-window-size.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nexport interface WindowSize {\n  width: number\n  height: number\n}\n\nconst serverWindowSize: WindowSize = { width: 0, height: 0 }\nlet cachedWindowSize = serverWindowSize\nlet resizeFrame = 0\nconst windowSizeListeners = new Set<() => void>()\n\nfunction readWindowSize(): WindowSize {\n  if (typeof window === \"undefined\") return serverWindowSize\n  if (\n    cachedWindowSize.width !== window.innerWidth ||\n    cachedWindowSize.height !== window.innerHeight\n  ) {\n    cachedWindowSize = {\n      width: window.innerWidth,\n      height: window.innerHeight,\n    }\n  }\n  return cachedWindowSize\n}\n\nfunction notifyWindowSize() {\n  cancelAnimationFrame(resizeFrame)\n  resizeFrame = requestAnimationFrame(() => {\n    readWindowSize()\n    windowSizeListeners.forEach((listener) => listener())\n  })\n}\n\nfunction subscribe(listener: () => void) {\n  windowSizeListeners.add(listener)\n  if (windowSizeListeners.size === 1 && typeof window !== \"undefined\") {\n    window.addEventListener(\"resize\", notifyWindowSize, { passive: true })\n  }\n  return () => {\n    windowSizeListeners.delete(listener)\n    if (windowSizeListeners.size === 0 && typeof window !== \"undefined\") {\n      window.removeEventListener(\"resize\", notifyWindowSize)\n      cancelAnimationFrame(resizeFrame)\n    }\n  }\n}\n\nexport function useWindowSize(\n  defaultValue: WindowSize = serverWindowSize\n): WindowSize {\n  return React.useSyncExternalStore(\n    subscribe,\n    readWindowSize,\n    () => defaultValue\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ef6333b1e215526533c35ccdf89e0bef72bb903b31ce43c393efdff598a31ad5",
+    "api": [
+      {
+        "name": "useWindowSize",
+        "kind": "function",
+        "line": 51,
+        "signature": "function useWindowSize(defaultValue: WindowSize = serverWindowSize): WindowSize",
+        "parameters": [
+          {
+            "name": "defaultValue",
+            "kind": "parameter",
+            "optional": true,
+            "type": "WindowSize",
+            "default": "serverWindowSize"
+          }
+        ],
+        "returns": "WindowSize",
+        "usage": "const result = useWindowSize(/* arguments */)"
+      },
+      {
+        "name": "WindowSize",
+        "kind": "interface",
+        "line": 5,
+        "signature": "interface WindowSize",
+        "members": [
+          {
+            "name": "width",
+            "kind": "property",
+            "type": "number"
+          },
+          {
+            "name": "height",
+            "kind": "property",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-window-size",
+      "importStatement": "import { useWindowSize } from \"@/hooks/use-window-size\"",
+      "primaryExport": "useWindowSize",
+      "example": "const result = useWindowSize(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

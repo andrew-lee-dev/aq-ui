@@ -1,0 +1,109 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-hotkeys",
+  "type": "registry:hook",
+  "title": "Use Hotkeys",
+  "description": "Open-code aq-ui React hook for Use Hotkeys.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-stable-callback"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-hotkeys.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useStableCallback } from \"@/hooks/use-stable-callback\"\n\nexport interface UseHotkeysOptions {\n  target?: Target<EventTarget>\n  enabled?: boolean\n  preventDefault?: boolean\n  stopPropagation?: boolean\n  allowInInputs?: boolean\n  exactModifiers?: boolean\n}\n\nfunction isEditable(target: EventTarget | null) {\n  return (\n    target instanceof HTMLElement &&\n    (target.isContentEditable ||\n      [\"INPUT\", \"TEXTAREA\", \"SELECT\"].includes(target.tagName))\n  )\n}\n\nfunction matchesHotkey(hotkey: string, event: KeyboardEvent, exact: boolean) {\n  const parts = hotkey\n    .toLowerCase()\n    .split(\"+\")\n    .map((part) => part.trim())\n  const key = parts.find(\n    (part) =>\n      ![\n        \"ctrl\",\n        \"control\",\n        \"alt\",\n        \"option\",\n        \"shift\",\n        \"meta\",\n        \"cmd\",\n        \"mod\",\n      ].includes(part)\n  )\n  const expectsCtrl = parts.includes(\"ctrl\") || parts.includes(\"control\")\n  const expectsAlt = parts.includes(\"alt\") || parts.includes(\"option\")\n  const expectsShift = parts.includes(\"shift\")\n  const expectsMeta = parts.includes(\"meta\") || parts.includes(\"cmd\")\n  const expectsMod = parts.includes(\"mod\")\n  const modMatches = expectsMod\n    ? /Mac|iPhone|iPad/.test(navigator.platform)\n      ? event.metaKey\n      : event.ctrlKey\n    : true\n\n  if (!modMatches || (key && event.key.toLowerCase() !== key)) return false\n  if (expectsCtrl && !event.ctrlKey) return false\n  if (expectsAlt && !event.altKey) return false\n  if (expectsShift && !event.shiftKey) return false\n  if (expectsMeta && !event.metaKey) return false\n  if (!exact) return true\n\n  return (\n    (expectsCtrl || (expectsMod && !event.metaKey)) === event.ctrlKey &&\n    expectsAlt === event.altKey &&\n    expectsShift === event.shiftKey &&\n    (expectsMeta || (expectsMod && event.metaKey)) === event.metaKey\n  )\n}\n\nexport function useHotkeys(\n  hotkeys: string | string[],\n  callback: (event: KeyboardEvent, hotkey: string) => void,\n  {\n    target,\n    enabled = true,\n    preventDefault = true,\n    stopPropagation = false,\n    allowInInputs = false,\n    exactModifiers = true,\n  }: UseHotkeysOptions = {}\n): void {\n  const stableCallback = useStableCallback(callback)\n  const hotkeyList = Array.isArray(hotkeys) ? hotkeys : [hotkeys]\n  const dependency = hotkeyList.join(\"|\")\n\n  React.useEffect(() => {\n    if (!enabled) return\n    const eventTarget =\n      resolveTarget(target) ?? (typeof window === \"undefined\" ? null : window)\n    if (!eventTarget) return\n\n    const listener: EventListener = (nativeEvent) => {\n      if (!(nativeEvent instanceof KeyboardEvent)) return\n      if (!allowInInputs && isEditable(nativeEvent.target)) return\n      const matched = hotkeyList.find((hotkey) =>\n        matchesHotkey(hotkey, nativeEvent, exactModifiers)\n      )\n      if (!matched) return\n      if (preventDefault) nativeEvent.preventDefault()\n      if (stopPropagation) nativeEvent.stopPropagation()\n      stableCallback(nativeEvent, matched)\n    }\n\n    eventTarget.addEventListener(\"keydown\", listener)\n    return () => eventTarget.removeEventListener(\"keydown\", listener)\n    // The normalized hotkey list intentionally controls re-subscription.\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [\n    allowInInputs,\n    dependency,\n    enabled,\n    exactModifiers,\n    preventDefault,\n    stableCallback,\n    stopPropagation,\n    target,\n  ])\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-54ab46b507ccec5ec11d4396a9696b9fa6ae744b8e6f1c5f027e670c03f34082",
+    "api": [
+      {
+        "name": "useHotkeys",
+        "kind": "function",
+        "line": 69,
+        "signature": "function useHotkeys(hotkeys: string | string[], callback: (event: KeyboardEvent, hotkey: string) => void, { target, enabled = true, preventDefault = true, stopPropagation = false, allowInInputs = false, exactModifiers = true, }: UseHotkeysOptions = {}): void",
+        "parameters": [
+          {
+            "name": "hotkeys",
+            "kind": "parameter",
+            "type": "string | string[]"
+          },
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "(event: KeyboardEvent, hotkey: string) => void"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseHotkeysOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "void",
+        "usage": "const result = useHotkeys(/* arguments */)"
+      },
+      {
+        "name": "UseHotkeysOptions",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface UseHotkeysOptions",
+        "members": [
+          {
+            "name": "target",
+            "kind": "property",
+            "optional": true,
+            "type": "Target<EventTarget>"
+          },
+          {
+            "name": "enabled",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "preventDefault",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "stopPropagation",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "allowInInputs",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "exactModifiers",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-hotkeys",
+      "importStatement": "import { useHotkeys } from \"@/hooks/use-hotkeys\"",
+      "primaryExport": "useHotkeys",
+      "example": "const result = useHotkeys(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-throttled-callback",
+  "type": "registry:hook",
+  "title": "Use Throttled Callback",
+  "description": "Open-code aq-ui React hook for Use Throttled Callback.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-throttled-callback.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\ntype AnyFunction = (...args: never[]) => unknown\n\nexport interface ThrottleOptions {\n  leading?: boolean\n  trailing?: boolean\n}\n\nexport type ThrottledFunction<T extends AnyFunction> = ((\n  ...args: Parameters<T>\n) => ReturnType<T> | undefined) & {\n  cancel: () => void\n  flush: () => ReturnType<T> | undefined\n  pending: () => boolean\n}\n\nexport function useThrottledCallback<T extends AnyFunction>(\n  callback: T,\n  interval = 250,\n  { leading = true, trailing = true }: ThrottleOptions = {}\n): ThrottledFunction<T> {\n  const callbackRef = useLatest(callback)\n  const lastRunRef = React.useRef(0)\n  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)\n  const argsRef = React.useRef<Parameters<T> | null>(null)\n\n  const cancel = React.useCallback(() => {\n    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n    timeoutRef.current = null\n    argsRef.current = null\n    lastRunRef.current = 0\n  }, [])\n\n  const invoke = React.useCallback(() => {\n    if (!argsRef.current) return undefined\n    const args = argsRef.current\n    argsRef.current = null\n    lastRunRef.current = Date.now()\n    return callbackRef.current(...args) as ReturnType<T>\n  }, [callbackRef])\n\n  const flush = React.useCallback(() => {\n    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n    timeoutRef.current = null\n    return invoke()\n  }, [invoke])\n\n  const schedule = React.useCallback(\n    (...args: Parameters<T>) => {\n      const now = Date.now()\n      if (lastRunRef.current === 0 && !leading) lastRunRef.current = now\n      const remaining = interval - (now - lastRunRef.current)\n      argsRef.current = args\n\n      if (remaining <= 0 || remaining > interval) {\n        if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)\n        timeoutRef.current = null\n        return invoke()\n      }\n\n      if (trailing && timeoutRef.current === null) {\n        timeoutRef.current = setTimeout(() => {\n          timeoutRef.current = null\n          invoke()\n        }, remaining)\n      } else if (!trailing) {\n        argsRef.current = null\n      }\n\n      return undefined\n    },\n    [interval, invoke, leading, trailing]\n  )\n\n  const pending = React.useCallback(() => timeoutRef.current !== null, [])\n\n  // The augmented function only captures callbacks; it does not read refs here.\n  /* eslint-disable react-hooks/refs */\n  const throttled = React.useMemo(\n    () =>\n      Object.assign(schedule, {\n        cancel,\n        flush,\n        pending,\n      }) as ThrottledFunction<T>,\n    [cancel, flush, pending, schedule]\n  )\n  /* eslint-enable react-hooks/refs */\n\n  React.useEffect(() => cancel, [cancel])\n\n  return throttled\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-a257b5a66951aecb999c138c45a046fecb5917fecf00032c21a14597f4bc9a31",
+    "api": [
+      {
+        "name": "ThrottledFunction",
+        "kind": "type",
+        "line": 14,
+        "signature": "type ThrottledFunction<T extends AnyFunction> = ((...args: Parameters<T>) => ReturnType<T> | undefined) & { … }",
+        "members": [
+          {
+            "name": "cancel",
+            "kind": "property",
+            "type": "() => void"
+          },
+          {
+            "name": "flush",
+            "kind": "property",
+            "type": "() => ReturnType<T> | undefined"
+          },
+          {
+            "name": "pending",
+            "kind": "property",
+            "type": "() => boolean"
+          }
+        ]
+      },
+      {
+        "name": "ThrottleOptions",
+        "kind": "interface",
+        "line": 9,
+        "signature": "interface ThrottleOptions",
+        "members": [
+          {
+            "name": "leading",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          },
+          {
+            "name": "trailing",
+            "kind": "property",
+            "optional": true,
+            "type": "boolean",
+            "default": "true"
+          }
+        ]
+      },
+      {
+        "name": "useThrottledCallback",
+        "kind": "function",
+        "line": 22,
+        "signature": "function useThrottledCallback<T extends AnyFunction>(callback: T, interval = 250, { leading = true, trailing = true }: ThrottleOptions = {}): ThrottledFunction<T>",
+        "parameters": [
+          {
+            "name": "callback",
+            "kind": "parameter",
+            "type": "T"
+          },
+          {
+            "name": "interval",
+            "kind": "parameter",
+            "optional": true,
+            "default": "250"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "ThrottleOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "ThrottledFunction<T>",
+        "usage": "const result = useThrottledCallback(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-throttled-callback",
+      "importStatement": "import { useThrottledCallback } from \"@/hooks/use-throttled-callback\"",
+      "primaryExport": "useThrottledCallback",
+      "example": "const result = useThrottledCallback(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-autosize-textarea",
+  "type": "registry:hook",
+  "title": "Use Autosize Textarea",
+  "description": "Open-code aq-ui React hook for Use Autosize Textarea.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "hook-target",
+    "use-isomorphic-layout-effect"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-autosize-textarea.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { resolveTarget, type Target } from \"@/hooks/_target\"\nimport { useIsomorphicLayoutEffect } from \"@/hooks/use-isomorphic-layout-effect\"\n\nexport interface UseAutosizeTextareaOptions {\n  minRows?: number\n  maxRows?: number\n}\n\nexport function useAutosizeTextarea(\n  target: Target<HTMLTextAreaElement>,\n  value: string,\n  {\n    minRows = 1,\n    maxRows = Number.POSITIVE_INFINITY,\n  }: UseAutosizeTextareaOptions = {}\n): number {\n  const [height, setHeight] = React.useState(0)\n\n  useIsomorphicLayoutEffect(() => {\n    const textarea = resolveTarget(target)\n    if (!textarea) return\n    const style = getComputedStyle(textarea)\n    const lineHeight = Number.parseFloat(style.lineHeight) || 20\n    const padding =\n      (Number.parseFloat(style.paddingTop) || 0) +\n      (Number.parseFloat(style.paddingBottom) || 0)\n    const border =\n      (Number.parseFloat(style.borderTopWidth) || 0) +\n      (Number.parseFloat(style.borderBottomWidth) || 0)\n    const minimum = minRows * lineHeight + padding + border\n    const maximum = maxRows * lineHeight + padding + border\n\n    textarea.style.height = \"0px\"\n    const nextHeight = Math.max(\n      minimum,\n      Math.min(textarea.scrollHeight + border, maximum)\n    )\n    textarea.style.height = nextHeight + \"px\"\n    textarea.style.overflowY =\n      textarea.scrollHeight + border > maximum ? \"auto\" : \"hidden\"\n    setHeight(nextHeight)\n  }, [maxRows, minRows, target, value])\n\n  return height\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-adf5971eb78dff35e3ac776fe334b54412e81764a49029e887f858430aee1ea7",
+    "api": [
+      {
+        "name": "useAutosizeTextarea",
+        "kind": "function",
+        "line": 13,
+        "signature": "function useAutosizeTextarea(target: Target<HTMLTextAreaElement>, value: string, { minRows = 1, maxRows = Number.POSITIVE_INFINITY, }: UseAutosizeTextareaOptions = {}): number",
+        "parameters": [
+          {
+            "name": "target",
+            "kind": "parameter",
+            "type": "Target<HTMLTextAreaElement>"
+          },
+          {
+            "name": "value",
+            "kind": "parameter",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "kind": "parameter",
+            "optional": true,
+            "type": "UseAutosizeTextareaOptions",
+            "default": "{}"
+          }
+        ],
+        "returns": "number",
+        "usage": "const result = useAutosizeTextarea(/* arguments */)"
+      },
+      {
+        "name": "UseAutosizeTextareaOptions",
+        "kind": "interface",
+        "line": 8,
+        "signature": "interface UseAutosizeTextareaOptions",
+        "members": [
+          {
+            "name": "minRows",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "maxRows",
+            "kind": "property",
+            "optional": true,
+            "type": "number",
+            "default": "Number.POSITIVE_INFINITY"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-autosize-textarea",
+      "importStatement": "import { useAutosizeTextarea } from \"@/hooks/use-autosize-textarea\"",
+      "primaryExport": "useAutosizeTextarea",
+      "example": "const result = useAutosizeTextarea(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

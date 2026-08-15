@@ -1,0 +1,47 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "use-merged-refs",
+  "type": "registry:hook",
+  "title": "Use Merged Refs",
+  "description": "Open-code aq-ui React hook for Use Merged Refs.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "use-latest"
+  ],
+  "files": [
+    {
+      "path": "hooks/use-merged-refs.ts",
+      "type": "registry:hook",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { useLatest } from \"@/hooks/use-latest\"\n\nfunction assignRef<T>(ref: React.Ref<T> | undefined, value: T | null) {\n  if (typeof ref === \"function\") {\n    ref(value)\n  } else if (ref) {\n    ;(ref as React.MutableRefObject<T | null>).current = value\n  }\n}\n\nexport function useMergedRefs<T>(\n  ...refs: Array<React.Ref<T> | undefined>\n): React.RefCallback<T> {\n  const refsRef = useLatest(refs)\n  return React.useCallback(\n    (value: T | null) => {\n      refsRef.current.forEach((ref) => assignRef(ref, value))\n    },\n    [refsRef]\n  )\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-da2abf05d93feb1ce0dce3cabf39a67669aa1dbaf2e5ecab139277686ab45c91",
+    "api": [
+      {
+        "name": "useMergedRefs",
+        "kind": "function",
+        "line": 15,
+        "signature": "function useMergedRefs<T>(...refs: Array<React.Ref<T> | undefined>): React.RefCallback<T>",
+        "parameters": [
+          {
+            "name": "refs",
+            "kind": "parameter",
+            "type": "Array<React.Ref<T> | undefined>"
+          }
+        ],
+        "returns": "React.RefCallback<T>",
+        "usage": "const result = useMergedRefs(/* arguments */)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/hooks/use-merged-refs",
+      "importStatement": "import { useMergedRefs } from \"@/hooks/use-merged-refs\"",
+      "primaryExport": "useMergedRefs",
+      "example": "const result = useMergedRefs(/* arguments */)"
+    },
+    "ssr": false
+  }
+}

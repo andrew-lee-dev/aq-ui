@@ -1,0 +1,96 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "timeline",
+  "type": "registry:ui",
+  "title": "Timeline",
+  "description": "Semantic, RTL-safe timeline primitives for events, status history, and activity feeds.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/timeline.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\n\nconst Timeline = React.forwardRef<\n  React.ComponentRef<\"ol\">,\n  React.ComponentProps<\"ol\">\n>(function Timeline({ className, ...props }, ref) {\n  return (\n    <ol\n      ref={ref}\n      data-slot=\"timeline\"\n      className={cn(\"relative flex flex-col\", className)}\n      {...props}\n    />\n  )\n})\nTimeline.displayName = \"Timeline\"\n\nconst TimelineItem = React.forwardRef<\n  React.ComponentRef<\"li\">,\n  React.ComponentProps<\"li\">\n>(function TimelineItem({ className, ...props }, ref) {\n  return (\n    <li\n      ref={ref}\n      data-slot=\"timeline-item\"\n      className={cn(\n        \"group/timeline-item relative grid grid-cols-[auto_1fr] gap-x-3 pb-8 last:pb-0\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTimelineItem.displayName = \"TimelineItem\"\n\nconst TimelineMarker = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function TimelineMarker({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      data-slot=\"timeline-marker\"\n      className={cn(\n        \"relative z-10 mt-1 flex size-3 rounded-full border-2 border-background bg-primary ring-1 ring-border\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTimelineMarker.displayName = \"TimelineMarker\"\n\nconst TimelineConnector = React.forwardRef<\n  React.ComponentRef<\"span\">,\n  React.ComponentProps<\"span\">\n>(function TimelineConnector({ className, ...props }, ref) {\n  return (\n    <span\n      ref={ref}\n      aria-hidden\n      data-slot=\"timeline-connector\"\n      className={cn(\n        \"absolute start-[5px] top-4 h-[calc(100%-0.5rem)] w-px bg-border group-last/timeline-item:hidden\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTimelineConnector.displayName = \"TimelineConnector\"\n\nconst TimelineContent = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\">\n>(function TimelineContent({ className, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      data-slot=\"timeline-content\"\n      className={cn(\"min-w-0\", className)}\n      {...props}\n    />\n  )\n})\nTimelineContent.displayName = \"TimelineContent\"\n\nconst TimelineTitle = React.forwardRef<\n  React.ComponentRef<\"h3\">,\n  React.ComponentProps<\"h3\">\n>(function TimelineTitle({ className, ...props }, ref) {\n  return (\n    <h3\n      ref={ref}\n      data-slot=\"timeline-title\"\n      className={cn(\"leading-none font-medium\", className)}\n      {...props}\n    />\n  )\n})\nTimelineTitle.displayName = \"TimelineTitle\"\n\nconst TimelineDescription = React.forwardRef<\n  React.ComponentRef<\"p\">,\n  React.ComponentProps<\"p\">\n>(function TimelineDescription({ className, ...props }, ref) {\n  return (\n    <p\n      ref={ref}\n      data-slot=\"timeline-description\"\n      className={cn(\"mt-1 text-sm text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nTimelineDescription.displayName = \"TimelineDescription\"\n\nconst TimelineTime = React.forwardRef<\n  React.ComponentRef<\"time\">,\n  React.ComponentProps<\"time\">\n>(function TimelineTime({ className, ...props }, ref) {\n  return (\n    <time\n      ref={ref}\n      data-slot=\"timeline-time\"\n      className={cn(\"mt-2 block text-xs text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n})\nTimelineTime.displayName = \"TimelineTime\"\n\nexport {\n  Timeline,\n  TimelineConnector,\n  TimelineContent,\n  TimelineDescription,\n  TimelineItem,\n  TimelineMarker,\n  TimelineTime,\n  TimelineTitle,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-ab479dd9a480ab36a1033382853209628034fd333cf59a1da84935d5513e5da0",
+    "api": [
+      {
+        "name": "Timeline",
+        "kind": "const",
+        "line": 5,
+        "signature": "const Timeline = React.forwardRef<React.ComponentRef<\"ol\">, React.ComponentProps<\"ol\">>(…)",
+        "propsType": "React.ComponentProps<\"ol\">",
+        "usage": "<Timeline />"
+      },
+      {
+        "name": "TimelineConnector",
+        "kind": "const",
+        "line": 56,
+        "signature": "const TimelineConnector = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<TimelineConnector />"
+      },
+      {
+        "name": "TimelineContent",
+        "kind": "const",
+        "line": 75,
+        "signature": "const TimelineContent = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\">>(…)",
+        "propsType": "React.ComponentProps<\"div\">",
+        "usage": "<TimelineContent />"
+      },
+      {
+        "name": "TimelineDescription",
+        "kind": "const",
+        "line": 105,
+        "signature": "const TimelineDescription = React.forwardRef<React.ComponentRef<\"p\">, React.ComponentProps<\"p\">>(…)",
+        "propsType": "React.ComponentProps<\"p\">",
+        "usage": "<TimelineDescription />"
+      },
+      {
+        "name": "TimelineItem",
+        "kind": "const",
+        "line": 20,
+        "signature": "const TimelineItem = React.forwardRef<React.ComponentRef<\"li\">, React.ComponentProps<\"li\">>(…)",
+        "propsType": "React.ComponentProps<\"li\">",
+        "usage": "<TimelineItem />"
+      },
+      {
+        "name": "TimelineMarker",
+        "kind": "const",
+        "line": 38,
+        "signature": "const TimelineMarker = React.forwardRef<React.ComponentRef<\"span\">, React.ComponentProps<\"span\">>(…)",
+        "propsType": "React.ComponentProps<\"span\">",
+        "usage": "<TimelineMarker />"
+      },
+      {
+        "name": "TimelineTime",
+        "kind": "const",
+        "line": 120,
+        "signature": "const TimelineTime = React.forwardRef<React.ComponentRef<\"time\">, React.ComponentProps<\"time\">>(…)",
+        "propsType": "React.ComponentProps<\"time\">",
+        "usage": "<TimelineTime />"
+      },
+      {
+        "name": "TimelineTitle",
+        "kind": "const",
+        "line": 90,
+        "signature": "const TimelineTitle = React.forwardRef<React.ComponentRef<\"h3\">, React.ComponentProps<\"h3\">>(…)",
+        "propsType": "React.ComponentProps<\"h3\">",
+        "usage": "<TimelineTitle />"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/timeline",
+      "importStatement": "import { Timeline } from \"@/components/ui/timeline\"",
+      "primaryExport": "Timeline",
+      "example": "<Timeline />"
+    },
+    "ssr": true
+  }
+}

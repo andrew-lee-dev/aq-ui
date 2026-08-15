@@ -1,0 +1,48 @@
+{
+  "name": "@aq-ui/docs",
+  "version": "0.1.0-alpha.0",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "prebuild": "pnpm --filter @aq-ui/registry registry:build",
+    "build": "next build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "performance:static": "node scripts/measure-static-performance.mjs",
+    "performance:check": "node scripts/measure-static-performance.mjs --check",
+    "start": "next start",
+    "lint": "eslint",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@aq-ui/registry": "workspace:*",
+    "lucide-react": "^1.31.0",
+    "next": "16.3.1",
+    "next-themes": "^0.4.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@aq-ui/eslint-config": "workspace:^",
+    "@aq-ui/typescript-config": "workspace:*",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "16.3.1",
+    "@storybook/addon-a11y": "10.5.8",
+    "@storybook/addon-docs": "10.5.8",
+    "@storybook/addon-themes": "10.5.8",
+    "@storybook/nextjs-vite": "10.5.8",
+    "@tailwindcss/postcss": "^4",
+    "@types/mdx": "^2.0.14",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "storybook": "10.5.8",
+    "typescript": "^5"
+  }
+}

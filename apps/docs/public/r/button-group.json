@@ -1,0 +1,66 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "button-group",
+  "type": "registry:ui",
+  "title": "Button Group",
+  "description": "Open-code aq-ui accessible component family for Button Group.",
+  "author": "aq-ui contributors",
+  "version": "0.1.0-alpha.0",
+  "dependencies": [
+    "@base-ui/react@^1.7.0",
+    "class-variance-authority@^0.7.1"
+  ],
+  "registryDependencies": [
+    "separator",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "components/ui/button-group.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\"\nimport { mergeProps } from \"@base-ui/react/merge-props\"\nimport { useRender } from \"@base-ui/react/use-render\"\nimport { cva, type VariantProps } from \"class-variance-authority\"\n\nimport { cn } from \"@/lib/utils\"\nimport { Separator } from \"@/components/ui/separator\"\n\nconst buttonGroupVariants = cva(\n  \"flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-e-lg [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1\",\n  {\n    variants: {\n      orientation: {\n        horizontal:\n          \"*:data-slot:rounded-e-none [&>[data-slot]:not(:has(~[data-slot]))]:rounded-e-lg! [&>[data-slot]~[data-slot]]:rounded-s-none [&>[data-slot]~[data-slot]]:border-s-0\",\n        vertical:\n          \"flex-col *:data-slot:rounded-b-none [&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0\",\n      },\n    },\n    defaultVariants: {\n      orientation: \"horizontal\",\n    },\n  }\n)\n\nconst ButtonGroup = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  React.ComponentProps<\"div\"> & VariantProps<typeof buttonGroupVariants>\n>(function ButtonGroup({ className, orientation, ...props }, ref) {\n  return (\n    <div\n      ref={ref}\n      role=\"group\"\n      data-slot=\"button-group\"\n      data-orientation={orientation}\n      className={cn(buttonGroupVariants({ orientation }), className)}\n      {...props}\n    />\n  )\n})\nButtonGroup.displayName = \"ButtonGroup\"\n\nconst ButtonGroupText = React.forwardRef<\n  React.ComponentRef<\"div\">,\n  useRender.ComponentProps<\"div\">\n>(function ButtonGroupText({ className, render, ...props }, ref) {\n  return useRender({\n    ref,\n    defaultTagName: \"div\",\n    props: mergeProps<\"div\">(\n      {\n        className: cn(\n          \"flex items-center gap-2 rounded-lg border bg-muted px-2.5 text-sm font-medium [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4\",\n          className\n        ),\n      },\n      props\n    ),\n    render,\n    state: {\n      slot: \"button-group-text\",\n    },\n  })\n})\nButtonGroupText.displayName = \"ButtonGroupText\"\n\nconst ButtonGroupSeparator = React.forwardRef<\n  React.ComponentRef<typeof Separator>,\n  React.ComponentProps<typeof Separator>\n>(function ButtonGroupSeparator(\n  { className, orientation = \"vertical\", ...props },\n  ref\n) {\n  return (\n    <Separator\n      ref={ref}\n      data-slot=\"button-group-separator\"\n      orientation={orientation}\n      className={cn(\n        \"relative self-stretch bg-input data-horizontal:mx-px data-horizontal:w-auto data-vertical:my-px data-vertical:h-auto\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nButtonGroupSeparator.displayName = \"ButtonGroupSeparator\"\n\nexport {\n  ButtonGroup,\n  ButtonGroupSeparator,\n  ButtonGroupText,\n  buttonGroupVariants,\n}\n"
+    }
+  ],
+  "meta": {
+    "integrity": "sha256-395cd4e12b7a3c6642056bf35ed8d0aac7ea6783098095c154fed1bf7407b90b",
+    "api": [
+      {
+        "name": "ButtonGroup",
+        "kind": "const",
+        "line": 26,
+        "signature": "const ButtonGroup = React.forwardRef<React.ComponentRef<\"div\">, React.ComponentProps<\"div\"> & VariantProps<typeof buttonGroupVariants>>(…)",
+        "propsType": "React.ComponentProps<\"div\"> & VariantProps<typeof buttonGroupVariants>",
+        "usage": "<ButtonGroup />"
+      },
+      {
+        "name": "ButtonGroupSeparator",
+        "kind": "const",
+        "line": 67,
+        "signature": "const ButtonGroupSeparator = React.forwardRef<React.ComponentRef<typeof Separator>, React.ComponentProps<typeof Separator>>(…)",
+        "propsType": "React.ComponentProps<typeof Separator>",
+        "usage": "<ButtonGroupSeparator />"
+      },
+      {
+        "name": "ButtonGroupText",
+        "kind": "const",
+        "line": 43,
+        "signature": "const ButtonGroupText = React.forwardRef<React.ComponentRef<\"div\">, useRender.ComponentProps<\"div\">>(…)",
+        "propsType": "useRender.ComponentProps<\"div\">",
+        "usage": "<ButtonGroupText />"
+      },
+      {
+        "name": "buttonGroupVariants",
+        "kind": "const",
+        "line": 9,
+        "signature": "const buttonGroupVariants = cva(…)"
+      }
+    ],
+    "usage": {
+      "importPath": "@/components/ui/button-group",
+      "importStatement": "import { ButtonGroup } from \"@/components/ui/button-group\"",
+      "primaryExport": "ButtonGroup",
+      "example": "<ButtonGroup />"
+    },
+    "ssr": true
+  }
+}

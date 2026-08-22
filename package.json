@@ -26,12 +26,12 @@
   "devDependencies": {
     "@aq-ui/eslint-config": "workspace:*",
     "@aq-ui/typescript-config": "workspace:*",
-    "@changesets/cli": "^3.0.0",
+    "@changesets/cli": "^3.0.1",
     "ajv": "^8.20.0",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
-    "turbo": "2.9.18",
-    "typescript": "^5.9.3"
+    "turbo": "2.10.11",
+    "typescript": "^7.0.2"
   },
   "packageManager": "pnpm@11.18.0",
   "engines": {

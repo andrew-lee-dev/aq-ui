@@ -16,7 +16,10 @@ assert(
   manifest.publishConfig?.access === "public",
   "The CLI package must publish with public access."
 )
-assert(manifest.publishConfig?.provenance === true, "The CLI package must require npm provenance.")
+assert(
+  manifest.publishConfig?.provenance === undefined,
+  "Trusted Publishing must generate provenance without a package-level override."
+)
 assert(
   manifest.homepage === "https://andrew-lee-dev.github.io/aq-ui",
   "The CLI package homepage must point to the public documentation site."

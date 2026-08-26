@@ -75,21 +75,24 @@ test("registry details expose compact, accessible collection navigation", () => 
 
 test("API shell stays server rendered with focused client islands", () => {
   const apiReference = read("components/api-reference.tsx")
+  const apiQuickStart = read("components/api-quick-start.tsx")
   const entryCards = read("components/api-entry-cards.tsx")
   const copyButton = read("components/copy-button.tsx")
   const lazyDetails = read("components/lazy-api-details.tsx")
 
   assert.doesNotMatch(apiReference, /^"use client"/m)
   assert.doesNotMatch(entryCards, /^"use client"/m)
+  assert.match(apiQuickStart, /^"use client"/m)
   assert.match(copyButton, /^"use client"/m)
   assert.match(lazyDetails, /^"use client"/m)
-  assert.match(apiReference, /<CopyButton/)
+  assert.match(apiQuickStart, /<CopyButton/)
   assert.match(copyButton, /aria-label=\{label\}/)
   assert.match(copyButton, /className="sr-only" aria-live="polite"/)
 })
 
 test("quick start renders shared TSX syntax tokens safely and accessibly", () => {
   const apiReference = read("components/api-reference.tsx")
+  const apiQuickStart = read("components/api-quick-start.tsx")
   const highlighter = read(
     "../../packages/registry/src/lib/code-highlighter.ts"
   )
@@ -112,37 +115,45 @@ test("quick start renders shared TSX syntax tokens safely and accessibly", () =>
     highlighter,
     /const codeHighlightClassName = "aq-code-highlight"/
   )
-  assert.match(quickStart, /highlightCodeLines\(code,\s*"tsx"\)/)
-  assert.match(quickStart, /codeHighlightClassName/)
-  assert.match(quickStart, /lines\.map\(\(tokens,\s*\w+\) =>/)
-  assert.match(quickStart, /tokens\.map\(\(token, tokenIndex\) =>/)
-  assert.match(quickStart, /className=\{token\.className\}/)
-  assert.match(quickStart, /\{token\.text\}/)
-  assert.doesNotMatch(quickStart, /aria-hidden="true"/)
-  assert.doesNotMatch(quickStart, /className="sr-only select-none"/)
-  assert.doesNotMatch(quickStart, /dangerouslySetInnerHTML/)
-
-  assert.match(quickStart, /<CopyButton/)
-  assert.match(quickStart, /label="Copy quick start"/)
-  assert.match(quickStart, /<pre\s+tabIndex=\{0\}/)
+  assert.match(apiReference, /function encodeHighlight/)
+  assert.match(apiReference, /value\.toString\(36\)/)
   assert.match(
     quickStart,
-    /aria-label=\{`\$\{item\.title\} quick start\. Use arrow keys to scroll\.`\}/
+    /encodeHighlight\(highlightCodeLines\(code,\s*"tsx"\)\)/
+  )
+  assert.match(quickStart, /<ApiQuickStart/)
+  assert.doesNotMatch(
+    apiQuickStart,
+    /import\("@aq-ui\/registry\/lib\/code-highlighter"\)/
+  )
+  assert.match(apiQuickStart, /aq-code-highlight/)
+  assert.match(apiQuickStart, /function renderHighlightedCode/)
+  assert.match(apiQuickStart, /encodedRanges\.split\(","\)/)
+  assert.match(apiQuickStart, /className=\{className\}/)
+  assert.match(apiQuickStart, /code\.slice\(start, start \+ length\)/)
+  assert.doesNotMatch(apiQuickStart, /aria-hidden="true"/)
+  assert.doesNotMatch(apiQuickStart, /className="sr-only select-none"/)
+  assert.doesNotMatch(apiQuickStart, /dangerouslySetInnerHTML/)
+
+  assert.match(apiQuickStart, /<CopyButton/)
+  assert.match(apiQuickStart, /label="Copy quick start"/)
+  assert.match(apiQuickStart, /<pre\s+tabIndex=\{0\}/)
+  assert.match(
+    apiQuickStart,
+    /aria-label=\{`\$\{title\} quick start\. Use arrow keys to scroll\.`\}/
   )
 })
 
 test("API reference exposes quick start, anchors, contracts, and source", () => {
   const apiReference = read("components/api-reference.tsx")
+  const apiQuickStart = read("components/api-quick-start.tsx")
   const entryCards = read("components/api-entry-cards.tsx")
-  const quickStartPosition = apiReference.indexOf(">Quick start<")
-  const exportsPosition = apiReference.indexOf(">Exports<")
 
-  assert.ok(quickStartPosition >= 0)
-  assert.ok(exportsPosition > quickStartPosition)
+  assert.match(apiQuickStart, />Quick start</)
+  assert.match(apiReference, />Exports</)
   assert.match(apiReference, /href="#source"/)
   assert.match(apiReference, /href=\{`#\$\{exportAnchor/)
   assert.match(apiReference, /id=\{exportAnchor/)
-  assert.match(apiReference, /data-api-export=\{entry\.name\}/)
   assert.match(apiReference, /SSR-safe/)
   assert.match(apiReference, /Client module/)
   assert.match(entryCards, /\{entry\.signature \? \(/)
@@ -210,9 +221,7 @@ test("Button summary exposes every export and defers structured details", () => 
   const apiReference = read("components/api-reference.tsx")
   const lazyDetails = read("components/lazy-api-details.tsx")
   const buttonRecord = JSON.parse(read("public/r/button.json"))
-  const summaryStart = apiReference.indexOf(
-    '<p className="mt-1" data-api-export="summary">'
-  )
+  const summaryStart = apiReference.indexOf('<p className="mt-1">')
   const summaryEnd = apiReference.indexOf("</p>", summaryStart)
   const summary = apiReference.slice(summaryStart, summaryEnd)
 
@@ -394,12 +403,12 @@ test("client APIs include a copyable Next.js client boundary", async () => {
 })
 
 test("long API and source code remain keyboard scrollable", () => {
-  const apiReference = read("components/api-reference.tsx")
+  const apiQuickStart = read("components/api-quick-start.tsx")
   const entryCards = read("components/api-entry-cards.tsx")
   const source = read("components/registry-source.tsx")
 
-  assert.match(apiReference, /tabIndex=\{0\}/)
-  assert.match(apiReference, /overflow-x-auto/)
+  assert.match(apiQuickStart, /tabIndex=\{0\}/)
+  assert.match(apiQuickStart, /overflow-x-auto/)
   assert.match(entryCards, /max-w-full overflow-x-auto/)
   assert.match(entryCards, /min-w-\[38rem\]/)
   assert.match(source, /id="source"/)

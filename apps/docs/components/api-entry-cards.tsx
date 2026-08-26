@@ -126,7 +126,6 @@ function ApiEntryCards({
           <article
             id={exportAnchor(item.name, entry.name, anchorPrefix, api)}
             key={entry.name}
-            data-api-export={entry.name}
             className="min-w-0 scroll-mt-20 overflow-hidden rounded-xl border p-4"
           >
             <header className="flex min-w-0 flex-wrap items-center gap-2">

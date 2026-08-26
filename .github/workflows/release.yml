@@ -38,7 +38,3 @@ jobs:
           publish: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Bootstrap the unpublished package with this secret. Once npm Trusted
-          # Publishing is configured, delete the secret and pnpm will use OIDC.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"

@@ -19,10 +19,17 @@ const generatedVersion = await readFile(
 const registry = JSON.parse(
   await readFile(resolve(root, "registry.json"), "utf8")
 )
+const releaseWorkflow = await readFile(
+  resolve(root, ".github/workflows/release.yml"),
+  "utf8"
+)
 
 const version = cliPackage.version
 const prereleaseTag = /-([0-9A-Za-z-]+)(?:\.|$)/u.exec(version)?.[1]
 const releaseScript = workspacePackage.scripts?.release
+const releaseNodeVersion = /\bnode-version:\s*["']?(\d+)(?:\.(\d+))?/u.exec(
+  releaseWorkflow
+)
 if (
   !prereleaseTag ||
   preState.mode !== "pre" ||
@@ -41,6 +48,36 @@ if (
 if (/\bchangeset publish\b[^\n]*\s--tag(?:=|\s)/u.test(releaseScript)) {
   throw new Error(
     "Do not pass --tag to changeset publish while Changesets prerelease mode determines the dist-tag."
+  )
+}
+if (!/^\s*id-token:\s*write\s*$/mu.test(releaseWorkflow)) {
+  throw new Error(
+    "The release workflow must grant id-token: write for npm OIDC."
+  )
+}
+if (!/^\s*runs-on:\s*ubuntu-latest\s*$/mu.test(releaseWorkflow)) {
+  throw new Error(
+    "The release workflow must publish from a GitHub-hosted runner."
+  )
+}
+if (
+  !releaseNodeVersion ||
+  Number(releaseNodeVersion[1]) < 22 ||
+  (Number(releaseNodeVersion[1]) === 22 &&
+    Number(releaseNodeVersion[2] ?? 0) < 14)
+) {
+  throw new Error(
+    "The release workflow must use Node.js 22.14 or newer for npm OIDC."
+  )
+}
+if (/\b(?:NODE_AUTH_TOKEN|NPM_TOKEN)\b|:_authToken\b/u.test(releaseWorkflow)) {
+  throw new Error(
+    "The release workflow must use npm Trusted Publishing without a long-lived npm token."
+  )
+}
+if (/\bNPM_CONFIG_PROVENANCE\b|--provenance\b/u.test(releaseWorkflow)) {
+  throw new Error(
+    "npm Trusted Publishing generates provenance without an explicit workflow override."
   )
 }
 if (!generatedVersion.includes(`VERSION = ${JSON.stringify(version)}`)) {

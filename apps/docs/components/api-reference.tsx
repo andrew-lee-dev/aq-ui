@@ -1,14 +1,15 @@
-import { Fragment } from "react"
-
 import { ApiEntryCards } from "@/components/api-entry-cards"
-import { CopyButton } from "@/components/copy-button"
+import {
+  ApiQuickStart,
+  type EncodedHighlight,
+} from "@/components/api-quick-start"
 import { LazyApiDetails } from "@/components/lazy-api-details"
 import { exportAnchor } from "@/lib/api-anchor"
 import { quickStart } from "@/lib/api-reference-quick-start"
 import type { RegistryItem } from "@/lib/registry"
 import {
-  codeHighlightClassName,
   highlightCodeLines,
+  type HighlightToken,
 } from "@aq-ui/registry/lib/code-highlighter"
 
 interface ApiReferenceProps {
@@ -16,48 +17,35 @@ interface ApiReferenceProps {
   compactMembers?: boolean
 }
 
-function QuickStart({ item, code }: { item: RegistryItem; code: string }) {
-  const lines = highlightCodeLines(code, "tsx")
+function encodeHighlight(lines: HighlightToken[][]): EncodedHighlight {
+  const classNames: string[] = []
+  const ranges: string[] = []
+  let offset = 0
 
-  return (
-    <div className="mt-4 overflow-hidden rounded-lg border">
-      <div className="flex items-center justify-between border-b px-3 py-1">
-        <h3 className="text-sm font-semibold">Quick start</h3>
-        <CopyButton
-          value={code}
-          label="Copy quick start"
-          className="p-1 text-xs hover:underline"
-        />
-      </div>
-      <pre
-        tabIndex={0}
-        aria-label={`${item.title} quick start. Use arrow keys to scroll.`}
-        className="overflow-x-auto p-3 text-sm leading-6"
-      >
-        <code
-          className={`block min-w-max font-mono ${codeHighlightClassName}`}
-          data-language="tsx"
-        >
-          {lines.map((tokens, lineIndex) => (
-            <Fragment key={lineIndex}>
-              {tokens.length > 0
-                ? tokens.map((token, tokenIndex) =>
-                    token.className ? (
-                      <span key={tokenIndex} className={token.className}>
-                        {token.text}
-                      </span>
-                    ) : (
-                      token.text
-                    )
-                  )
-                : "\u200b"}
-              {lineIndex < lines.length - 1 ? "\n" : null}
-            </Fragment>
-          ))}
-        </code>
-      </pre>
-    </div>
-  )
+  lines.forEach((tokens, lineIndex) => {
+    for (const token of tokens) {
+      if (token.className) {
+        let classIndex = classNames.indexOf(token.className)
+        if (classIndex < 0) {
+          classIndex = classNames.push(token.className) - 1
+        }
+        ranges.push(
+          [offset, token.text.length, classIndex]
+            .map((value) => value.toString(36))
+            .join(":")
+        )
+      }
+      offset += token.text.length
+    }
+    if (lineIndex < lines.length - 1) offset += 1
+  })
+
+  return [classNames, ranges.join(",")]
+}
+
+function QuickStart({ item, code }: { item: RegistryItem; code: string }) {
+  const highlight = encodeHighlight(highlightCodeLines(code, "tsx"))
+  return <ApiQuickStart code={code} highlight={highlight} title={item.title} />
 }
 
 function CompactReference({
@@ -98,7 +86,6 @@ function CompactReference({
               <li
                 id={exportAnchor(item.name, entry.name, "api", api)}
                 key={entry.name}
-                data-api-export={entry.name}
                 className="min-w-0 scroll-mt-20"
               >
                 <code className="break-all">{entry.name}</code>{" "}
@@ -109,13 +96,10 @@ function CompactReference({
             ))}
           </ul>
         ) : (
-          <p className="mt-1" data-api-export="summary">
-            {api.map((entry, index) => (
-              <span key={entry.name}>
-                {index ? ", " : ""}
-                <code>{entry.name}</code> ({entry.kind})
-              </span>
-            ))}
+          <p className="mt-1">
+            <code>
+              {api.map((entry) => `${entry.name} (${entry.kind})`).join(", ")}
+            </code>
           </p>
         )}
       </section>

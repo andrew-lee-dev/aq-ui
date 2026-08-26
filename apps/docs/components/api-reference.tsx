@@ -1,9 +1,15 @@
+import { Fragment } from "react"
+
 import { ApiEntryCards } from "@/components/api-entry-cards"
 import { CopyButton } from "@/components/copy-button"
 import { LazyApiDetails } from "@/components/lazy-api-details"
 import { exportAnchor } from "@/lib/api-anchor"
 import { quickStart } from "@/lib/api-reference-quick-start"
 import type { RegistryItem } from "@/lib/registry"
+import {
+  codeHighlightClassName,
+  highlightCodeLines,
+} from "@aq-ui/registry/lib/code-highlighter"
 
 interface ApiReferenceProps {
   item: RegistryItem
@@ -11,6 +17,8 @@ interface ApiReferenceProps {
 }
 
 function QuickStart({ item, code }: { item: RegistryItem; code: string }) {
+  const lines = highlightCodeLines(code, "tsx")
+
   return (
     <div className="mt-4 overflow-hidden rounded-lg border">
       <div className="flex items-center justify-between border-b px-3 py-1">
@@ -24,9 +32,29 @@ function QuickStart({ item, code }: { item: RegistryItem; code: string }) {
       <pre
         tabIndex={0}
         aria-label={`${item.title} quick start. Use arrow keys to scroll.`}
-        className="overflow-x-auto p-3 text-sm"
+        className="overflow-x-auto p-3 text-sm leading-6"
       >
-        <code>{code}</code>
+        <code
+          className={`block min-w-max font-mono ${codeHighlightClassName}`}
+          data-language="tsx"
+        >
+          {lines.map((tokens, lineIndex) => (
+            <Fragment key={lineIndex}>
+              {tokens.length > 0
+                ? tokens.map((token, tokenIndex) =>
+                    token.className ? (
+                      <span key={tokenIndex} className={token.className}>
+                        {token.text}
+                      </span>
+                    ) : (
+                      token.text
+                    )
+                  )
+                : "\u200b"}
+              {lineIndex < lines.length - 1 ? "\n" : null}
+            </Fragment>
+          ))}
+        </code>
       </pre>
     </div>
   )

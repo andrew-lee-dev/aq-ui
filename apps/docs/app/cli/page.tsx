@@ -50,7 +50,7 @@ export default function CliPage() {
       </p>
       <CodeBlock
         className="mt-8"
-        code="pnpm dlx aq-ui --help"
+        code="pnpm dlx aq-ui@alpha --help"
         language="bash"
         copyButton
       />
@@ -83,9 +83,9 @@ export default function CliPage() {
         <CodeBlock
           className="mt-4"
           code={
-            "aq-ui add code-editor --languages typescript,json,yaml\n" +
-            "aq-ui add markdown-editor --languages typescript,sql\n" +
-            "aq-ui add code-editor --languages all"
+            "pnpm dlx aq-ui@alpha add code-editor --languages typescript,json,yaml\n" +
+            "pnpm dlx aq-ui@alpha add markdown-editor --languages typescript,sql\n" +
+            "pnpm dlx aq-ui@alpha add code-editor --languages all"
           }
           language="bash"
           copyButton

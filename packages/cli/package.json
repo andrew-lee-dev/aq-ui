@@ -3,14 +3,14 @@
   "version": "0.1.0-alpha.0",
   "description": "Install and manage open-code aq-ui components and hooks.",
   "author": "aq-ui contributors",
-  "homepage": "https://aq-ui.github.io/aq-ui/",
+  "homepage": "https://andrew-lee-dev.github.io/aq-ui",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aq-ui/aq-ui.git",
+    "url": "git+https://github.com/andrew-lee-dev/aq-ui.git",
     "directory": "packages/cli"
   },
   "bugs": {
-    "url": "https://github.com/aq-ui/aq-ui/issues"
+    "url": "https://github.com/andrew-lee-dev/aq-ui/issues"
   },
   "type": "module",
   "bin": {

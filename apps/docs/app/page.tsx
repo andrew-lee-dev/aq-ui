@@ -66,7 +66,7 @@ export default function HomePage() {
           </a>
         </div>
         <pre className="mt-8 max-w-full overflow-x-auto rounded-xl border bg-muted/40 px-5 py-3 text-start text-sm">
-          <code>pnpm dlx aq-ui add button markdown-editor</code>
+          <code>pnpm dlx aq-ui@alpha add button markdown-editor</code>
         </pre>
       </section>
       <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-24 sm:grid-cols-3 sm:px-6">

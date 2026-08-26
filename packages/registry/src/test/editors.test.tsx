@@ -18,6 +18,7 @@ import { RichTextEditor } from "@aq-ui/registry/components/rich-text-editor"
 import { RichTextRenderer } from "@aq-ui/registry/components/rich-text-renderer"
 import type { CodeEditorHandle } from "@aq-ui/registry/hooks/use-code-editor"
 import { useRichTextEditor } from "@aq-ui/registry/hooks/use-rich-text-editor"
+import { codeHighlightClassName } from "@aq-ui/registry/lib/code-highlighter"
 import {
   generateRichTextHTML,
   parseRichTextHTML,
@@ -25,6 +26,10 @@ import {
 import StarterKit from "@tiptap/starter-kit"
 
 describe("content editor SSR and security contracts", () => {
+  it("uses a chromatic syntax palette in light and dark themes", () => {
+    expect(codeHighlightClassName).toBe("aq-code-highlight")
+  })
+
   it("round-trips canonical rich-text JSON through HTML on the server", () => {
     const document = {
       type: "doc",

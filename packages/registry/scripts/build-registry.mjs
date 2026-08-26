@@ -1169,7 +1169,7 @@ const publicItems = items.filter((item) => !item.meta.internal)
 const catalog = {
   $schema: "https://ui.shadcn.com/schema/registry.json",
   name: "aq-ui",
-  homepage: "https://aq-ui.github.io/aq-ui",
+  homepage: "https://andrew-lee-dev.github.io/aq-ui",
   items: publicItems.map(({ files, ...item }) => {
     return {
       ...item,

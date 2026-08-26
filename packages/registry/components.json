@@ -21,6 +21,6 @@
   "menuColor": "default",
   "menuAccent": "subtle",
   "registries": {
-    "@aq-ui": "https://aq-ui.github.io/aq-ui/r/{name}.json"
+    "@aq-ui": "https://andrew-lee-dev.github.io/aq-ui/r/{name}.json"
   }
 }

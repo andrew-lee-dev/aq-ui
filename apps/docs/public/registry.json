@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "aq-ui",
-  "homepage": "https://aq-ui.github.io/aq-ui",
+  "homepage": "https://andrew-lee-dev.github.io/aq-ui",
   "items": [
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -200,7 +200,7 @@
       ],
       "registryDependencies": [],
       "meta": {
-        "integrity": "sha256-0938d57bc7f10e33c6a14b4ae2438fdf9ffa13275cf4c88cf383621fdf267ad6",
+        "integrity": "sha256-0bb096b37c9136b332fe081c9dbe3517cf276df2c023671929fd7855c349ba60",
         "api": [],
         "ssr": true
       },
@@ -887,32 +887,32 @@
         "utils"
       ],
       "meta": {
-        "integrity": "sha256-066eed0b620e63e1affa0f30ac6cae6b454b9d9e4ff58c098b0ddc11a71b6229",
+        "integrity": "sha256-83da2c22d127f88927b88702a8d6103fd2dd503c61d9a395db58d14f2da3e5c7",
         "api": [
           {
             "name": "CodeBlock",
             "kind": "function",
-            "line": 29
+            "line": 30
           },
           {
             "name": "CodeBlockDiff",
             "kind": "type",
-            "line": 11
+            "line": 12
           },
           {
             "name": "CodeBlockLanguage",
             "kind": "type",
-            "line": 7
+            "line": 8
           },
           {
             "name": "CodeBlockProps",
             "kind": "interface",
-            "line": 13
+            "line": 14
           },
           {
             "name": "normalizeHighlightLanguage",
             "kind": "function",
-            "line": 6
+            "line": 7
           }
         ],
         "ssr": true
@@ -3349,6 +3349,7 @@
       ],
       "registryDependencies": [
         "button",
+        "code-highlighter",
         "rich-text-html",
         "rich-text-renderer",
         "separator",
@@ -3357,7 +3358,7 @@
         "utils"
       ],
       "meta": {
-        "integrity": "sha256-4ed3b5a148ed7ab33f8cd588e6cad6108e0cdce5c794cb5442733f6368000707",
+        "integrity": "sha256-bbd8a0c6d96d2b20e912ed7af5cabfc53f4c73c0c3d5aac183d6112057f1c702",
         "api": [
           {
             "name": "createRichTextExtensions",
@@ -3367,7 +3368,7 @@
           {
             "name": "EditorAssetUploadAdapter",
             "kind": "type",
-            "line": 49
+            "line": 50
           },
           {
             "name": "RichTextDocument",
@@ -3377,62 +3378,62 @@
           {
             "name": "RichTextEditor",
             "kind": "const",
-            "line": 1005
+            "line": 1007
           },
           {
             "name": "RichTextEditorBubbleMenu",
             "kind": "function",
-            "line": 410
+            "line": 412
           },
           {
             "name": "RichTextEditorBubbleMenuProps",
             "kind": "interface",
-            "line": 403
+            "line": 405
           },
           {
             "name": "RichTextEditorContent",
             "kind": "function",
-            "line": 374
+            "line": 375
           },
           {
             "name": "RichTextEditorContentProps",
             "kind": "interface",
-            "line": 367
+            "line": 368
           },
           {
             "name": "RichTextEditorFloatingMenu",
             "kind": "function",
-            "line": 469
+            "line": 471
           },
           {
             "name": "RichTextEditorFloatingMenuProps",
             "kind": "interface",
-            "line": 462
+            "line": 464
           },
           {
             "name": "RichTextEditorProps",
             "kind": "interface",
-            "line": 980
+            "line": 982
           },
           {
             "name": "RichTextEditorStatusBar",
             "kind": "function",
-            "line": 523
+            "line": 525
           },
           {
             "name": "RichTextEditorStatusBarProps",
             "kind": "interface",
-            "line": 516
+            "line": 518
           },
           {
             "name": "RichTextEditorToolbar",
             "kind": "function",
-            "line": 101
+            "line": 102
           },
           {
             "name": "RichTextEditorToolbarProps",
             "kind": "interface",
-            "line": 97
+            "line": 98
           },
           {
             "name": "RichTextMentionItem",

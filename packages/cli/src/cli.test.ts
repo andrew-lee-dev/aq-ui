@@ -22,6 +22,10 @@ import { applyThemeBlock, ensureThemeImports } from "./theme.js"
 import { rewriteRegistryImports } from "./transform.js"
 import type { GlobalOptions } from "./types.js"
 
+test("uses the public GitHub Pages registry by default", () => {
+  assert.equal(DEFAULT_REGISTRY, "https://andrew-lee-dev.github.io/aq-ui/r")
+})
+
 async function temporaryDirectory(t: test.TestContext): Promise<string> {
   const directory = await mkdtemp(path.join(os.tmpdir(), "aq-ui-cli-"))
   t.after(async () => rm(directory, { force: true, recursive: true }))

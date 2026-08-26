@@ -36,6 +36,8 @@ interface HighlightToken {
   className?: string
 }
 
+const codeHighlightClassName = "aq-code-highlight"
+
 const codeLowlight = createLowlight()
 
 codeLowlight.register({
@@ -118,5 +120,10 @@ function highlightCodeLines(code: string, language?: CodeBlockLanguage) {
   return lines
 }
 
-export { codeLowlight, highlightCodeLines, normalizeHighlightLanguage }
+export {
+  codeHighlightClassName,
+  codeLowlight,
+  highlightCodeLines,
+  normalizeHighlightLanguage,
+}
 export type { CodeBlockLanguage, HighlightToken }

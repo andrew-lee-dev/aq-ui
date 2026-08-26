@@ -3,6 +3,9 @@ import { resolve } from "node:path"
 import process from "node:process"
 
 const root = process.cwd()
+const workspacePackage = JSON.parse(
+  await readFile(resolve(root, "package.json"), "utf8")
+)
 const cliPackage = JSON.parse(
   await readFile(resolve(root, "packages/cli/package.json"), "utf8")
 )
@@ -19,6 +22,7 @@ const registry = JSON.parse(
 
 const version = cliPackage.version
 const prereleaseTag = /-([0-9A-Za-z-]+)(?:\.|$)/u.exec(version)?.[1]
+const releaseScript = workspacePackage.scripts?.release
 if (
   !prereleaseTag ||
   preState.mode !== "pre" ||
@@ -26,6 +30,17 @@ if (
 ) {
   throw new Error(
     `Release policy mismatch: ${version} must use Changesets prerelease tag ${prereleaseTag ?? "<missing>"}.`
+  )
+}
+if (
+  typeof releaseScript !== "string" ||
+  !releaseScript.includes("changeset publish")
+) {
+  throw new Error("The release script must publish through Changesets.")
+}
+if (/\bchangeset publish\b[^\n]*\s--tag(?:=|\s)/u.test(releaseScript)) {
+  throw new Error(
+    "Do not pass --tag to changeset publish while Changesets prerelease mode determines the dist-tag."
   )
 }
 if (!generatedVersion.includes(`VERSION = ${JSON.stringify(version)}`)) {

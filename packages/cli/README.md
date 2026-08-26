@@ -4,11 +4,11 @@ The `aq-ui` CLI installs open-code React components, hooks, utilities, and theme
 shadcn-compatible registry.
 
 ```bash
-pnpm dlx aq-ui init
-pnpm dlx aq-ui add button dialog
-pnpm dlx aq-ui add code-editor --languages typescript,tsx,json,yaml
-pnpm dlx aq-ui diff
-pnpm dlx aq-ui update
+pnpm dlx aq-ui@alpha init
+pnpm dlx aq-ui@alpha add button dialog
+pnpm dlx aq-ui@alpha add code-editor --languages typescript,tsx,json,yaml
+pnpm dlx aq-ui@alpha diff
+pnpm dlx aq-ui@alpha update
 ```
 
 ## Commands

@@ -53,7 +53,7 @@ function TabsExample() {
         Components render with your semantic theme tokens.
       </TabsContent>
       <TabsContent value="code" className="rounded-lg border p-4 font-mono">
-        pnpm dlx aq-ui add tabs
+        pnpm dlx aq-ui@alpha add tabs
       </TabsContent>
       <TabsContent value="accessibility" className="rounded-lg border p-4">
         Arrow keys move focus between tabs.

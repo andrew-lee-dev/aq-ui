@@ -72,7 +72,7 @@ function DrawerExample() {
         </DrawerHeader>
         <div className="px-4 py-6">
           <code className="rounded-md bg-muted px-2 py-1 text-sm">
-            pnpm dlx aq-ui add drawer
+            pnpm dlx aq-ui@alpha add drawer
           </code>
         </div>
         <DrawerFooter>

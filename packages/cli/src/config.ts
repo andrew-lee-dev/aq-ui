@@ -16,7 +16,7 @@ import { MANIFEST_VERSION } from "./types.js"
 
 export const COMPONENTS_FILE = "components.json"
 export const MANIFEST_FILE = ".aq-ui/manifest.json"
-export const DEFAULT_REGISTRY = "https://aq-ui.github.io/aq-ui/r"
+export const DEFAULT_REGISTRY = "https://andrew-lee-dev.github.io/aq-ui/r"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)

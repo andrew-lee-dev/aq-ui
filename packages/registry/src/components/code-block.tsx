@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { CodeBlockCopyButton } from "@aq-ui/registry/components/code-block-copy-button"
 import {
+  codeHighlightClassName,
   highlightCodeLines,
   normalizeHighlightLanguage,
   type CodeBlockLanguage,
@@ -81,7 +82,7 @@ function CodeBlock({
           className={cn(
             "block min-w-max font-mono",
             wrapLines && "min-w-0",
-            "[&_.hljs-attr]:text-chart-1 [&_.hljs-attribute]:text-chart-1 [&_.hljs-built_in]:text-chart-3 [&_.hljs-comment]:text-muted-foreground [&_.hljs-function]:text-chart-2 [&_.hljs-keyword]:text-primary [&_.hljs-literal]:text-chart-3 [&_.hljs-number]:text-chart-4 [&_.hljs-operator]:text-foreground [&_.hljs-property]:text-chart-1 [&_.hljs-punctuation]:text-muted-foreground [&_.hljs-string]:text-chart-2 [&_.hljs-symbol]:text-chart-4 [&_.hljs-title]:text-chart-1 [&_.hljs-type]:text-chart-3 [&_.hljs-variable]:text-chart-5"
+            codeHighlightClassName
           )}
         >
           <span className="sr-only select-none">{code}</span>

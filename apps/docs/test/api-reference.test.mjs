@@ -88,6 +88,49 @@ test("API shell stays server rendered with focused client islands", () => {
   assert.match(copyButton, /className="sr-only" aria-live="polite"/)
 })
 
+test("quick start renders shared TSX syntax tokens safely and accessibly", () => {
+  const apiReference = read("components/api-reference.tsx")
+  const highlighter = read(
+    "../../packages/registry/src/lib/code-highlighter.ts"
+  )
+  const quickStartStart = apiReference.indexOf("function QuickStart")
+  const quickStartEnd = apiReference.indexOf(
+    "function CompactReference",
+    quickStartStart
+  )
+
+  assert.ok(quickStartStart >= 0, "QuickStart must remain a named component.")
+  assert.ok(
+    quickStartEnd > quickStartStart,
+    "QuickStart source must be independently inspectable."
+  )
+
+  const quickStart = apiReference.slice(quickStartStart, quickStartEnd)
+
+  assert.match(apiReference, /from "@aq-ui\/registry\/lib\/code-highlighter"/)
+  assert.match(
+    highlighter,
+    /const codeHighlightClassName = "aq-code-highlight"/
+  )
+  assert.match(quickStart, /highlightCodeLines\(code,\s*"tsx"\)/)
+  assert.match(quickStart, /codeHighlightClassName/)
+  assert.match(quickStart, /lines\.map\(\(tokens,\s*\w+\) =>/)
+  assert.match(quickStart, /tokens\.map\(\(token, tokenIndex\) =>/)
+  assert.match(quickStart, /className=\{token\.className\}/)
+  assert.match(quickStart, /\{token\.text\}/)
+  assert.doesNotMatch(quickStart, /aria-hidden="true"/)
+  assert.doesNotMatch(quickStart, /className="sr-only select-none"/)
+  assert.doesNotMatch(quickStart, /dangerouslySetInnerHTML/)
+
+  assert.match(quickStart, /<CopyButton/)
+  assert.match(quickStart, /label="Copy quick start"/)
+  assert.match(quickStart, /<pre\s+tabIndex=\{0\}/)
+  assert.match(
+    quickStart,
+    /aria-label=\{`\$\{item\.title\} quick start\. Use arrow keys to scroll\.`\}/
+  )
+})
+
 test("API reference exposes quick start, anchors, contracts, and source", () => {
   const apiReference = read("components/api-reference.tsx")
   const entryCards = read("components/api-entry-cards.tsx")
@@ -363,6 +406,11 @@ test("long API and source code remain keyboard scrollable", () => {
   assert.match(source, /data-slot="code-block-pre"\s+tabIndex=\{0\}/)
   assert.match(source, /Use arrow keys to scroll/)
   assert.match(source, /<CopyButton/)
+  assert.match(source, /import\("@aq-ui\/registry\/lib\/code-highlighter"\)/)
+  assert.match(source, /highlightCodeLines/)
+  assert.match(source, /sourceLanguage\(file\.path\)/)
+  assert.match(source, /data-slot="code-block-line"/)
+  assert.match(source, /className="sr-only select-none"/)
 })
 
 test("docs accept the rich per-record registry API contract", () => {

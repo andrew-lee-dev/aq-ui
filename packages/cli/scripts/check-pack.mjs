@@ -18,9 +18,17 @@ assert(
 )
 assert(manifest.publishConfig?.provenance === true, "The CLI package must require npm provenance.")
 assert(
-  manifest.repository?.url === "git+https://github.com/aq-ui/aq-ui.git" &&
+  manifest.homepage === "https://andrew-lee-dev.github.io/aq-ui",
+  "The CLI package homepage must point to the public documentation site."
+)
+assert(
+  manifest.repository?.url === "git+https://github.com/andrew-lee-dev/aq-ui.git" &&
     manifest.repository?.directory === "packages/cli",
   "The CLI package repository metadata is incomplete."
+)
+assert(
+  manifest.bugs?.url === "https://github.com/andrew-lee-dev/aq-ui/issues",
+  "The CLI package issue tracker must point to the public repository."
 )
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm"

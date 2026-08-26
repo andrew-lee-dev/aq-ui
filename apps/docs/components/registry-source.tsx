@@ -3,6 +3,10 @@
 import * as React from "react"
 
 import { CopyButton } from "@/components/copy-button"
+import type {
+  CodeBlockLanguage,
+  HighlightToken,
+} from "@aq-ui/registry/lib/code-highlighter"
 
 interface RegistrySourceFile {
   path: string
@@ -17,17 +21,51 @@ interface RegistrySourceProps {
   name: string
 }
 
+interface HighlightedSourceFile extends Required<RegistrySourceFile> {
+  lines: HighlightToken[][]
+}
+
 type SourceState =
   | { status: "idle" | "loading" }
-  | { status: "ready"; files: Array<Required<RegistrySourceFile>> }
+  | {
+      status: "ready"
+      files: HighlightedSourceFile[]
+      codeClassName: string
+    }
   | { status: "error"; message: string }
+
+const sourceLanguages: Record<string, CodeBlockLanguage> = {
+  bash: "bash",
+  css: "css",
+  html: "html",
+  js: "javascript",
+  json: "json",
+  jsx: "jsx",
+  md: "markdown",
+  mdx: "markdown",
+  mjs: "javascript",
+  sql: "sql",
+  ts: "typescript",
+  tsx: "tsx",
+  yaml: "yaml",
+  yml: "yaml",
+}
+
+function sourceLanguage(path: string): CodeBlockLanguage {
+  const extension = path.split(".").pop()?.toLowerCase() ?? ""
+  return sourceLanguages[extension] ?? "plaintext"
+}
 
 function SourceCodeBlock({
   code,
+  codeClassName,
   filename,
+  lines,
 }: {
   code: string
+  codeClassName: string
   filename: string
+  lines: HighlightToken[][]
 }) {
   return (
     <figure
@@ -47,9 +85,35 @@ function SourceCodeBlock({
         data-slot="code-block-pre"
         tabIndex={0}
         aria-label={`${filename} source code. Use arrow keys to scroll.`}
-        className="m-0 min-h-0 flex-1 overflow-auto p-3 text-[0.8125rem] leading-6 whitespace-pre [tab-size:2]"
+        className="m-0 min-h-0 flex-1 overflow-auto py-3 text-[0.8125rem] leading-6 whitespace-pre [tab-size:2] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
-        <code className="block min-w-max font-mono">{code}</code>
+        <code
+          className={`block min-w-max font-mono ${codeClassName}`}
+          data-language={sourceLanguage(filename)}
+        >
+          <span className="sr-only select-none">{code}</span>
+          {lines.map((tokens, index) => (
+            <span
+              key={index}
+              aria-hidden="true"
+              data-slot="code-block-line"
+              className="grid min-h-6 grid-cols-[auto_1fr] gap-4 px-3"
+            >
+              <span className="min-w-[2ch] text-end text-muted-foreground select-none">
+                {index + 1}
+              </span>
+              <span className="min-w-0">
+                {tokens.length > 0
+                  ? tokens.map((token, tokenIndex) => (
+                      <span key={tokenIndex} className={token.className}>
+                        {token.text}
+                      </span>
+                    ))
+                  : "\u200b"}
+              </span>
+            </span>
+          ))}
+        </code>
       </pre>
     </figure>
   )
@@ -68,9 +132,12 @@ function RegistrySource({ name }: RegistrySourceProps) {
     setState({ status: "loading" })
 
     try {
-      const response = await fetch(`../../r/${encodeURIComponent(name)}.json`, {
-        signal: controller.signal,
-      })
+      const [response, highlighter] = await Promise.all([
+        fetch(`../../r/${encodeURIComponent(name)}.json`, {
+          signal: controller.signal,
+        }),
+        import("@aq-ui/registry/lib/code-highlighter"),
+      ])
       if (!response.ok) {
         throw new Error(`Source request failed with status ${response.status}.`)
       }
@@ -82,7 +149,17 @@ function RegistrySource({ name }: RegistrySourceProps) {
       )
       if (!files.length) throw new Error("No source files were found.")
 
-      setState({ status: "ready", files })
+      setState({
+        status: "ready",
+        codeClassName: highlighter.codeHighlightClassName,
+        files: files.map((file) => ({
+          ...file,
+          lines: highlighter.highlightCodeLines(
+            file.content,
+            sourceLanguage(file.path)
+          ),
+        })),
+      })
     } catch (reason) {
       if (controller.signal.aborted) return
       setState({
@@ -139,7 +216,9 @@ function RegistrySource({ name }: RegistrySourceProps) {
           <SourceCodeBlock
             key={file.path}
             code={file.content}
+            codeClassName={state.codeClassName}
             filename={file.path}
+            lines={file.lines}
           />
         ))
       ) : state.status === "error" ? (

@@ -46,13 +46,13 @@ pnpm --filter aq-ui build
 node packages/cli/dist/index.js list --registry ./apps/docs/public/r
 ```
 
-After publication, consumers can install only what they need:
+During the alpha release, consumers can install only what they need:
 
 ```bash
-pnpm dlx aq-ui init
-pnpm dlx aq-ui add button data-grid
-pnpm dlx aq-ui add code-editor markdown-editor rich-text-editor
-pnpm dlx aq-ui add code-editor --languages typescript,tsx,json,yaml
+pnpm dlx aq-ui@alpha init
+pnpm dlx aq-ui@alpha add button data-grid
+pnpm dlx aq-ui@alpha add code-editor markdown-editor rich-text-editor
+pnpm dlx aq-ui@alpha add code-editor --languages typescript,tsx,json,yaml
 ```
 
 The CLI tracks installed hashes in `.aq-ui/manifest.json`, validates registry paths and HTTPS, writes files transactionally, pins generated dependencies to tested version ranges, and preserves local edits unless `--force` is explicitly supplied.

@@ -104,6 +104,43 @@ function contrastRatio(foreground: OklchColor, background: OklchColor) {
 }
 
 describe("global accessibility styles", () => {
+  it("keeps syntax colors chromatic and above WCAG AA contrast", () => {
+    const lightTheme = themeBlock(":root")
+    const darkTheme = themeBlock(".dark")
+    const syntaxTokens = [
+      "aq-syntax-comment",
+      "aq-syntax-keyword",
+      "aq-syntax-meta",
+      "aq-syntax-property",
+      "aq-syntax-string",
+      "aq-syntax-number",
+      "aq-syntax-literal",
+      "aq-syntax-type",
+      "aq-syntax-title",
+      "aq-syntax-variable",
+    ]
+
+    for (const token of syntaxTokens) {
+      const lightColor = colorToken(lightTheme, token)
+      const darkColor = colorToken(darkTheme, token)
+
+      expect(lightColor.chroma, `${token} light chroma`).toBeGreaterThan(0.03)
+      expect(darkColor.chroma, `${token} dark chroma`).toBeGreaterThan(0.03)
+      expect(
+        contrastRatio(lightColor, colorToken(lightTheme, "muted")),
+        `${token} light contrast`
+      ).toBeGreaterThanOrEqual(4.5)
+      expect(
+        contrastRatio(darkColor, colorToken(darkTheme, "muted")),
+        `${token} dark contrast`
+      ).toBeGreaterThanOrEqual(4.5)
+    }
+
+    expect(globals).toContain(".aq-code-highlight")
+    expect(globals).toContain(".hljs-selector-pseudo")
+    expect(globals).toContain(".hljs-params")
+  })
+
   it("disables motion and smooth scrolling when reduced motion is requested", () => {
     const start = globals.indexOf("@media (prefers-reduced-motion: reduce)")
     const end = globals.indexOf("@layer base", start)

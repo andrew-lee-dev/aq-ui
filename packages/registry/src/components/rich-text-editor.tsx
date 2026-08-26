@@ -46,6 +46,7 @@ import {
   type RichTextMentionProvider,
   type RichTextUpload,
 } from "@aq-ui/registry/hooks/use-rich-text-editor"
+import { codeHighlightClassName } from "@aq-ui/registry/lib/code-highlighter"
 import type { EditorAssetUploadAdapter } from "@aq-ui/registry/lib/upload"
 import { cn } from "@aq-ui/registry/lib/utils"
 
@@ -393,6 +394,7 @@ function RichTextEditorContent({
         "[&_.ProseMirror_a]:text-primary [&_.ProseMirror_a]:underline [&_.ProseMirror_a]:underline-offset-4 [&_.ProseMirror_img]:my-4 [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_img]:rounded-lg [&_.ProseMirror_img]:border",
         "[&_.ProseMirror_table]:my-4 [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:border-collapse [&_.ProseMirror_td]:border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_th]:border [&_.ProseMirror_th]:bg-muted/50 [&_.ProseMirror_th]:p-2",
         "[&_.is-editor-empty:first-child]:before:pointer-events-none [&_.is-editor-empty:first-child]:before:float-start [&_.is-editor-empty:first-child]:before:h-0 [&_.is-editor-empty:first-child]:before:text-muted-foreground [&_.is-editor-empty:first-child]:before:content-[attr(data-placeholder)]",
+        codeHighlightClassName,
         className
       )}
       {...props}

@@ -40,7 +40,11 @@ export default function GettingStartedPage() {
       </section>
       <section className="mt-10">
         <h2 className="text-2xl font-semibold">Initialize</h2>
-        <CodeBlock code="pnpm dlx aq-ui init" language="bash" copyButton />
+        <CodeBlock
+          code="pnpm dlx aq-ui@alpha init"
+          language="bash"
+          copyButton
+        />
         <p className="text-muted-foreground">
           The command detects your package manager and aliases, creates{" "}
           <code>components.json</code>, installs the neutral token foundation,
@@ -56,7 +60,7 @@ export default function GettingStartedPage() {
       <section className="mt-10">
         <h2 className="text-2xl font-semibold">Add open code</h2>
         <CodeBlock
-          code="pnpm dlx aq-ui add button dialog data-grid"
+          code="pnpm dlx aq-ui@alpha add button dialog data-grid"
           language="bash"
           copyButton
         />

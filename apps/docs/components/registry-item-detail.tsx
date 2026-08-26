@@ -75,7 +75,7 @@ export function RegistryItemDetail({
       <section className="mt-10">
         <h2 className="text-xl font-semibold">Installation</h2>
         <pre className="mt-3 overflow-x-auto rounded-xl border bg-muted/40 p-4 text-sm">
-          <code>{`pnpm dlx aq-ui add ${item.name}`}</code>
+          <code>{`pnpm dlx aq-ui@alpha add ${item.name}`}</code>
         </pre>
       </section>
       {item.name === "button" ? <ButtonGuide /> : null}

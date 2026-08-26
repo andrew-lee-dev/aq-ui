@@ -20,7 +20,7 @@
     "version-packages": "changeset version && pnpm --filter aq-ui generate:theme && pnpm registry:build",
     "pack:check": "pnpm --filter aq-ui pack:check",
     "release:check": "node scripts/check-release.mjs && pnpm audit:prod && pnpm pack:check",
-    "release": "pnpm release:check && pnpm build && changeset publish --tag alpha",
+    "release": "pnpm release:check && pnpm build && changeset publish",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm registry:check && pnpm schema:check && pnpm release:check && pnpm test && pnpm build && pnpm --filter @aq-ui/docs performance:check && pnpm storybook:build"
   },
   "devDependencies": {

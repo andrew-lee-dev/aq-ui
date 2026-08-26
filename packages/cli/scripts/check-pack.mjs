@@ -30,6 +30,10 @@ assert(
   manifest.bugs?.url === "https://github.com/andrew-lee-dev/aq-ui/issues",
   "The CLI package issue tracker must point to the public repository."
 )
+assert(
+  manifest.bin?.["aq-ui"] === "dist/index.js",
+  "The CLI package binary must use npm's canonical relative path."
+)
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm"
 const { stdout } = await execute(npm, ["pack", "--dry-run", "--json", "--ignore-scripts"], {

@@ -14,7 +14,7 @@
   },
   "type": "module",
   "bin": {
-    "aq-ui": "./dist/index.js"
+    "aq-ui": "dist/index.js"
   },
   "files": [
     "dist",

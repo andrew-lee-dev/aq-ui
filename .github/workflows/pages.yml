@@ -33,7 +33,7 @@ jobs:
           key: ${{ runner.os }}-node-24-next-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/registry/**') }}
           restore-keys: |
             ${{ runner.os }}-node-24-next-${{ hashFiles('pnpm-lock.yaml') }}-
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @aq-ui/docs build
         env:

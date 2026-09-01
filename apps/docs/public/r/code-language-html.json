@@ -5,7 +5,7 @@
   "title": "Code Language Html",
   "description": "Open-code aq-ui shared library for Code Language Html.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@codemirror/lang-html@^6.4.12"
   ],

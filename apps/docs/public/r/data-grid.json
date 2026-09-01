@@ -5,7 +5,7 @@
   "title": "Data Grid",
   "description": "Virtualized TanStack data grid with sorting, filtering, resizing, pinning, visibility, and row selection.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@tanstack/react-table@^8.21.3",
     "@tanstack/react-virtual@^3.13.12",

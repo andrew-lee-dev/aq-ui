@@ -5,7 +5,7 @@
   "title": "Rich Text Renderer",
   "description": "Open-code aq-ui accessible component family for Rich Text Renderer.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [],
   "registryDependencies": [
     "code-block",

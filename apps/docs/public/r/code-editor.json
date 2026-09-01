@@ -5,7 +5,7 @@
   "title": "Code Editor",
   "description": "CodeMirror 6 editor with controlled state, lazy languages, diagnostics, search, folding, and token-aware themes.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@codemirror/state@^6.7.1"
   ],

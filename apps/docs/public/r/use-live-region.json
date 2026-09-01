@@ -5,7 +5,7 @@
   "title": "Use Live Region",
   "description": "Open-code aq-ui React hook for Use Live Region.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [],
   "registryDependencies": [
     "use-hydrated",

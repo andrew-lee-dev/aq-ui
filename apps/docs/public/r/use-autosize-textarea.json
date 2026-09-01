@@ -5,7 +5,7 @@
   "title": "Use Autosize Textarea",
   "description": "Open-code aq-ui React hook for Use Autosize Textarea.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [],
   "registryDependencies": [
     "hook-target",

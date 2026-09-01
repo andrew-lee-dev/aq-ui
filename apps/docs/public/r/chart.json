@@ -5,7 +5,7 @@
   "title": "Chart",
   "description": "Open-code aq-ui accessible component family for Chart.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "recharts@3.8.0"
   ],

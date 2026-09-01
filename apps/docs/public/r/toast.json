@@ -5,7 +5,7 @@
   "title": "Toast",
   "description": "Open-code aq-ui accessible component family for Toast.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@base-ui/react@^1.7.0",
     "lucide-react@^1.31.0"

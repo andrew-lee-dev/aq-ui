@@ -5,7 +5,7 @@
   "title": "Spinner",
   "description": "Open-code aq-ui accessible component family for Spinner.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "lucide-react@^1.31.0"
   ],

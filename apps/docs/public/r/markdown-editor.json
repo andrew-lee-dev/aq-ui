@@ -5,7 +5,7 @@
   "title": "Markdown Editor",
   "description": "CommonMark and GFM source editor with write, preview, split, formatting, uploads, and deferred rendering.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "hast-util-sanitize@^5.0.2",
     "lucide-react@^1.31.0",

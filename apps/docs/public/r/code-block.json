@@ -5,7 +5,7 @@
   "title": "Code Block",
   "description": "SSR-safe syntax-highlighted code with line numbers, diffs, emphasis, filenames, and copy support.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [],
   "registryDependencies": [
     "code-block-copy-button",

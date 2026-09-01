@@ -5,7 +5,7 @@
   "title": "Code Block Copy Button",
   "description": "Open-code aq-ui accessible component family for Code Block Copy Button.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "lucide-react@^1.31.0"
   ],

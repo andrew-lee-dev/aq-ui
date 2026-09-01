@@ -5,7 +5,7 @@
   "title": "Code Language Plaintext",
   "description": "Open-code aq-ui shared library for Code Language Plaintext.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [],
   "registryDependencies": [
     "code-language-registry"

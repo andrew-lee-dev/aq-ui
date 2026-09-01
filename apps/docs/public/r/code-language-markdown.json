@@ -5,7 +5,7 @@
   "title": "Code Language Markdown",
   "description": "Open-code aq-ui shared library for Code Language Markdown.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@codemirror/lang-markdown@^6.5.2"
   ],

@@ -5,7 +5,7 @@
   "title": "File Upload",
   "description": "Keyboard-accessible drop zone with validation, progress, retry, cancellation, and transport-neutral uploads.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "lucide-react@^1.31.0"
   ],

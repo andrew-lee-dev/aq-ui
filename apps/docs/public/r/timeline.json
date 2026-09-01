@@ -5,7 +5,7 @@
   "title": "Timeline",
   "description": "Semantic, RTL-safe timeline primitives for events, status history, and activity feeds.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [],
   "registryDependencies": [
     "utils"

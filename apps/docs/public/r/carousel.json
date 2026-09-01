@@ -5,7 +5,7 @@
   "title": "Carousel",
   "description": "Open-code aq-ui accessible component family for Carousel.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "embla-carousel-react@^8.6.0",
     "lucide-react@^1.31.0"

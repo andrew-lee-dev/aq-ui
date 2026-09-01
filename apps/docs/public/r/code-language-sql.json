@@ -5,7 +5,7 @@
   "title": "Code Language Sql",
   "description": "Open-code aq-ui shared library for Code Language Sql.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@codemirror/lang-sql@^6.10.0"
   ],

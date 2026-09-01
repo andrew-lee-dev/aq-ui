@@ -5,7 +5,7 @@
   "title": "Color Picker",
   "description": "Accessible color area, hue and alpha controls, swatch, field, and controlled color formats.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "react-aria-components@^1.12.3"
   ],

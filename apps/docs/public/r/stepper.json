@@ -5,7 +5,7 @@
   "title": "Stepper",
   "description": "Controlled or uncontrolled, linear-aware multi-step workflow with horizontal and vertical composition.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "lucide-react@^1.31.0"
   ],

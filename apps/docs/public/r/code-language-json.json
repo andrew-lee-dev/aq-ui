@@ -5,7 +5,7 @@
   "title": "Code Language Json",
   "description": "Open-code aq-ui shared library for Code Language Json.",
   "author": "aq-ui contributors",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "dependencies": [
     "@codemirror/lang-json@^6.0.2"
   ],

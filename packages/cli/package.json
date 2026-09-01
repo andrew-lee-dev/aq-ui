@@ -53,12 +53,12 @@
     "access": "public"
   },
   "dependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "@aq-ui/eslint-config": "workspace:*",
-    "@types/node": "^22.0.0",
-    "eslint": "^9",
+    "@types/node": "^26.4.0",
+    "eslint": "^10",
     "prettier": "^3"
   }
 }

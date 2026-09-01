@@ -17,8 +17,8 @@
     "schema:check": "node scripts/validate-shadcn-schema.mjs",
     "audit:prod": "pnpm audit --prod",
     "changeset": "changeset",
-    "version-packages": "changeset version && pnpm --filter aq-ui generate:theme && pnpm registry:build",
-    "pack:check": "pnpm --filter aq-ui pack:check",
+    "version-packages": "changeset version && pnpm --filter andrew-aq-ui generate:theme && pnpm registry:build",
+    "pack:check": "pnpm --filter andrew-aq-ui pack:check",
     "release:check": "node scripts/check-release.mjs && pnpm audit:prod && pnpm pack:check",
     "release": "pnpm release:check && pnpm build && changeset publish",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm registry:check && pnpm schema:check && pnpm release:check && pnpm test && pnpm build && pnpm --filter @aq-ui/docs performance:check && pnpm storybook:build"

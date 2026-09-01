@@ -9,7 +9,7 @@ const execute = promisify(execFile)
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const manifest = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8"))
 
-assert(manifest.name === "andrew-aq-ui", "The public package name must be andrew-aq-ui.")
+assert(manifest.name === "@andrew-lee/aq-ui", "The public package name must be @andrew-lee/aq-ui.")
 assert(manifest.private !== true, "The CLI package must remain publishable.")
 assert(manifest.license === "MIT", "The CLI package must declare MIT.")
 assert(
@@ -34,7 +34,7 @@ assert(
   "The CLI package issue tracker must point to the public repository."
 )
 assert(
-  manifest.bin?.["andrew-aq-ui"] === "dist/index.js" && manifest.bin?.["aq-ui"] === "dist/index.js",
+  manifest.bin?.["aq-ui"] === "dist/index.js",
   "The CLI package binary must use npm's canonical relative path."
 )
 
